@@ -25,6 +25,8 @@ import ActivitiesPage from "./educateur/pages/Activities";
 import ReportsPage from "./educateur/pages/Reports";
 import TableUsers from "./pages/Tables/TableUsers";
 import TableEnfants from "./pages/Tables/TableEnfants";
+import GestionEducateurs from "./components/tables/BasictTableEducateur";
+import TableEducateurs from "./pages/Tables/TableEducateurs";
 
 export default function App() {
   return (
@@ -61,6 +63,7 @@ export default function App() {
             <Route path="/basic-tables" element={<BasicTables />} />
             <Route path="/users" element={<TableUsers />} />
             <Route path="/enfants" element={<TableEnfants />} />
+            <Route path="/educateurs" element={<TableEducateurs />} />
             {/* Ui Elements */}
             <Route path="/alerts" element={<Alerts />} />
             <Route path="/avatars" element={<Avatars />} />

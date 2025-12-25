@@ -59,9 +59,9 @@ const navItems: NavItem[] = [
    path: "/enfants",
   },
   {
-    name: "Educateur",
+    name: "Educateurs",
     icon: <GroupIcon />,
-    path: "#",
+    path: "/educateurs",
     // subItems: [{ name: "Basic Tables", path: "/basic-tables", pro: false }],
   },
   {
