@@ -46,48 +46,45 @@ export default function ClassesSummary() {
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900 shadow-sm">
+    <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-300 dark:bg-white shadow-sm">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h3 className="text-lg font-semibold text-gray-800 dark:text-white">
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-900">
             Classes Actives
           </h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+          <p className="text-sm text-gray-500 dark:text-gray-700">
             Vue d'ensemble des classes
           </p>
         </div>
-        {/* <button className="text-blue-600 text-sm font-medium hover:text-blue-700 dark:text-blue-400">
-          Voir toutes →
-        </button> */}
       </div>
 
       {/* Sélecteur de classe */}
       <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-800 mb-2">
           Classe actuelle
         </label>
         <div className="relative">
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="w-full flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            className="w-full flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-100 border border-gray-300 dark:border-gray-400 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-200 transition-colors"
           >
             <div className="text-left">
-              <div className="font-medium text-gray-900 dark:text-white">
+              <div className="font-medium text-gray-900 dark:text-gray-900">
                 {selectedClass.name}
               </div>
-              <div className="text-sm text-gray-500 dark:text-gray-400">
+              <div className="text-sm text-gray-500 dark:text-gray-700">
                 {selectedClass.level} • {selectedClass.present}/{selectedClass.totalChildren} enfants présents
               </div>
             </div>
             {isExpanded ? (
-              <ChevronUpIcon className="size-5 text-gray-500" />
+              <ChevronUpIcon className="size-5 text-gray-500 dark:text-gray-600" />
             ) : (
-              <ChevronDownIcon className="size-5 text-gray-500" />
+              <ChevronDownIcon className="size-5 text-gray-500 dark:text-gray-600" />
             )}
           </button>
           
           {isExpanded && (
-            <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg">
+            <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-100 border border-gray-200 dark:border-gray-300 rounded-lg shadow-lg">
               {classesData.map((classItem) => (
                 <button
                   key={classItem.id}
@@ -95,12 +92,12 @@ export default function ClassesSummary() {
                     setSelectedClass(classItem);
                     setIsExpanded(false);
                   }}
-                  className="w-full p-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors first:rounded-t-lg last:rounded-b-lg"
+                  className="w-full p-3 text-left hover:bg-gray-50 dark:hover:bg-gray-200 transition-colors first:rounded-t-lg last:rounded-b-lg"
                 >
-                  <div className="font-medium text-gray-900 dark:text-white">
+                  <div className="font-medium text-gray-900 dark:text-gray-900">
                     {classItem.name}
                   </div>
-                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                  <div className="text-sm text-gray-500 dark:text-gray-700">
                     {classItem.level} • {classItem.present}/{classItem.totalChildren} enfants
                   </div>
                 </button>
@@ -112,42 +109,42 @@ export default function ClassesSummary() {
 
       {/* Statistiques de la classe sélectionnée */}
       <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-          <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+        <div className="text-center p-3 bg-blue-50 dark:bg-blue-100 rounded-lg">
+          <div className="text-2xl font-bold text-blue-600 dark:text-blue-700">
             {selectedClass.totalChildren}
           </div>
-          <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+          <div className="text-sm text-gray-600 dark:text-gray-700 mt-1">
             Enfants
           </div>
         </div>
-        <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-          <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+        <div className="text-center p-3 bg-green-50 dark:bg-green-100 rounded-lg">
+          <div className="text-2xl font-bold text-green-600 dark:text-green-700">
             {selectedClass.present}
           </div>
-          <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+          <div className="text-sm text-gray-600 dark:text-gray-700 mt-1">
             Présents
           </div>
         </div>
-        <div className="text-center p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-          <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+        <div className="text-center p-3 bg-purple-50 dark:bg-purple-100 rounded-lg">
+          <div className="text-2xl font-bold text-purple-600 dark:text-purple-700">
             {selectedClass.activities}
           </div>
-          <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+          <div className="text-sm text-gray-600 dark:text-gray-700 mt-1">
             Activités
           </div>
         </div>
       </div>
 
       {/* Actions rapides */}
-      <div className="border-t border-gray-200 dark:border-gray-800 pt-6">
-        <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+      <div className="border-t border-gray-200 dark:border-gray-200 pt-6">
+        <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-800 mb-3">
           Actions Rapides
         </h4>
         <div className="grid grid-cols-2 gap-3">
-          <button className="p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors text-sm font-medium">
+          <button className="p-3 bg-blue-50 dark:bg-blue-100 text-blue-600 dark:text-blue-700 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-200 transition-colors text-sm font-medium">
             Marquer Présence
           </button>
-          <button className="p-3 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors text-sm font-medium">
+          <button className="p-3 bg-green-50 dark:bg-green-100 text-green-600 dark:text-green-700 rounded-lg hover:bg-green-100 dark:hover:bg-green-200 transition-colors text-sm font-medium">
             Ajouter Activité
           </button>
         </div>

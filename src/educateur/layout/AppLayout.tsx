@@ -1,6 +1,6 @@
 import { SidebarProvider, useSidebar } from "../../context/SidebarContext";
 import { Outlet } from "react-router";
-import AppHeader from "../../layout/AppHeader";
+import AppHeader from "../layout/AppHeader";
  import Backdrop from "../../layout/Backdrop";
 import AppSidebar from "../../layout/AppSidebar";
 
@@ -15,7 +15,7 @@ const LayoutContent: React.FC = () => {
       </div>
       <div
       
-        className={`flex-1 transition-all duration-300 ease-in-out lg:ml-[90px]
+        className={`flex-1 transition-all duration-300 ease-in-out 
          
          ${isMobileOpen ? "ml-0" : ""}`}
       >

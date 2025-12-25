@@ -1,5 +1,6 @@
-// Home.tsx - Version finale avec toutes les cartes
+// Home.tsx - Version complète avec QuickAccess
 import PageMeta from "../../components/common/PageMeta";
+import QuickAccess from "../../components/ecommerce/QuickAccess";
 import ChildMetrics from "../../components/ecommerce/ChildMetrics";
 import ParentMetrics from "../../components/ecommerce/ParentMetrics";
 import ChildrenTotalMetrics from "../../components/ecommerce/ChildrenTotalMetrics";
@@ -8,7 +9,7 @@ import FinancialOverview from "../../components/ecommerce/FinancialOverview";
 import RecentActivities from "../../components/ecommerce/RecentActivities";
 import EducatorList from "../../components/ecommerce/EducatorList";
 import ParentCommunications from "../../components/ecommerce/ParentCommunications";
-import EducateursMetrics from "../../components/ecommerce/EducateursMetrics";
+
 export default function NurseryDashboard() {
   return (
     <>
@@ -18,23 +19,18 @@ export default function NurseryDashboard() {
       />
       
       {/* Section Accès Rapide */}
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">
-          Accès Rapide
-        </h2>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          {/* Boutons d'accès rapide */}
-        </div>
+      <QuickAccess />
+
+      {/* Métriques principales - 3 cartes */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <ChildMetrics />
+        <ParentMetrics />
+        <ChildrenTotalMetrics />
       </div>
 
       <div className="grid grid-cols-12 gap-6">
-        {/* Métriques principales - 3 cartes */}
+        {/* Graphique de présence */}
         <div className="col-span-12 lg:col-span-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            <EducateursMetrics />
-            <ParentMetrics />
-            <ChildrenTotalMetrics />
-          </div>
           <AttendanceChart />
         </div>
 

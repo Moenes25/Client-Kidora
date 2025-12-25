@@ -20,6 +20,11 @@ import { ScrollToTop } from "./components/common/ScrollToTop";
 import Home from "./pages/Dashboard/Home";
 import HomeEducateur from "./educateur/pages/Home";
 import AppLayoutEducateur from "./educateur/layout/AppLayout";
+import ChildrenPage from "./educateur/pages/Children";
+import ActivitiesPage from "./educateur/pages/Activities";
+import ReportsPage from "./educateur/pages/Reports";
+import TableUsers from "./pages/Tables/TableUsers";
+import TableEnfants from "./pages/Tables/TableEnfants";
 
 export default function App() {
   return (
@@ -31,6 +36,14 @@ export default function App() {
           {/* Educateur Dashboard Layout */}
           <Route path="/educateur" element={<AppLayoutEducateur />}>
             <Route index  element={<HomeEducateur />} />
+          <Route path="children" element={<ChildrenPage />} />
+          
+          {/* Route pour les activités */}
+          <Route path="activities" element={<ActivitiesPage />} />
+          
+          {/* Route pour les rapports */}
+          <Route path="reports" element={<ReportsPage />} />
+
           </Route>
           {/* Dashboard Layout */}
           <Route element={<AppLayout />}>
@@ -46,7 +59,8 @@ export default function App() {
 
             {/* Tables */}
             <Route path="/basic-tables" element={<BasicTables />} />
-
+            <Route path="/users" element={<TableUsers />} />
+            <Route path="/enfants" element={<TableEnfants />} />
             {/* Ui Elements */}
             <Route path="/alerts" element={<Alerts />} />
             <Route path="/avatars" element={<Avatars />} />
