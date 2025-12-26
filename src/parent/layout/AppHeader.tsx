@@ -6,6 +6,7 @@ import { useSidebar } from "../../context/SidebarContext";
 import { ThemeToggleButton } from "../../components/common/ThemeToggleButton";
 import NotificationDropdown from "../../components/header/NotificationDropdown";
 import UserDropdown from "../../components/header/UserDropdown";
+import { UserCircleIcon } from "lucide-react";
 
 const AppHeader: React.FC = () => {
   const [isApplicationMenuOpen, setApplicationMenuOpen] = useState(false);
@@ -22,6 +23,10 @@ const AppHeader: React.FC = () => {
 
   const toggleApplicationMenu = () => {
     setApplicationMenuOpen(!isApplicationMenuOpen);
+  };
+
+  const handleLogout = () => {
+    console.log("Se déconnecter");
   };
 
   const inputRef = useRef<HTMLInputElement>(null);
@@ -53,7 +58,7 @@ const AppHeader: React.FC = () => {
   const navLinks = [
     { 
       name: "Accueil", 
-      path: "/educateur",
+      path: "/parent",
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
@@ -68,7 +73,7 @@ const AppHeader: React.FC = () => {
     },
     { 
       name: "Enfants", 
-      path: "/educateur/children", 
+      path: "/parent/enfants",
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="12" cy="5" r="3"/>
@@ -84,8 +89,8 @@ const AppHeader: React.FC = () => {
       activeColor: "text-purple-600 dark:text-white"
     },
     { 
-      name: "Activités", 
-      path: "/educateur/activities",
+      name: "Activités éducatives",
+      path: "/parent/activites_enfants",
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M12 2v20M2 12h20"/>
@@ -100,17 +105,18 @@ const AppHeader: React.FC = () => {
       activeColor: "text-green-600 dark:text-white"
     },
     { 
-      name: "Rapports", 
-      path: "/educateur/reports",
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M14 3v4a1 1 0 0 0 1 1h4"/>
-          <path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/>
-          <path d="M9 9h1"/>
-          <path d="M9 13h6"/>
-          <path d="M9 17h6"/>
-        </svg>
-      ),
+      name: "profil", 
+      path: "/parent/profil",
+      icon: <UserCircleIcon/>
+        // <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        //   <path d="M14 3v4a1 1 0 0 0 1 1h4"/>
+        //   <path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/>
+        //   <path d="M9 9h1"/>
+        //   <path d="M9 13h6"/>
+        //   <path d="M9 17h6"/>
+        // </svg>
+        
+     ,
       color: "text-orange-600 dark:text-orange-100",
       bgColor: "bg-orange-100 dark:bg-orange-400/30",
       borderColor: "border-orange-200 dark:border-orange-400/50",
@@ -238,10 +244,10 @@ const AppHeader: React.FC = () => {
 
           {/* Boutons à droite (thème, notifications, utilisateur) */}
           <div className="hidden lg:flex items-center gap-2">
-            <ThemeToggleButton />
+            {/* <ThemeToggleButton /> */}
             <NotificationDropdown />
             {/* <UserDropdown /> */}
-             <Link
+           <Link
           to="/signin"
           className="flex items-center gap-3 px-3 py-2 mt-3 font-medium text-gray-700 rounded-lg group text-theme-sm hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
         >
@@ -306,6 +312,7 @@ const AppHeader: React.FC = () => {
           </div>
           {/* <!-- User Area --> */}
           <UserDropdown />
+          
         </div>
       </div>
     </header>

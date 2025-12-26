@@ -27,6 +27,11 @@ import TableUsers from "./pages/Tables/TableUsers";
 import TableEnfants from "./pages/Tables/TableEnfants";
 import GestionEducateurs from "./components/tables/BasictTableEducateur";
 import TableEducateurs from "./pages/Tables/TableEducateurs";
+import AppLayoutParent from "./parent/layout/AppLayout";
+import HomeParent from "./parent/pages/Home";
+import Enfants from "./parent/pages/Enfants";
+import ActivitiesEnfants from "./parent/layout/ActivitiesEnfants ";
+import ParentProfil from "./parent/pages/parentProfile";
 
 export default function App() {
   return (
@@ -42,10 +47,16 @@ export default function App() {
           
           {/* Route pour les activités */}
           <Route path="activities" element={<ActivitiesPage />} />
-          
+           
           {/* Route pour les rapports */}
           <Route path="reports" element={<ReportsPage />} />
 
+          </Route>
+          <Route path="/parent" element={<AppLayoutParent />}>
+            <Route index  element={<HomeParent />} />
+            <Route path="enfants" element={<Enfants />} />
+            <Route path="activites_enfants" element={<ActivitiesEnfants />} />
+            <Route path="profil" element={<ParentProfil />} />
           </Route>
           {/* Dashboard Layout */}
           <Route element={<AppLayout />}>

@@ -21,7 +21,7 @@ const STATIC_ACCOUNTS = [
   {
     email: "parent@kidora.com",
     password: "parent123",
-    redirectTo: "#",
+    redirectTo: "/parent",
     role: "parent"
   }
 ];
