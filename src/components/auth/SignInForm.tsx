@@ -7,18 +7,21 @@ import Button from "../ui/button/Button";
 
 const STATIC_ACCOUNTS = [
   {
+    nom : "Admin",
     email: "admin@kidora.com",
     password: "admin123",
     redirectTo: "/",
     role: "admin"
   },
   {
+    nom : "Educateur",
     email: "educator@kidora.com",
     password: "educ123",
     redirectTo: "/educateur",
     role: "educateur"
   },
   {
+    nom : "Parent",
     email: "parent@kidora.com",
     password: "parent123",
     redirectTo: "/parent",

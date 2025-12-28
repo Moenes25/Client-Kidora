@@ -299,7 +299,7 @@ const AppHeader: React.FC = () => {
 
           <div className="flex items-center gap-2 2xsm:gap-3 w-full justify-center mt-4">
             {/* <!-- Dark Mode Toggler --> */}
-            <ThemeToggleButton />
+            {/* <ThemeToggleButton /> */}
             {/* <!-- Dark Mode Toggler --> */}
             <NotificationDropdown />
             {/* <!-- Notification Menu Area --> */}

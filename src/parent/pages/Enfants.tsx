@@ -2,47 +2,102 @@
 import { useState } from "react";
 import { Link } from "react-router";
 
+interface Rapport {
+  id: number;
+  enfant: string;
+  type: string;
+  titre: string;
+  date: string;
+  statut: 'nouveau' | 'lu' | 'archive';
+
+}
+
 const Enfants = () => {
+  
+
+  const [rapports] = useState<Rapport[]>([
+    {
+      id: 1,
+      enfant: "Ahmed Ben Salah",
+      type: "hebdomadaire",
+      titre: "Progrès en Mathématiques",
+      date: "12/01/2024",
+      statut: 'nouveau'
+    },
+    {
+      id: 2,
+      enfant: "Sara Ben Salah",
+      type: "mensuel",
+      titre: "Bilan Mensuel",
+      date: "10/01/2024",
+      statut: 'lu'
+    },
+    {
+      id: 3,
+      enfant: "Mohamed Ben Salah",
+      type: "trimestriel",
+      titre: "Évaluation Trimestrielle",
+      date: "05/01/2024",
+      statut: 'lu'
+    },
+    {
+      id: 4,
+      enfant: "Nour Ben Salah",
+      type: "spécial",
+      titre: "Rapport Motricité",
+      date: "03/01/2024",
+      statut: 'nouveau'
+    },
+    {
+      id: 5,
+      enfant: "Ahmed Ben Salah",
+      type: "hebdomadaire",
+      titre: "Suivi Langue Française",
+      date: "05/01/2024",
+      statut: 'archive'
+    }
+  ]);
+
   const [evaluations] = useState([
     {
       id: 1,
       title: "Évaluation Hebdomadaire - Langage",
-      child: "Lucas",
+      child: "Ahmed",
       date: "12/01/2024",
       result: "Excellent",
       skills: ["Vocabulaire", "Prononciation", "Compréhension"],
       comment: "Progrès remarquables en expression orale. Vocabulaire enrichi.",
-      educator: "Mme Sophie"
+      educator: "Mme Fatma"
     },
     {
       id: 2,
       title: "Évaluation Mensuelle - Social",
-      child: "Emma",
+      child: "Sara",
       date: "10/01/2024",
       result: "Bon",
       skills: ["Interaction", "Partage", "Coopération"],
       comment: "Bonne évolution dans les jeux de groupe. Continue à s'ouvrir aux autres.",
-      educator: "Mme Julie"
+      educator: "Mme Amina"
     },
     {
       id: 3,
       title: "Évaluation Trimestrielle - Globale",
-      child: "Lucas",
+      child: "Mohamed",
       date: "05/01/2024",
       result: "Très bon",
       skills: ["Langage", "Cognition", "Motricité", "Social"],
       comment: "Développement harmonieux dans tous les domaines. Continue les bons efforts.",
-      educator: "Mme Sophie"
+      educator: "Mme Fatma"
     },
     {
       id: 4,
       title: "Évaluation Spécifique - Motricité",
-      child: "Emma",
+      child: "Nour",
       date: "03/01/2024",
       result: "À améliorer",
       skills: ["Motricité fine", "Coordination"],
       comment: "Besoin de renforcer la coordination œil-main. Exercices spécifiques recommandés.",
-      educator: "Mme Julie"
+      educator: "Mme Amina"
     }
   ]);
 
@@ -57,11 +112,11 @@ const Enfants = () => {
   const [children] = useState([
     {
       id: 1,
-      name: "Lucas Martin",
+      name: "Ahmed Ben Salah",
       age: "8 ans",
       class: "CE2",
-      educator: "Mme Sophie",
-      avatar: "LM",
+      educator: "Mme Fatma",
+      avatar: "/images/3-4_ans/enfant_1.jpg",
       health: {
         allergies: ["Aucune"],
         medicalNotes: "Porte des lunettes",
@@ -78,11 +133,11 @@ const Enfants = () => {
     },
     {
       id: 2,
-      name: "Emma Dubois",
+      name: "Sara Ben Salah",
       age: "6 ans",
       class: "CP",
-      educator: "Mme Julie",
-      avatar: "ED",
+      educator: "Mme Amina",
+      avatar: "/images/3-4_ans/enfant_3.jpg",
       health: {
         allergies: ["Lactose"],
         medicalNotes: "Asthme léger",
@@ -99,11 +154,11 @@ const Enfants = () => {
     },
     {
       id: 3,
-      name: "Mohamed Ali",
+      name: "Mohamed Ben Salah",
       age: "10 ans",
       class: "CM2",
-      educator: "M. Thomas",
-      avatar: "MA",
+      educator: "M. Karim",
+      avatar: "/images/3-4_ans/enfant_6.jpg",
       health: {
         allergies: ["Arachides"],
         medicalNotes: "Aucune",
@@ -117,20 +172,42 @@ const Enfants = () => {
       performance: 75,
       color: "from-green-500 to-emerald-500",
       bgColor: "bg-green-50 dark:bg-green-900/20"
-    }
+    },
+    {
+      id: 4,
+      name: "Nour Ben Salah",
+      age: "7 ans",
+      class: "CE1",
+      educator: "Mme Amina",
+      avatar: "/images/3-4_ans/enfant_4.jpg",
+      health: {
+        allergies: ["Pollen"],
+        medicalNotes: "Aucune",
+        vaccination: "À jour"
+      },
+      presence: {
+        today: true,
+        week: 4,
+        month: 19
+      },
+      performance: 88,
+      color: "from-amber-500 to-orange-500",
+      bgColor: "bg-amber-50 dark:bg-amber-900/20"
+    },
+  
   ]);
 
   const [selectedChildForTracking, setSelectedChildForTracking] = useState(children[0]?.name || "");
   const [aiInsights] = useState([
     {
       title: "Analyse IA : Développement",
-      content: "Lucas montre des progrès significatifs en mathématiques. Recommandation : activités de logique supplémentaires.",
+      content: "Ahmed montre des progrès significatifs en mathématiques. Recommandation : activités de logique supplémentaires.",
       color: "text-blue-600 dark:text-blue-400",
       icon: "📈"
     },
     {
       title: "Alertes précoces",
-      content: "Emma : excellente progression sociale. Mohamed : attention à la motricité fine.",
+      content: "Sara : excellente progression sociale. Mohamed : attention à la motricité fine.",
       color: "text-amber-600 dark:text-amber-400",
       icon: "🔔"
     },
@@ -141,6 +218,9 @@ const Enfants = () => {
       icon: "📊"
     }
   ]);
+  const getNouveauxRapportsPourEnfant = (enfantNom: string) => {
+    return rapports.filter(r => r.enfant === enfantNom && r.statut === 'nouveau').length;
+  };
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -148,7 +228,7 @@ const Enfants = () => {
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Profil des Enfants
+            Profil de Vos Enfants
           </h1>
           <p className="text-gray-600 dark:text-gray-300 mt-2">
             Suivez le développement complet de chaque enfant
@@ -162,6 +242,7 @@ const Enfants = () => {
       {/* Cartes enfants principales */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {children.map((child) => (
+          
           <div 
             key={child.id}
             className={`p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 ${child.bgColor}`}
@@ -169,8 +250,13 @@ const Enfants = () => {
             {/* En-tête profil */}
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-4">
-                <div className={`w-16 h-16 rounded-full bg-gradient-to-r ${child.color} flex items-center justify-center text-white text-xl font-bold`}>
-                  {child.avatar}
+                <div className="relative">
+                  <img 
+                    src={child.avatar} 
+                    alt={child.name}
+                    className="w-16 h-16 rounded-full object-cover border-2 border-white dark:border-gray-700 shadow-md"
+                  />
+                  <div className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-2 border-white dark:border-gray-700 bg-gradient-to-r ${child.color}`}></div>
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-gray-900 dark:text-white">{child.name}</h3>
@@ -229,12 +315,26 @@ const Enfants = () => {
               >
                 <div className="text-blue-600 dark:text-blue-400 font-medium">Activités</div>
               </Link>
+             
               <Link 
-                to={`/parent/enfant/${child.id}/reports`}
-                className="p-3 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg text-center transition-colors"
-              >
-                <div className="text-purple-600 dark:text-purple-400 font-medium">Rapports</div>
-              </Link>
+                  to={`/parent/enfant/${child.id}/reports`}
+                  className="p-3 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg text-center transition-colors group relative"
+                >
+                  {/* Comptez les rapports nouveaux directement */}
+                  {rapports.filter((r: Rapport) => r.enfant === child.name && r.statut === 'nouveau').length > 0 && (
+                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center animate-pulse">
+                      {rapports.filter((r: Rapport) => r.enfant === child.name && r.statut === 'nouveau').length}
+                    </div>
+                  )}
+                  {/* <div className="text-2xl mb-2 group-hover:scale-110 transition-transform">📄</div> */}
+                  <div className="text-purple-600 dark:text-purple-400 font-medium">Rapports</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    {rapports.filter((r: Rapport) => r.enfant === child.name && r.statut === 'nouveau').length > 0 
+                      ? `${rapports.filter((r: Rapport) => r.enfant === child.name && r.statut === 'nouveau').length} nouveau(x)`
+                      : 'Tous lus'
+                    }
+                  </div>
+                </Link>
               <Link 
                 to={`/parent/enfant/${child.id}/evaluations`}
                 className="p-3 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg text-center transition-colors"
@@ -245,8 +345,6 @@ const Enfants = () => {
           </div>
         ))}
       </div>
-
-      
 
       {/* Section 4: Suivi pédagogique */}
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
@@ -269,14 +367,19 @@ const Enfants = () => {
             {children.map((child) => (
               <button
                 key={child.id}
-                className={`px-4 py-2 rounded-lg transition-colors ${
+                className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${
                   child.name === selectedChildForTracking
                     ? `bg-gradient-to-r ${child.color} text-white`
                     : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                 }`}
                 onClick={() => setSelectedChildForTracking(child.name)}
               >
-                {child.name}
+                <img 
+                  src={child.avatar} 
+                  alt={child.name}
+                  className="w-6 h-6 rounded-full object-cover"
+                />
+                {child.name.split(" ")[0]}
               </button>
             ))}
           </div>
@@ -336,8 +439,6 @@ const Enfants = () => {
             </div>
           </div>
         </div>
-
-       
       </div>
 
       {/* Section 5: Évaluations rapides */}
@@ -355,46 +456,57 @@ const Enfants = () => {
 
         {/* Grille d'évaluations */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          {evaluations.map((evaluation) => (
-            <div key={evaluation.id} className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <h4 className="font-medium text-gray-900 dark:text-white">{evaluation.title}</h4>
-                  <div className="text-sm text-gray-500 dark:text-gray-400">
-                    {evaluation.child} • {evaluation.date}
+          {evaluations.map((evaluation) => {
+            const child = children.find(c => c.name.split(" ")[0] === evaluation.child);
+            return (
+              <div key={evaluation.id} className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    {child && (
+                      <img 
+                        src={child.avatar} 
+                        alt={child.name}
+                        className="w-10 h-10 rounded-full object-cover"
+                      />
+                    )}
+                    <div>
+                      <h4 className="font-medium text-gray-900 dark:text-white">{evaluation.title}</h4>
+                      <div className="text-sm text-gray-500 dark:text-gray-400">
+                        {evaluation.child} • {evaluation.date}
+                      </div>
+                    </div>
+                  </div>
+                  <div className={`px-3 py-1 rounded-full text-sm ${
+                    evaluation.result === "Excellent" ? "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400" :
+                    evaluation.result === "Bon" ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400" :
+                    "bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400"
+                  }`}>
+                    {evaluation.result}
                   </div>
                 </div>
-                <div className={`px-3 py-1 rounded-full text-sm ${
-                  evaluation.result === "Excellent" ? "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400" :
-                  evaluation.result === "Bon" ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400" :
-                  "bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400"
-                }`}>
-                  {evaluation.result}
+
+                <div className="mb-3">
+                  <div className="text-sm text-gray-600 dark:text-gray-300 mb-2">Compétences évaluées :</div>
+                  <div className="flex flex-wrap gap-2">
+                    {evaluation.skills.map((skill, index) => (
+                      <span key={index} className="px-2 py-1 bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-300 text-xs rounded">
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="text-sm text-gray-700 dark:text-gray-300 mb-3">
+                  <strong>Commentaire éducatrice :</strong> {evaluation.comment}
+                </div>
+
+                <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+                  <span>Évaluatrice : {evaluation.educator}</span>
                 </div>
               </div>
-
-              <div className="mb-3">
-                <div className="text-sm text-gray-600 dark:text-gray-300 mb-2">Compétences évaluées :</div>
-                <div className="flex flex-wrap gap-2">
-                  {evaluation.skills.map((skill, index) => (
-                    <span key={index} className="px-2 py-1 bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-300 text-xs rounded">
-                      {skill}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div className="text-sm text-gray-700 dark:text-gray-300 mb-3">
-                <strong>Commentaire éducatrice :</strong> {evaluation.comment}
-              </div>
-
-              <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-                <span>Évaluatrice : {evaluation.educator}</span>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
-
       </div>
 
       {/* Évolution globale */}
@@ -431,8 +543,36 @@ const Enfants = () => {
           </div>
         </div>
       </div>
+
+      {/* Galerie des enfants */}
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Vos Enfants</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
+          {children.map((child) => (
+            <div key={child.id} className="flex flex-col items-center text-center">
+              <div className="relative mb-2">
+                <img 
+                  src={child.avatar} 
+                  alt={child.name}
+                  className="w-20 h-20 rounded-full object-cover border-4 border-white dark:border-gray-700 shadow-lg"
+                />
+                <div className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-2 border-white dark:border-gray-700 bg-gradient-to-r ${child.color}`}></div>
+              </div>
+              <div>
+                <h4 className="font-medium text-gray-900 dark:text-white">{child.name.split(" ")[0]}</h4>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{child.age} • {child.class}</p>
+                <div className={`inline-block px-2 py-0.5 text-xs rounded-full mt-1 ${
+                  child.presence.today ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400' : 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400'
+                }`}>
+                  {child.presence.today ? "Présent" : "Absent"}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 };
-
+ 
 export default Enfants;

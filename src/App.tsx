@@ -32,6 +32,12 @@ import HomeParent from "./parent/pages/Home";
 import Enfants from "./parent/pages/Enfants";
 import ActivitiesEnfants from "./parent/layout/ActivitiesEnfants ";
 import ParentProfil from "./parent/pages/parentProfile";
+import FinancePage from "./pages/Finance";
+import ClassesPage from "./pages/Classes";
+import ParametresPage from "./pages/Parametres";
+import ParentReportsPage from "./parent/pages/Reports";
+import ParentEvaluationsPage from "./parent/pages/ParentEvaluationsPage";
+import ParentActivitiesPage from "./parent/pages/ParentActivitiesPage";
 
 export default function App() {
   return (
@@ -57,6 +63,9 @@ export default function App() {
             <Route path="enfants" element={<Enfants />} />
             <Route path="activites_enfants" element={<ActivitiesEnfants />} />
             <Route path="profil" element={<ParentProfil />} />
+             <Route path="enfant/:childId/reports" element={<ParentReportsPage />} />
+             <Route path="enfant/:childId/activities" element={<ParentActivitiesPage />} />
+             <Route path="enfant/:childId/evaluations" element={<ParentEvaluationsPage />} />
           </Route>
           {/* Dashboard Layout */}
           <Route element={<AppLayout />}>
@@ -66,7 +75,7 @@ export default function App() {
             <Route path="/profile" element={<UserProfiles />} />
             <Route path="/calendar" element={<Calendar />} />
             <Route path="/blank" element={<Blank />} />
-
+             <Route path="/reports" element ={<ReportsPage/>}/>
             {/* Forms */}
             <Route path="/form-elements" element={<FormElements />} />
 
@@ -75,6 +84,8 @@ export default function App() {
             <Route path="/users" element={<TableUsers />} />
             <Route path="/enfants" element={<TableEnfants />} />
             <Route path="/educateurs" element={<TableEducateurs />} />
+             <Route path="/classes" element={<ClassesPage />} />
+            <Route path="/finance" element={<FinancePage />} />
             {/* Ui Elements */}
             <Route path="/alerts" element={<Alerts />} />
             <Route path="/avatars" element={<Avatars />} />
@@ -82,6 +93,8 @@ export default function App() {
             <Route path="/buttons" element={<Buttons />} />
             <Route path="/images" element={<Images />} />
             <Route path="/videos" element={<Videos />} />
+            <Route path="/parametres" element={<ParametresPage />} />
+            
 
             {/* Charts */}
             <Route path="/line-chart" element={<LineChart />} />

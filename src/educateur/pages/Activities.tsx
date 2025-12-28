@@ -26,6 +26,18 @@ interface Activite {
   observation?: string;
   photo?: string;
   statut: 'planifie' | 'en_cours' | 'termine' | 'annule';
+  evaluations?: EvaluationEnfant[];
+}
+
+interface EvaluationEnfant {
+  enfantId: number;
+  nom: string;
+  photo?: string;
+  participation: 'excellente' | 'bonne' | 'moyenne' | 'faible' | 'absente';
+  observations: string;
+  competencesAcquises: string[];
+  besoinAide: boolean;
+  note: number; // 1-5
 }
 
 
@@ -49,6 +61,10 @@ const [nouvelleActivite, setNouvelleActivite] = useState({
   const [filterType, setFilterType] = useState("all");
   const [filterStatut, setFilterStatut] = useState("all");
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
+
+  const [showEvaluationModal, setShowEvaluationModal] = useState(false);
+  const [activiteEnCours, setActiviteEnCours] = useState<Activite | null>(null);
+  const [evaluations, setEvaluations] = useState<EvaluationEnfant[]>([]);
   
   const [activites, setActivites] = useState<Activite[]>([
     { 
@@ -225,6 +241,43 @@ const [nouvelleActivite, setNouvelleActivite] = useState({
       default: return "bg-gray-100 text-gray-800 dark:bg-gray-200 dark:text-gray-700";
     }
   };
+  const demarrerEvaluation = (activite: Activite) => {
+  setActiviteEnCours(activite);
+  
+  // Créer des évaluations vides pour chaque enfant
+  const evaluationsInitiales: EvaluationEnfant[] = [
+    { enfantId: 1, nom: "Emma Dubois", participation: 'bonne' as const, observations: '', competencesAcquises: [], besoinAide: false, note: 3 },
+    { enfantId: 2, nom: "Lucas Martin", participation: 'bonne' as const, observations: '', competencesAcquises: [], besoinAide: false, note: 3 },
+    { enfantId: 3, nom: "Fatima Zahra", participation: 'bonne' as const, observations: '', competencesAcquises: [], besoinAide: false, note: 3 },
+    { enfantId: 4, nom: "Voussez Alain", participation: 'bonne' as const, observations: '', competencesAcquises: [], besoinAide: false, note: 3 },
+    { enfantId: 5, nom: "Chloé Petit", participation: 'bonne' as const, observations: '', competencesAcquises: [], besoinAide: false, note: 3 },
+    { enfantId: 6, nom: "Mohamed Ali", participation: 'bonne' as const, observations: '', competencesAcquises: [], besoinAide: false, note: 3 },
+    { enfantId: 7, nom: "Léa Bernard", participation: 'bonne' as const, observations: '', competencesAcquises: [], besoinAide: false, note: 3 },
+    { enfantId: 8, nom: "Thomas Leroy", participation: 'bonne' as const, observations: '', competencesAcquises: [], besoinAide: false, note: 3 },
+  ].slice(0, activite.enfantsInscrits); // Limiter aux enfants inscrits
+
+  setEvaluations(evaluationsInitiales);
+  setShowEvaluationModal(true);
+};
+
+const sauvegarderEvaluations = () => {
+  if (activiteEnCours) {
+    console.log("Évaluations sauvegardées pour", activiteEnCours.titre, evaluations);
+    
+    // Mettre à jour l'activité avec les évaluations
+    const activitesMaj = activites.map(a => 
+      a.id === activiteEnCours.id 
+        ? { ...a, evaluations: [...evaluations] }
+        : a
+    );
+    
+    setActivites(activitesMaj);
+    setShowEvaluationModal(false);
+    setActiviteEnCours(null);
+    
+    alert("Évaluations sauvegardées avec succès !");
+  }
+};
 
   return (
     <>
@@ -567,6 +620,220 @@ const [nouvelleActivite, setNouvelleActivite] = useState({
         </div>
       </div>
 
+      {showEvaluationModal && activiteEnCours && (
+  <div className="fixed inset-0 z-[100000] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/50 z-[100000]" onClick={() => setShowEvaluationModal(false)} />
+    <div className="relative z-[100001] flex min-h-full items-center justify-center p-4">
+      <div className="relative w-full max-w-4xl transform overflow-hidden rounded-xl bg-white dark:bg-gray-800 shadow-2xl transition-all">
+        <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              Évaluation des enfants
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              {activiteEnCours.titre} - {new Date(activiteEnCours.date).toLocaleDateString('fr-FR')}
+            </p>
+          </div>
+          <button
+            onClick={() => setShowEvaluationModal(false)}
+            className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="px-6 py-4 space-y-6 max-h-[70vh] overflow-y-auto">
+          {/* Résumé de l'activité */}
+          <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
+            <div className="flex items-center gap-3">
+              <div className={`p-3 rounded-lg ${getTypeColor(activiteEnCours.type).split(' ')[0]} text-2xl`}>
+                {getTypeIcon(activiteEnCours.type)}
+              </div>
+              <div>
+                <h4 className="font-medium text-gray-900 dark:text-white">{activiteEnCours.titre}</h4>
+                <p className="text-sm text-gray-600 dark:text-gray-400">{activiteEnCours.description}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Liste des évaluations */}
+          <div className="space-y-4">
+            {evaluations.map((evaluation, index) => (
+              <div key={evaluation.enfantId} className="p-4 border border-gray-200 dark:border-gray-700 rounded-xl">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                      <span className="text-gray-700 dark:text-gray-300 font-medium">
+                        {evaluation.nom.split(' ').map(n => n[0]).join('')}
+                      </span>
+                    </div>
+                    <div>
+                      <h5 className="font-medium text-gray-900 dark:text-white">{evaluation.nom}</h5>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Enfant #{evaluation.enfantId}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Note :</span>
+                    <div className="flex">
+                      {[1, 2, 3, 4, 5].map(star => (
+                        <button
+                          key={star}
+                          onClick={() => {
+                            const newEvaluations = [...evaluations];
+                            newEvaluations[index].note = star;
+                            setEvaluations(newEvaluations);
+                          }}
+                          className={`text-xl ${star <= evaluation.note ? 'text-yellow-500' : 'text-gray-300 dark:text-gray-600'}`}
+                        >
+                          ★
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Participation
+                    </label>
+                    <select
+                      value={evaluation.participation}
+                      onChange={(e) => {
+                        const newEvaluations = [...evaluations];
+                        newEvaluations[index].participation = e.target.value as any;
+                        setEvaluations(newEvaluations);
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg"
+                    >
+                      <option value="excellente">⭐ Excellente</option>
+                      <option value="bonne">👍 Bonne</option>
+                      <option value="moyenne">⚪ Moyenne</option>
+                      <option value="faible">⚠️ Faible</option>
+                      <option value="absente">❌ Absente</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Besoin d'aide supplémentaire ?
+                    </label>
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => {
+                          const newEvaluations = [...evaluations];
+                          newEvaluations[index].besoinAide = true;
+                          setEvaluations(newEvaluations);
+                        }}
+                        className={`flex-1 py-2 rounded-lg ${evaluation.besoinAide ? 'bg-red-100 text-red-700 border-red-300' : 'bg-gray-100 text-gray-700 border-gray-300'} border`}
+                      >
+                        Oui
+                      </button>
+                      <button
+                        onClick={() => {
+                          const newEvaluations = [...evaluations];
+                          newEvaluations[index].besoinAide = false;
+                          setEvaluations(newEvaluations);
+                        }}
+                        className={`flex-1 py-2 rounded-lg ${!evaluation.besoinAide ? 'bg-green-100 text-green-700 border-green-300' : 'bg-gray-100 text-gray-700 border-gray-300'} border`}
+                      >
+                        Non
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Observations
+                  </label>
+                  <textarea
+                    value={evaluation.observations}
+                    onChange={(e) => {
+                      const newEvaluations = [...evaluations];
+                      newEvaluations[index].observations = e.target.value;
+                      setEvaluations(newEvaluations);
+                    }}
+                    rows={2}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg"
+                    placeholder="Notes sur la participation de l'enfant..."
+                  />
+                </div>
+
+                <div className="mt-4">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Compétences acquises (séparées par des virgules)
+                  </label>
+                  <input
+                    type="text"
+                    value={evaluation.competencesAcquises.join(', ')}
+                    onChange={(e) => {
+                      const newEvaluations = [...evaluations];
+                      newEvaluations[index].competencesAcquises = e.target.value.split(',').map(c => c.trim()).filter(c => c);
+                      setEvaluations(newEvaluations);
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg"
+                    placeholder="Ex: a appris à découper, a compris les consignes..."
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Résumé des évaluations */}
+          <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+            <h4 className="font-medium text-gray-900 dark:text-white mb-3">Résumé des évaluations</h4>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600 dark:text-green-500">
+                  {evaluations.filter(e => e.participation === 'excellente' || e.participation === 'bonne').length}
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">Bonnes participations</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-500">
+                  {evaluations.filter(e => e.participation === 'moyenne').length}
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">Participation moyenne</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-red-600 dark:text-red-500">
+                  {evaluations.filter(e => e.participation === 'faible' || e.participation === 'absente').length}
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">Faible participation</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-blue-600 dark:text-blue-500">
+                  {evaluations.filter(e => e.besoinAide).length}
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">Besoin d'aide</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700 px-6 py-4">
+          <button
+            type="button"
+            onClick={() => setShowEvaluationModal(false)}
+            className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
+          >
+            Annuler
+          </button>
+          <button
+            type="button"
+            onClick={sauvegarderEvaluations}
+            className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700"
+          >
+            Terminer l'activité avec évaluations
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+
       {viewMode === 'list' ? (
         <div className="space-y-4">
           {filteredActivites.map(activite => (
@@ -637,9 +904,12 @@ const [nouvelleActivite, setNouvelleActivite] = useState({
                     </button>
                   )}
                   {activite.statut === 'en_cours' && (
-                    <button className="px-4 py-2 bg-amber-50 dark:bg-amber-100 text-amber-600 dark:text-amber-700 rounded-lg hover:bg-amber-100 dark:hover:bg-amber-200 transition-colors text-sm font-medium">
-                      Terminer
-                    </button>
+                   <button 
+                  onClick={() => demarrerEvaluation(activite)}
+                  className="px-4 py-2 bg-amber-50 dark:bg-amber-100 text-amber-600 dark:text-amber-700 rounded-lg hover:bg-amber-100 dark:hover:bg-amber-200 transition-colors text-sm font-medium"
+                >
+                  Évaluer et terminer
+                </button>
                   )}
                 </div>
               </div>
@@ -651,6 +921,33 @@ const [nouvelleActivite, setNouvelleActivite] = useState({
                   </div>
                 </div>
               )}
+              {activite.evaluations && activite.evaluations.length > 0 && (
+            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-200">
+              <div className="text-sm font-medium text-gray-700 dark:text-gray-800 mb-2">
+                📊 Évaluations des enfants :
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                {activite.evaluations.slice(0, 4).map(evaluation => (
+                  <div key={evaluation.enfantId} className="text-xs bg-gray-50 dark:bg-gray-100 p-2 rounded">
+                    <div className="font-medium">{evaluation.nom}</div>
+                    <div>Participation: {evaluation.participation}</div>
+                    <div className="flex items-center">
+                      Note: 
+                      <span className="ml-1 text-yellow-500">
+                        {'★'.repeat(evaluation.note)}
+                        <span className="text-gray-300">{'★'.repeat(5 - evaluation.note)}</span>
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {activite.evaluations.length > 4 && (
+                <div className="text-xs text-gray-500 dark:text-gray-600 mt-1">
+                  + {activite.evaluations.length - 4} autres évaluations...
+                </div>
+              )}
+            </div>
+          )}
             </div>
           ))}
         </div>

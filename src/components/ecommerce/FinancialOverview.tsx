@@ -6,16 +6,26 @@ export default function FinancialOverview() {
     {
       id: 1,
       title: "Revenus Mensuels",
-      amount: "€12,450",
+      amount: "12,450 DT",
       change: "+8.5%",
       trend: "up",
-      icon: <DollarSign className="w-5 h-5" />,
+      icon :( <svg
+      className="w-5 h-5 text-green-600"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+    >
+      <text x="2" y="17" fontSize="14" fontWeight="bold">
+        DT
+        </text>
+      </svg>
+    ),
+        
       color: "text-green-600 bg-green-100 dark:bg-green-900/30"
     },
     {
       id: 2,
       title: "Paiements en Attente",
-      amount: "€2,850",
+      amount: "2,850 DT",
       change: "-3.2%",
       trend: "down",
       icon: <CreditCard className="w-5 h-5" />,
@@ -49,6 +59,7 @@ export default function FinancialOverview() {
             <div className="flex items-center gap-3">
               <div className={`p-2 rounded-lg ${item.color}`}>
                 {item.icon}
+                
               </div>
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">{item.title}</p>

@@ -48,7 +48,7 @@ const AppHeader: React.FC = () => {
 
   // Fonction pour vérifier si un lien est actif
   const isActive = (path: string) => {
-    if (path === "/educateur") {
+    if (path === "/parent") {
       return location.pathname === path;
     }
     return location.pathname === path || location.pathname.startsWith(path + "/");

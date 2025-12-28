@@ -57,6 +57,8 @@ import { ReactComponent as ErrorHexaIcon } from "./info-hexa.svg?react";
 // import { ReactComponent as UserGroup02Icon } from "./user-group-02.png?react";
 import { ReactComponent as UserGroup02Icon } from "./user-group-02-stroke-rounded.svg?react";
 import { ReactComponent as AbsentIcon } from "./absent.svg?react";
+// Créez un composant SettingsIcon ou utilisez :
+
 export {
   ErrorHexaIcon,
   AlertHexaIcon,

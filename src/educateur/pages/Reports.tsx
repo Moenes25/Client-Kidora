@@ -17,7 +17,7 @@ import {
 interface Rapport {
   id: number;
   titre: string;
-  type: 'hebdomadaire' | 'mensuel' | 'trimestriel' | 'individuel' | 'activite' | 'medical' | 'comportement';
+  type: 'individuel_hebdomadaire' | 'individuel_quotidien' | 'classe_hebdomadaire' | 'trimestriel';
   periode: string;
   dateCreation: string;
   auteur: string;
@@ -45,12 +45,13 @@ export default function ReportsPage() {
   const [selectedRapport, setSelectedRapport] = useState<Rapport | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'stats'>('list');
   const [showModeleModal, setShowModeleModal] = useState(false);
+  const [showViewRapport, setShowViewRapport] = useState(false);
   
   const [rapports, setRapports] = useState<Rapport[]>([
     { 
       id: 1, 
       titre: "Rapport Hebdomadaire - Classe (3-4) ans", 
-      type: 'hebdomadaire',
+      type: 'classe_hebdomadaire',
       periode: "08-12 Janvier 2024",
       dateCreation: "2024-01-12",
       auteur: "Mme. Dupont",
@@ -63,10 +64,10 @@ export default function ReportsPage() {
     },
     { 
       id: 2, 
-      titre: "Bilan Individuel - Fatima Zahra", 
-      type: 'individuel',
-      periode: "Décembre 2023",
-      dateCreation: "2024-01-05",
+      titre: "Rapport Individuel Hebdomadaire - Fatima Zahra", 
+      type: 'individuel_hebdomadaire',
+      periode: "08-12 Janvier 2024",
+      dateCreation: "2024-01-12",
       auteur: "Mme. Dupont",
       enfantsConcernes: 1,
       statut: 'finalise',
@@ -77,16 +78,16 @@ export default function ReportsPage() {
     },
     { 
       id: 3, 
-      titre: "Évaluation Activité Jardinage Éducatif", 
-      type: 'activite',
-      periode: "10 Janvier 2024",
-      dateCreation: "2024-01-11",
+      titre: "Rapport Individuel Quotidien - Lucas Martin", 
+      type: 'individuel_quotidien',
+      periode: "15 Janvier 2024",
+      dateCreation: "2024-01-15",
       auteur: "M. Martin",
-      enfantsConcernes: 15,
+      enfantsConcernes: 1,
       statut: 'brouillon',
-      resume: "Activité très appréciée, excellente participation. Observations positives sur la patience et la curiosité.",
-      actionsRecommandees: ["Réitérer l'activité mensuellement", "Impliquer les enfants dans l'entretien", "Créer un journal de croissance"],
-      motsCles: ["nature", "patience", "curiosité"],
+      resume: "Journée difficile avec quelques crises émotionnelles. N'a pas bien dormi la nuit dernière.",
+      actionsRecommandees: ["Adapter le rythme de la journée", "Instaurer un rituel de calme", "Communication avec les parents"],
+      motsCles: ["émotions", "sommeil", "adaptation"],
       importance: 'moyenne'
     },
     { 
@@ -105,80 +106,80 @@ export default function ReportsPage() {
     },
     { 
       id: 5, 
-      titre: "Suivi Médical - Vaccinations et Santé", 
-      type: 'medical',
-      periode: "Janvier 2024",
-      dateCreation: "2024-01-10",
-      auteur: "Infirmerie",
-      enfantsConcernes: 42,
-      statut: 'archive',
-      resume: "Mise à jour complète des carnets de vaccination. Aucun cas de maladie contagieuse.",
-      actionsRecommandees: ["Rappel vaccinal pour 3 enfants", "Contrôle mensuel des allergies", "Sensibilisation hygiène"],
-      motsCles: ["vaccination", "santé", "prévention"],
-      importance: 'haute'
+      titre: "Rapport Individuel Quotidien - Emma Dubois", 
+      type: 'individuel_quotidien',
+      periode: "14 Janvier 2024",
+      dateCreation: "2024-01-14",
+      auteur: "Mme. Dupont",
+      enfantsConcernes: 1,
+      statut: 'envoye',
+      resume: "Journée excellente ! Participation active à toutes les activités. A aidé un camarade en difficulté.",
+      actionsRecommandees: ["Encourager ce comportement d'entraide", "Responsabilités supplémentaires", "Félicitations aux parents"],
+      motsCles: ["entraide", "participation", "responsabilité"],
+      importance: 'faible'
     },
     { 
       id: 6, 
-      titre: "Observation Comportementale - Thomas Leroy", 
-      type: 'comportement',
-      periode: "Janvier 2024",
-      dateCreation: "2024-01-14",
+      titre: "Rapport Hebdomadaire - Classe (4-5) ans", 
+      type: 'classe_hebdomadaire',
+      periode: "01-05 Janvier 2024",
+      dateCreation: "2024-01-05",
       auteur: "M. Martin",
-      enfantsConcernes: 1,
-      statut: 'envoye',
-      resume: "Amélioration notable de la concentration. Réduction des retards matinaux.",
-      actionsRecommandees: ["Continuer le système de récompenses", "Communication régulière avec les parents", "Activités de concentration"],
-      motsCles: ["concentration", "ponctualité", "progrès"],
+      enfantsConcernes: 12,
+      statut: 'archive',
+      resume: "Bonne reprise après les vacances. Progrès visibles en autonomie et en langage.",
+      actionsRecommandees: ["Continuer le travail sur l'autonomie", "Enrichir le vocabulaire", "Activités de motricité globale"],
+      motsCles: ["autonomie", "langage", "progrès"],
       importance: 'moyenne'
     },
     { 
       id: 7, 
-      titre: "Rapport Mensuel - Activités Créatives", 
-      type: 'mensuel',
-      periode: "Décembre 2023",
+      titre: "Rapport Trimestriel - Compétences Académiques", 
+      type: 'trimestriel',
+      periode: "Octobre-Décembre 2023",
       dateCreation: "2024-01-02",
       auteur: "Mme. Dupont",
       enfantsConcernes: 18,
       statut: 'archive',
-      resume: "Excellente participation aux activités artistiques. Découverte de talents cachés.",
-      actionsRecommandees: ["Exposition des œuvres", "Ateliers avec artiste local", "Portfolio artistique par enfant"],
-      motsCles: ["créativité", "art", "expression"],
-      importance: 'faible'
+      resume: "Avancées significatives en lecture et écriture. Bon niveau général en mathématiques.",
+      actionsRecommandees: ["Ateliers de lecture supplémentaires", "Défis mathématiques", "Suivi individualisé"],
+      motsCles: ["lecture", "mathématiques", "progrès"],
+      importance: 'haute'
     },
   ]);
 
   const modelesRapports: ModeleRapport[] = [
     {
       id: 1,
-      nom: "Rapport Hebdomadaire Standard",
-      description: "Format standard pour le suivi hebdomadaire d'une classe",
-      type: 'hebdomadaire',
-      tempsEstime: 20,
-      sections: ["Présences/Absences", "Activités réalisées", "Observations", "Progrès notables", "Points d'attention"]
+      nom: "Rapport Individuel Hebdomadaire",
+      description: "Suivi hebdomadaire détaillé d'un enfant spécifique",
+      type: 'individuel_hebdomadaire',
+      tempsEstime: 30,
+      sections: ["Progrès de la semaine", "Développement social", "Développement cognitif", "Observations", "Objectifs semaine suivante"]
     },
     {
       id: 2,
-      nom: "Bilan Individuel Détaillé",
-      description: "Rapport complet sur le développement d'un enfant",
-      type: 'individuel',
-      tempsEstime: 45,
-      sections: ["Développement cognitif", "Développement social", "Développement émotionnel", "Compétences acquises", "Objectifs futurs"]
+      nom: "Rapport Individuel Quotidien",
+      description: "Suivi journalier rapide d'un enfant",
+      type: 'individuel_quotidien',
+      tempsEstime: 10,
+      sections: ["Humeur du jour", "Participation", "Relations sociales", "Événements marquants", "À signaler aux parents"]
     },
     {
       id: 3,
-      nom: "Évaluation d'Activité",
-      description: "Analyse détaillée d'une activité spécifique",
-      type: 'activite',
-      tempsEstime: 30,
-      sections: ["Objectifs pédagogiques", "Déroulement", "Participation", "Résultats", "Améliorations possibles"]
+      nom: "Rapport Classe Hebdomadaire",
+      description: "Bilan hebdomadaire de l'ensemble de la classe",
+      type: 'classe_hebdomadaire',
+      tempsEstime: 25,
+      sections: ["Ambiance générale", "Projets réalisés", "Progrès collectifs", "Points d'attention", "Planning semaine suivante"]
     },
     {
       id: 4,
-      nom: "Rapport Comportemental",
-      description: "Suivi spécifique des comportements",
-      type: 'comportement',
-      tempsEstime: 25,
-      sections: ["Contexte", "Observations", "Analyse", "Stratégies utilisées", "Recommandations"]
+      nom: "Rapport Trimestriel",
+      description: "Évaluation complète sur 3 mois",
+      type: 'trimestriel',
+      tempsEstime: 60,
+      sections: ["Bilan académique", "Développement social", "Compétences acquises", "Objectifs atteints", "Projets futurs"]
     }
   ];
 
@@ -200,36 +201,40 @@ export default function ReportsPage() {
     brouillons: rapports.filter(r => r.statut === 'brouillon').length,
     enfantsTotal: rapports.reduce((sum, r) => sum + r.enfantsConcernes, 0),
     parType: {
-      hebdomadaire: rapports.filter(r => r.type === 'hebdomadaire').length,
-      individuel: rapports.filter(r => r.type === 'individuel').length,
-      activite: rapports.filter(r => r.type === 'activite').length,
-      mensuel: rapports.filter(r => r.type === 'mensuel').length,
+      individuel_hebdomadaire: rapports.filter(r => r.type === 'individuel_hebdomadaire').length,
+      individuel_quotidien: rapports.filter(r => r.type === 'individuel_quotidien').length,
+      classe_hebdomadaire: rapports.filter(r => r.type === 'classe_hebdomadaire').length,
+      trimestriel: rapports.filter(r => r.type === 'trimestriel').length,
     }
   };
 
   const getTypeIcon = (type: string) => {
     switch(type) {
-      case 'hebdomadaire': return "📅";
-      case 'mensuel': return "📆";
-      case 'trimestriel': return "📊";
-      case 'individuel': return "👤";
-      case 'activite': return "🎯";
-      case 'medical': return "🏥";
-      case 'comportement': return "🧠";
+      case 'individuel_hebdomadaire': return "📅👤";
+      case 'individuel_quotidien': return "📝👤";
+      case 'classe_hebdomadaire': return "📅👥";
+      case 'trimestriel': return "📊📈";
       default: return "📄";
     }
   };
 
   const getTypeColor = (type: string) => {
     switch(type) {
-      case 'hebdomadaire': return "bg-blue-100 text-blue-800 dark:bg-blue-100 dark:text-blue-700";
-      case 'mensuel': return "bg-green-100 text-green-800 dark:bg-green-100 dark:text-green-700";
-      case 'trimestriel': return "bg-purple-100 text-purple-800 dark:bg-purple-100 dark:text-purple-700";
-      case 'individuel': return "bg-amber-100 text-amber-800 dark:bg-amber-100 dark:text-amber-700";
-      case 'activite': return "bg-pink-100 text-pink-800 dark:bg-pink-100 dark:text-pink-700";
-      case 'medical': return "bg-red-100 text-red-800 dark:bg-red-100 dark:text-red-700";
-      case 'comportement': return "bg-indigo-100 text-indigo-800 dark:bg-indigo-100 dark:text-indigo-700";
+      case 'individuel_hebdomadaire': return "bg-blue-100 text-blue-800 dark:bg-blue-100 dark:text-blue-700";
+      case 'individuel_quotidien': return "bg-green-100 text-green-800 dark:bg-green-100 dark:text-green-700";
+      case 'classe_hebdomadaire': return "bg-purple-100 text-purple-800 dark:bg-purple-100 dark:text-purple-700";
+      case 'trimestriel': return "bg-amber-100 text-amber-800 dark:bg-amber-100 dark:text-amber-700";
       default: return "bg-gray-100 text-gray-800 dark:bg-gray-200 dark:text-gray-700";
+    }
+  };
+
+  const getTypeLabel = (type: string) => {
+    switch(type) {
+      case 'individuel_hebdomadaire': return "Individuel Hebdomadaire";
+      case 'individuel_quotidien': return "Individuel Quotidien";
+      case 'classe_hebdomadaire': return "Classe Hebdomadaire";
+      case 'trimestriel': return "Trimestriel";
+      default: return type;
     }
   };
 
@@ -259,6 +264,37 @@ export default function ReportsPage() {
 
   const handleExporterRapport = (rapport: Rapport) => {
     console.log("Export du rapport:", rapport.titre);
+     const contenuPDF = `
+    Rapport: ${rapport.titre}
+    Type: ${getTypeLabel(rapport.type)}
+    Période: ${rapport.periode}
+    Éducateur: ${rapport.auteur}
+    Enfants concernés: ${rapport.enfantsConcernes}
+    
+    Résumé:
+    ${rapport.resume || ''}
+    
+    Actions recommandées:
+    ${rapport.actionsRecommandees?.join('\n• ') || ''}
+    
+    Mots-clés:
+    ${rapport.motsCles?.join(', ') || ''}
+    
+    Date: ${new Date().toLocaleDateString('fr-FR')}
+  `;
+  
+  // Simuler le téléchargement
+  const blob = new Blob([contenuPDF], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `rapport_${rapport.id}_${rapport.titre.replace(/\s+/g, '_')}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  
+  alert(`Rapport "${rapport.titre}" téléchargé !`);
   };
 
   return (
@@ -280,13 +316,13 @@ export default function ReportsPage() {
           </div>
           
           <div className="flex flex-wrap gap-3">
-            <button 
+            {/* <button 
               onClick={() => setShowModeleModal(true)}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
             >
               <PlusIcon className="size-5" />
               Nouveau rapport
-            </button>
+            </button> */}
             
             <div className="flex gap-2 bg-gray-100 dark:bg-gray-200 p-1 rounded-lg">
               <button 
@@ -378,7 +414,7 @@ export default function ReportsPage() {
                   <div key={type} className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="text-xl">{getTypeIcon(type)}</span>
-                      <span className="text-gray-700 dark:text-gray-800 capitalize">{type}</span>
+                      <span className="text-gray-700 dark:text-gray-800">{getTypeLabel(type)}</span>
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="w-32 h-2 bg-gray-200 dark:bg-gray-300 rounded-full overflow-hidden">
@@ -401,21 +437,21 @@ export default function ReportsPage() {
               <div className="space-y-3">
                 <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-100 rounded-lg">
                   <div>
-                    <div className="font-medium text-gray-900 dark:text-gray-900">Rapports hebdomadaires</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-700">Tous les vendredis</div>
+                    <div className="font-medium text-gray-900 dark:text-gray-900">Rapports individuels quotidiens</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-700">Tous les jours à 16h</div>
                   </div>
                   <CalenderIcon className="size-5 text-blue-600 dark:text-blue-700" />
                 </div>
                 <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-100 rounded-lg">
                   <div>
-                    <div className="font-medium text-gray-900 dark:text-gray-900">Bilans individuels</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-700">Dernier jour du mois</div>
+                    <div className="font-medium text-gray-900 dark:text-gray-900">Rapports classe hebdomadaires</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-700">Tous les vendredis</div>
                   </div>
                   <CalenderIcon className="size-5 text-green-600 dark:text-green-700" />
                 </div>
                 <div className="flex items-center justify-between p-3 bg-purple-50 dark:bg-purple-100 rounded-lg">
                   <div>
-                    <div className="font-medium text-gray-900 dark:text-gray-900">Rapport trimestriel</div>
+                    <div className="font-medium text-gray-900 dark:text-gray-900">Rapports trimestriels</div>
                     <div className="text-sm text-gray-600 dark:text-gray-700">15 Mars 2024</div>
                   </div>
                   <CalenderIcon className="size-5 text-purple-600 dark:text-purple-700" />
@@ -451,13 +487,10 @@ export default function ReportsPage() {
                   className="px-4 py-3 bg-gray-50 dark:bg-gray-100 border border-gray-300 dark:border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-600"
                 >
                   <option value="all">Tous les types</option>
-                  <option value="hebdomadaire">Hebdomadaire</option>
-                  <option value="mensuel">Mensuel</option>
+                  <option value="individuel_hebdomadaire">Individuel Hebdomadaire</option>
+                  <option value="individuel_quotidien">Individuel Quotidien</option>
+                  <option value="classe_hebdomadaire">Classe Hebdomadaire</option>
                   <option value="trimestriel">Trimestriel</option>
-                  <option value="individuel">Individuel</option>
-                  <option value="activite">Activité</option>
-                  <option value="medical">Médical</option>
-                  <option value="comportement">Comportement</option>
                 </select>
                 
                 <select
@@ -516,6 +549,9 @@ export default function ReportsPage() {
                             <span className="text-lg">👶</span>
                             {rapport.enfantsConcernes} enfant{rapport.enfantsConcernes > 1 ? 's' : ''}
                           </div>
+                          <span className={`px-2 py-0.5 rounded text-xs font-medium ${getTypeColor(rapport.type)}`}>
+                            {getTypeLabel(rapport.type)}
+                          </span>
                         </div>
                         
                         {rapport.resume && (
@@ -554,7 +590,11 @@ export default function ReportsPage() {
                   
                   <div className="flex flex-col gap-2 min-w-[200px]">
                     <button 
-                      onClick={() => setSelectedRapport(rapport)}
+                      onClick={() =>{
+                         setSelectedRapport(rapport)
+                         setShowViewRapport(true);
+                      }
+                        }
                       className="px-4 py-2 bg-blue-50 dark:bg-blue-100 text-blue-600 dark:text-blue-700 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-200 transition-colors text-sm font-medium flex items-center justify-center gap-2"
                     >
                       <EyeIcon className="size-4" />
@@ -631,7 +671,7 @@ export default function ReportsPage() {
                             ⏱️ {modele.tempsEstime} min
                           </span>
                           <span className={`px-2 py-0.5 rounded text-xs font-medium ${getTypeColor(modele.type)}`}>
-                            {modele.type}
+                            {getTypeLabel(modele.type)}
                           </span>
                         </div>
                       </div>
@@ -668,7 +708,380 @@ export default function ReportsPage() {
           </div>
         </div>
       )}
+      {/* Modal de consultation du rapport */}
 
+{showViewRapport && selectedRapport && (
+  <div className="fixed inset-0 z-[100000] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/50 z-[100000]" onClick={() => setShowViewRapport(false)} />
+    <div className="relative z-[100001] flex min-h-full items-center justify-center p-4">
+      <div className="relative w-full max-w-5xl transform overflow-hidden rounded-xl bg-white dark:bg-gray-800 shadow-2xl transition-all">
+        <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+          <div className="flex items-center gap-3">
+            <div className={`p-2 rounded-lg ${getTypeColor(selectedRapport.type).split(' ')[0]}`}>
+              <span className="text-xl">{getTypeIcon(selectedRapport.type)}</span>
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Rapport {getTypeLabel(selectedRapport.type)}
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Pour les parents • {selectedRapport.periode}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => handleExporterRapport(selectedRapport)}
+              className="px-3 py-1.5 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-1"
+            >
+              <DownloadIcon className="size-4" />
+              PDF
+            </button>
+            <button
+              onClick={() => setShowViewRapport(false)}
+              className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+
+        <div className="px-6 py-4 space-y-6 max-h-[75vh] overflow-y-auto">
+          {/* En-tête élégant */}
+          <div className="text-center border-b pb-6 mb-6">
+            <div className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+              Rapport Pédagogique
+            </div>
+            <div className="text-xl text-blue-600 dark:text-blue-400 mb-4">
+              {selectedRapport.titre}
+            </div>
+            <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+              <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full">
+                <CalenderIcon className="size-4" />
+                {selectedRapport.periode}
+              </div>
+              <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full">
+                <UserIcon className="size-4" />
+                Éducateur: {selectedRapport.auteur}
+              </div>
+              <div className={`px-3 py-1 rounded-full text-xs font-medium ${getStatutColor(selectedRapport.statut)}`}>
+                {selectedRapport.statut === 'envoye' ? '✅ Envoyé aux parents' : '📝 En préparation'}
+              </div>
+            </div>
+          </div>
+
+          {/* Section spéciale pour les rapports individuels (pour les parents) */}
+          {(selectedRapport.type === 'individuel_hebdomadaire' || selectedRapport.type === 'individuel_quotidien') && (
+            <div className="space-y-6">
+              {/* Message personnalisé aux parents */}
+              <div className="p-5 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-xl border border-blue-200 dark:border-blue-700">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 bg-blue-100 dark:bg-blue-800 rounded-lg">
+                    <span className="text-xl">👨‍👩‍👧</span>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-gray-900 dark:text-white">
+                      Message aux parents
+                    </h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Observations détaillées sur votre enfant
+                    </p>
+                  </div>
+                </div>
+                <div className="bg-white/50 dark:bg-gray-800/50 p-4 rounded-lg">
+                  <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                    <span className="font-medium">Cher(s) parent(s),</span><br/>
+                    Voici un rapport détaillé sur le développement et les progrès de votre enfant pendant cette période. 
+                    Nous souhaitons partager avec vous les observations positives, les compétences acquises et les domaines 
+                    où nous continuons à travailler ensemble pour soutenir sa croissance.
+                  </p>
+                </div>
+              </div>
+
+              {/* Tableau de développement */}
+              <div className="p-5 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+                <h4 className="font-medium text-gray-900 dark:text-white mb-4">
+                  📊 Tableau de Développement
+                </h4>
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex justify-between mb-1">
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Développement Social</span>
+                      <span className="text-sm font-medium text-green-600 dark:text-green-500">Excellent</span>
+                    </div>
+                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                      <div className="bg-green-500 h-2 rounded-full" style={{ width: '90%' }}></div>
+                    </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      Interagit bien avec les autres, partage volontiers, montre de l'empathie
+                    </p>
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between mb-1">
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Compétences Cognitives</span>
+                      <span className="text-sm font-medium text-blue-600 dark:text-blue-500">Très bon</span>
+                    </div>
+                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                      <div className="bg-blue-500 h-2 rounded-full" style={{ width: '85%' }}></div>
+                    </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      Bonne mémoire, résolution de problèmes, curiosité intellectuelle
+                    </p>
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between mb-1">
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Expression Émotionnelle</span>
+                      <span className="text-sm font-medium text-amber-600 dark:text-amber-500">En progression</span>
+                    </div>
+                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                      <div className="bg-amber-500 h-2 rounded-full" style={{ width: '75%' }}></div>
+                    </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      Apprend à identifier et exprimer ses émotions de manière appropriée
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Moments forts de la semaine */}
+              <div className="p-5 bg-amber-50 dark:bg-amber-900/20 rounded-xl">
+                <h4 className="font-medium text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                  <span className="text-xl">⭐</span>
+                  Moments Forts de la Période
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="bg-white dark:bg-gray-800 p-3 rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <span className="font-medium text-gray-800 dark:text-gray-300">Succès académique</span>
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      A réussi à compter jusqu'à 20 sans erreur lors de l'activité mathématique
+                    </p>
+                  </div>
+                  <div className="bg-white dark:bg-gray-800 p-3 rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                      <span className="font-medium text-gray-800 dark:text-gray-300">Progrès social</span>
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      A aidé un camarade qui avait du mal à mettre son manteau
+                    </p>
+                  </div>
+                  <div className="bg-white dark:bg-gray-800 p-3 rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                      <span className="font-medium text-gray-800 dark:text-gray-300">Créativité</span>
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      A créé un dessin très original lors de l'atelier peinture
+                    </p>
+                  </div>
+                  <div className="bg-white dark:bg-gray-800 p-3 rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-2 h-2 bg-indigo-500 rounded-full"></div>
+                      <span className="font-medium text-gray-800 dark:text-gray-300">Autonomie</span>
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Range maintenant systématiquement ses affaires sans rappel
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Observations détaillées par domaine */}
+              <div className="p-5 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl">
+                <h4 className="font-medium text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                  <span className="text-xl">🔍</span>
+                  Observations Détaillées
+                </h4>
+                <div className="space-y-4">
+                  <div>
+                    <h5 className="font-medium text-gray-800 dark:text-gray-300 mb-2">📚 Compétences Académiques</h5>
+                    <div className="bg-white/70 dark:bg-gray-800/70 p-3 rounded-lg">
+                      <ul className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                        <li className="flex items-start gap-2">
+                          <span className="text-green-500">✓</span>
+                          <span>Reconnaît et nomme les lettres de l'alphabet</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-green-500">✓</span>
+                          <span>Compte jusqu'à 20 avec précision</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-blue-500">↗</span>
+                          <span>Travaille la reconnaissance des formes géométriques</span>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h5 className="font-medium text-gray-800 dark:text-gray-300 mb-2">🤝 Compétences Sociales</h5>
+                    <div className="bg-white/70 dark:bg-gray-800/70 p-3 rounded-lg">
+                      <ul className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                        <li className="flex items-start gap-2">
+                          <span className="text-green-500">✓</span>
+                          <span>Partage spontanément avec les autres enfants</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-green-500">✓</span>
+                          <span>Utilise les formules de politesse systématiquement</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-blue-500">↗</span>
+                          <span>Apprend à résoudre les petits conflits verbalement</span>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Recommandations pour les parents */}
+              <div className="p-5 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl">
+                <h4 className="font-medium text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                  <span className="text-xl">💡</span>
+                  Suggestions pour la Maison
+                </h4>
+                <div className="bg-white/70 dark:bg-gray-800/70 p-4 rounded-lg">
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 bg-purple-100 dark:bg-purple-800 rounded-lg">
+                        <span className="text-purple-600 dark:text-purple-300">📚</span>
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-800 dark:text-gray-300">Lecture quotidienne</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          Lire ensemble 15 minutes par jour pour renforcer le vocabulaire
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 bg-blue-100 dark:bg-blue-800 rounded-lg">
+                        <span className="text-blue-600 dark:text-blue-300">🎮</span>
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-800 dark:text-gray-300">Jeux éducatifs</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          Proposer des puzzles et jeux de construction pour la motricité fine
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 bg-green-100 dark:bg-green-800 rounded-lg">
+                        <span className="text-green-600 dark:text-green-300">🗣️</span>
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-800 dark:text-gray-300">Dialoguer sur les émotions</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          Nommer les émotions ressenties pendant la journée pour développer l'intelligence émotionnelle
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Activités préférées */}
+              <div className="p-5 bg-gradient-to-r from-cyan-50 to-blue-50 dark:from-cyan-900/20 dark:to-blue-900/20 rounded-xl">
+                <h4 className="font-medium text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                  <span className="text-xl">❤️</span>
+                  Activités Préférées
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  <span className="px-3 py-1 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full text-sm">
+                    Atelier peinture
+                  </span>
+                  <span className="px-3 py-1 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full text-sm">
+                    Jeux de construction
+                  </span>
+                  <span className="px-3 py-1 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full text-sm">
+                    Histoires en groupe
+                  </span>
+                  <span className="px-3 py-1 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full text-sm">
+                    Jeux dans la cour
+                  </span>
+                  <span className="px-3 py-1 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full text-sm">
+                    Activités musicales
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Section pour les rapports de classe et trimestriels (garder l'ancien design) */}
+          {(selectedRapport.type === 'classe_hebdomadaire' || selectedRapport.type === 'trimestriel') && (
+            <div className="space-y-6">
+              {/* ... Garder le contenu existant pour les rapports de classe ... */}
+              <div className="p-5 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
+                <h4 className="font-medium text-gray-900 dark:text-white mb-3">
+                  📋 Résumé Exécutif
+                </h4>
+                <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                  {selectedRapport.resume}
+                </p>
+              </div>
+              
+              {/* ... Autres sections existantes ... */}
+            </div>
+          )}
+
+          {/* Signature et contacts */}
+          <div className="p-5 border-t border-gray-200 dark:border-gray-700">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h5 className="font-medium text-gray-900 dark:text-white mb-3">📞 Contact</h5>
+                <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                  <p>Éducateur/Éducatrice: <span className="font-medium text-gray-900 dark:text-white">{selectedRapport.auteur}</span></p>
+                  <p>Disponible pour échanger: Lundi et jeudi de 16h30 à 17h30</p>
+                  <p>Email: educateur@ecole-exemple.fr</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="inline-block border-t border-gray-300 dark:border-gray-600 pt-4">
+                  <p className="font-medium text-gray-900 dark:text-white">{selectedRapport.auteur}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Éducateur/Éducatrice</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
+                    Établi le {new Date().toLocaleDateString('fr-FR', { 
+                      weekday: 'long', 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric' 
+                    })}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex justify-between items-center border-t border-gray-200 dark:border-gray-700 px-6 py-4 bg-gray-50 dark:bg-gray-700/50">
+          <div className="text-sm text-gray-500 dark:text-gray-400">
+            Rapport #{selectedRapport.id} • Créé le {new Date(selectedRapport.dateCreation).toLocaleDateString('fr-FR')}
+          </div>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setShowViewRapport(false)}
+              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
+            >
+              Fermer
+            </button>
+            <button
+              onClick={() => handleExporterRapport(selectedRapport)}
+              className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg hover:from-blue-700 hover:to-purple-700 flex items-center gap-2"
+            >
+              <DownloadIcon className="size-4" />
+              Télécharger pour les parents
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
       {/* Section Export et partage */}
       <div className="mt-8 space-y-6">
         <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-100 dark:to-pink-100 rounded-2xl border border-purple-200 dark:border-purple-300 p-6">
@@ -695,23 +1108,6 @@ export default function ReportsPage() {
               <div className="text-sm text-gray-500 dark:text-gray-700 mt-1">Version physique</div>
             </button>
           </div>
-          
-          {/* <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-200">
-            <h4 className="font-medium text-gray-900 dark:text-gray-900 mb-3">
-              Options de partage avancées
-            </h4>
-            <div className="flex flex-wrap gap-3">
-              <button className="px-4 py-2 bg-gray-100 dark:bg-gray-200 text-gray-700 dark:text-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-300 transition-colors">
-                Partage équipe
-              </button>
-              <button className="px-4 py-2 bg-gray-100 dark:bg-gray-200 text-gray-700 dark:text-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-300 transition-colors">
-                Version anonymisée
-              </button>
-              <button className="px-4 py-2 bg-gray-100 dark:bg-gray-200 text-gray-700 dark:text-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-300 transition-colors">
-                Archive automatique
-              </button>
-            </div>
-          </div> */}
         </div>
       </div>
 

@@ -6,7 +6,7 @@ import {
   TableRow,
 } from "../ui/table";
 import Badge from "../ui/badge/Badge";
-import { useState, useMemo } from "react";
+import { useState, useMemo,useEffect } from "react";
 
 interface Utilisateur {
   id: number;
@@ -144,7 +144,20 @@ const tableData: Utilisateur[] = [
 export default function BasicTablesUsers() {
   const [roleFilter, setRoleFilter] = useState<string>("");
   const [statutFilter, setStatutFilter] = useState<string>("");
+  
+  
+  const [editingUser, setEditingUser] = useState<Utilisateur | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [formData, setFormData] = useState<Partial<Utilisateur>>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
+   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [viewingUser, setViewingUser] = useState<Utilisateur | null>(null);
+
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deletingUser, setDeletingUser] = useState<Utilisateur | null>(null);
+
+  const [updatingStatus, setUpdatingStatus] = useState<number | null>(null);
   // Options uniques pour les filtres
   const roleOptions = useMemo(() => {
     const roles = Array.from(new Set(tableData.map(user => user.role)));
@@ -200,20 +213,684 @@ export default function BasicTablesUsers() {
 
   // Gérer les actions sur les utilisateurs
   const handleEdit = (utilisateur: Utilisateur) => {
-    console.log("Éditer l'utilisateur:", utilisateur);
-    // Implémentez votre logique d'édition ici
+      setEditingUser(utilisateur);
+      setFormData({
+      nomPrenom: utilisateur.nomPrenom,
+      email: utilisateur.email,
+      telephone: utilisateur.telephone,
+      role: utilisateur.role,
+      statut: utilisateur.statut,
+      image: utilisateur.image,
+      classe: utilisateur.classe
+    });
+      setIsEditModalOpen(true);
+  };
+  useEffect(() => {
+  if (isEditModalOpen && editingUser) {
+    document.body.style.overflow = 'hidden';
+    setErrors({});
+  } else {
+    document.body.style.overflow = 'unset';
+  }
+  
+  return () => {
+    document.body.style.overflow = 'unset';
+  };
+  }, [isEditModalOpen, editingUser]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev!, [name]: value }));
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: "" }));
+    }
+  };
+  
+
+  const validateForm = () => {
+  const newErrors: Record<string, string> = {};
+  if (!formData.nomPrenom?.trim()) newErrors.nomPrenom = "Le nom et prénom sont requis";
+  if (!formData.email?.trim()) newErrors.email = "L'email est requis";
+  else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = "L'email n'est pas valide";
+  if (!formData.telephone?.trim()) newErrors.telephone = "Le téléphone est requis";
+  return newErrors;
   };
 
+
+  const handleSaveEdit = () => (e: React.FormEvent) => {
+  e.preventDefault();
+  
+  const formErrors = validateForm();
+  if (Object.keys(formErrors).length === 0) {
+    console.log("Sauvegarder les modifications:", formData);
+    alert(`Modifications sauvegardées pour ${formData.nomPrenom}`);
+    handleCloseEdit();
+  } else {
+    setErrors(formErrors);
+  }
+};
+const handleCloseEdit = () => {
+  setIsEditModalOpen(false);
+  setEditingUser(null);
+  setFormData({});
+  setErrors({});
+};
+
+
+
   const handleDelete = (utilisateur: Utilisateur) => {
-    console.log("Supprimer l'utilisateur:", utilisateur);
-    // Implémentez votre logique de suppression ici
+   setDeletingUser(utilisateur);
+   setIsDeleteModalOpen(true);
   };
 
   const handleView = (utilisateur: Utilisateur) => {
-    console.log("Voir les détails de l'utilisateur:", utilisateur);
-    // Implémentez votre logique de visualisation ici
+    setViewingUser(utilisateur);
+  setIsViewModalOpen(true);
+  };
+  const handleCloseView = () => {
+    setIsViewModalOpen(false);
+    setViewingUser(null);
+  };
+  const EditUserModal = () => {
+  if (!isEditModalOpen || !editingUser) return null;
+
+  return (
+    <div className="fixed inset-0 z-[100000] overflow-y-auto">
+      <div className="fixed inset-0 bg-black/50 z-[100000]" onClick={handleCloseEdit} />
+      <div className="relative z-[100001] flex min-h-full items-center justify-center p-4">
+        <div className="relative w-full max-w-2xl transform overflow-hidden rounded-xl bg-white dark:bg-gray-800 shadow-2xl transition-all">
+          <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Modifier l'Utilisateur
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Modifiez les informations de {editingUser.nomPrenom}
+              </p>
+            </div>
+            <button
+              onClick={handleCloseEdit}
+              className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
+            >
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <form onSubmit={handleSaveEdit}>
+            <div className="px-6 py-4 space-y-6 max-h-[60vh] overflow-y-auto">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 overflow-hidden rounded-full">
+                  <img
+                    src={formData.image || editingUser.image}
+                    alt={formData.nomPrenom}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Photo de profil (URL)
+                  </label>
+                  <input
+                    type="text"
+                    name="image"
+                    value={formData.image || ""}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                    placeholder="/images/user/default-avatar.jpg"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Nom et Prénom *
+                </label>
+                <input
+                  type="text"
+                  name="nomPrenom"
+                  value={formData.nomPrenom || ""}
+                  onChange={handleChange}
+                  className={`w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    errors.nomPrenom 
+                      ? 'border-red-500 focus:border-red-500' 
+                      : 'border-gray-300 dark:border-gray-600 focus:border-blue-500'
+                  } dark:bg-gray-700 dark:text-white`}
+                  placeholder="Ex: Sophie Martin"
+                />
+                {errors.nomPrenom && (
+                  <p className="mt-1 text-sm text-red-600">{errors.nomPrenom}</p>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Email *
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email || ""}
+                    onChange={handleChange}
+                    className={`w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                      errors.email 
+                        ? 'border-red-500 focus:border-red-500' 
+                        : 'border-gray-300 dark:border-gray-600 focus:border-blue-500'
+                    } dark:bg-gray-700 dark:text-white`}
+                    placeholder="exemple@email.com"
+                  />
+                  {errors.email && (
+                    <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Téléphone *
+                  </label>
+                  <input
+                    type="tel"
+                    name="telephone"
+                    value={formData.telephone || ""}
+                    onChange={handleChange}
+                    className={`w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                      errors.telephone 
+                        ? 'border-red-500 focus:border-red-500' 
+                        : 'border-gray-300 dark:border-gray-600 focus:border-blue-500'
+                    } dark:bg-gray-700 dark:text-white`}
+                    placeholder="+33 6 12 34 56 78"
+                  />
+                  {errors.telephone && (
+                    <p className="mt-1 text-sm text-red-600">{errors.telephone}</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Rôle
+                  </label>
+                  <select
+                    name="role"
+                    value={formData.role || "parent"}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                  >
+                    <option value="parent">Parent</option>
+                    <option value="educateur">Éducateur</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Statut
+                  </label>
+                  <select
+                    name="statut"
+                    value={formData.statut || "actif"}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                  >
+                    <option value="actif">Actif</option>
+                    <option value="en_attente">En attente</option>
+                    <option value="inactif">Inactif</option>
+                  </select>
+                </div>
+              </div>
+
+              {formData.role === "educateur" && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Classe
+                  </label>
+                  <input
+                    type="text"
+                    name="classe"
+                    value={formData.classe || ""}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                    placeholder="Ex: (3-4) ans"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700 px-6 py-4">
+              <button
+                type="button"
+                onClick={handleCloseEdit}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600"
+              >
+                Annuler
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+              >
+                Enregistrer les modifications
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+};
+const ViewUserModal = () => {
+  if (!isViewModalOpen || !viewingUser) return null;
+
+  // Fonction pour formater le statut
+  const getStatusColor = (statut: string) => {
+    switch(statut) {
+      case 'actif': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
+      case 'inactif': return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
+      case 'en_attente': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400';
+      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400';
+    }
   };
 
+  // Fonction pour formater le rôle
+  const getRoleDisplay = (role: string) => {
+    return role === 'parent' ? 'Parent' : 'Éducateur';
+  };
+
+  // Fonction pour compter les enfants
+  const countEnfants = () => {
+    return viewingUser.enfants?.images?.length || 0;
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100000] overflow-y-auto">
+      <div className="fixed inset-0 bg-black/50 z-[100000]" onClick={handleCloseView} />
+      <div className="relative z-[100001] flex min-h-full items-center justify-center p-4">
+        <div className="relative w-full max-w-2xl transform overflow-hidden rounded-xl bg-white dark:bg-gray-800 shadow-2xl transition-all">
+          <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Détails de l'Utilisateur
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Informations complètes de {viewingUser.nomPrenom}
+              </p>
+            </div>
+            <button
+              onClick={handleCloseView}
+              className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
+            >
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <div className="px-6 py-4 space-y-6 max-h-[60vh] overflow-y-auto">
+            {/* Section Profil */}
+            <div className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+              <div className="relative">
+                <div className="w-20 h-20 overflow-hidden rounded-full">
+                  <img
+                    src={viewingUser.image}
+                    alt={viewingUser.nomPrenom}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className={`absolute -bottom-1 -right-1 px-2 py-0.5 text-xs rounded-full border-2 border-white dark:border-gray-800 ${
+                  viewingUser.role === 'parent' 
+                    ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' 
+                    : 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400'
+                }`}>
+                  {getRoleDisplay(viewingUser.role)}
+                </div>
+              </div>
+              <div className="flex-1">
+                <h4 className="text-xl font-bold text-gray-900 dark:text-white">{viewingUser.nomPrenom}</h4>
+                <p className="text-gray-600 dark:text-gray-400 mt-1">
+                  Membre depuis le {formatDate(viewingUser.dateCreation)}
+                </p>
+                <div className="flex items-center gap-2 mt-2">
+                  <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(viewingUser.statut)}`}>
+                    {viewingUser.statut === 'actif' ? 'Actif' : 
+                     viewingUser.statut === 'inactif' ? 'Inactif' : 
+                     'En attente'}
+                  </span>
+                  {viewingUser.classe && (
+                    <span className="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400">
+                      {viewingUser.classe}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Section Contact */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+                <h5 className="font-medium text-gray-900 dark:text-white mb-3">Informations de Contact</h5>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <svg className="w-4 h-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    <a href={`mailto:${viewingUser.email}`} className="text-blue-600 dark:text-blue-400 hover:underline">
+                      {viewingUser.email}
+                    </a>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <svg className="w-4 h-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                    </svg>
+                    <a href={`tel:${viewingUser.telephone}`} className="text-gray-800 dark:text-gray-300 hover:underline">
+                      {viewingUser.telephone}
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+                <h5 className="font-medium text-gray-900 dark:text-white mb-3">Activité</h5>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600 dark:text-gray-400">Dernière connexion:</span>
+                    <span className="font-medium text-gray-900 dark:text-white">
+                      {formatDate(viewingUser.derniereConnexion)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600 dark:text-gray-400">Date d'inscription:</span>
+                    <span className="font-medium text-gray-900 dark:text-white">
+                      {formatDate(viewingUser.dateCreation)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Section Enfants (pour les parents) */}
+            {viewingUser.role === 'parent' && viewingUser.enfants && (
+              <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+                <div className="flex items-center justify-between mb-3">
+                  <h5 className="font-medium text-gray-900 dark:text-white">Enfants inscrits</h5>
+                  <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
+                    {countEnfants()} enfant{countEnfants() > 1 ? 's' : ''}
+                  </span>
+                </div>
+                {viewingUser.enfants.images.length > 0 ? (
+                  <div className="flex gap-2">
+                    {viewingUser.enfants.images.map((image, index) => (
+                      <div key={index} className="w-12 h-12 overflow-hidden rounded-full">
+                        <img
+                          src={image}
+                          alt={`Enfant ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-500 dark:text-gray-400 text-sm">
+                    Aucun enfant inscrit
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Section Classe (pour les éducateurs) */}
+            {viewingUser.role === 'educateur' && viewingUser.classe && (
+              <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+                <h5 className="font-medium text-gray-900 dark:text-white mb-3">Classe assignée</h5>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+                    <span className="text-blue-600 dark:text-blue-400">🏫</span>
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-900 dark:text-white">{viewingUser.classe}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Classe principale</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700 px-6 py-4">
+            <button
+              type="button"
+              onClick={handleCloseView}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600"
+            >
+              Fermer
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                handleCloseView();
+                handleEdit(viewingUser);
+              }}
+              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+            >
+              Modifier cet utilisateur
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const handleConfirmDelete = () => {
+  if (deletingUser) {
+    console.log("Confirmation de suppression pour:", deletingUser);
+    // Ici vous appellerez votre API ou mettez à jour votre état global
+    // Pour l'exemple, on simule juste avec une alerte
+    alert(`Utilisateur "${deletingUser.nomPrenom}" supprimé avec succès !`);
+    setIsDeleteModalOpen(false);
+    setDeletingUser(null);
+  }
+};
+
+const handleCancelDelete = () => {
+  setIsDeleteModalOpen(false);
+  setDeletingUser(null);
+};
+const DeleteConfirmationModal = () => {
+  if (!isDeleteModalOpen || !deletingUser) return null;
+
+  return (
+    <div className="fixed inset-0 z-[100000] overflow-y-auto">
+      <div className="fixed inset-0 bg-black/50 z-[100000]" onClick={handleCancelDelete} />
+      <div className="relative z-[100001] flex min-h-full items-center justify-center p-4">
+        <div className="relative w-full max-w-md transform overflow-hidden rounded-xl bg-white dark:bg-gray-800 shadow-2xl transition-all">
+          <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Confirmer la suppression
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Cette action est irréversible
+              </p>
+            </div>
+            <button
+              onClick={handleCancelDelete}
+              className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
+            >
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <div className="px-6 py-6">
+            {/* Icône d'avertissement */}
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+                <svg className="w-8 h-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+            </div>
+
+            {/* Message de confirmation */}
+            <div className="text-center mb-6">
+              <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                Êtes-vous sûr de vouloir supprimer ?
+              </h4>
+              <p className="text-gray-600 dark:text-gray-400">
+                Vous êtes sur le point de supprimer l'utilisateur <span className="font-semibold text-gray-900 dark:text-white">{deletingUser.nomPrenom}</span>.
+                Cette action ne peut pas être annulée.
+              </p>
+            </div>
+
+            {/* Détails de l'utilisateur à supprimer */}
+            <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800/30 rounded-lg p-4 mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 overflow-hidden rounded-full">
+                  <img
+                    src={deletingUser.image}
+                    alt={deletingUser.nomPrenom}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div>
+                  <p className="font-medium text-gray-900 dark:text-white">{deletingUser.nomPrenom}</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400">
+                      {getRoleDisplay(deletingUser.role)}
+                    </span>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${
+                      deletingUser.statut === 'actif' 
+                        ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                        : deletingUser.statut === 'inactif'
+                        ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                        : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+                    }`}>
+                      {deletingUser.statut === 'actif' ? 'Actif' : 
+                       deletingUser.statut === 'inactif' ? 'Inactif' : 
+                       'En attente'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Conséquences de la suppression */}
+              <div className="mt-4 space-y-2 text-sm">
+                <div className="flex items-start gap-2">
+                  <svg className="w-4 h-4 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  <span className="text-gray-700 dark:text-gray-300">
+                    Toutes les données associées seront perdues
+                  </span>
+                </div>
+                {deletingUser.role === 'parent' && deletingUser.enfants?.images && deletingUser.enfants.images.length > 0 && (
+                  <div className="flex items-start gap-2">
+                    <svg className="w-4 h-4 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    <span className="text-gray-700 dark:text-gray-300">
+                      {deletingUser.enfants.images.length} enfant(s) associé(s) ne seront plus accessibles
+                    </span>
+                  </div>
+                )}
+                <div className="flex items-start gap-2">
+                  <svg className="w-4 h-4 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  <span className="text-gray-700 dark:text-gray-300">
+                    L'historique des activités sera définitivement effacé
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Avertissement final */}
+            <div className="text-center mb-6">
+              <p className="text-sm text-red-600 dark:text-red-400 font-medium">
+                ⚠️ Attention : Cette action est définitive et ne peut pas être annulée.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700 px-6 py-4">
+            <button
+              type="button"
+              onClick={handleCancelDelete}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600"
+            >
+              Annuler
+            </button>
+            <button
+              type="button"
+              onClick={handleConfirmDelete}
+              className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+            >
+              Supprimer définitivement
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+// Après tous les useEffects existants, ajouter :
+useEffect(() => {
+  if (isDeleteModalOpen && deletingUser) {
+    document.body.style.overflow = 'hidden';
+  } else {
+    document.body.style.overflow = 'unset';
+  }
+  
+  return () => {
+    document.body.style.overflow = 'unset';
+  };
+}, [isDeleteModalOpen, deletingUser]);
+
+const handleToggleStatus = (utilisateur: Utilisateur) => {
+  console.log("Changer le statut de l'utilisateur:", utilisateur);
+  
+  // Définir le nouveau statut
+  let nouveauStatut: 'actif' | 'inactif' | 'en_attente';
+  
+  switch(utilisateur.statut) {
+    case 'actif':
+      nouveauStatut = 'inactif';
+      break;
+    case 'inactif':
+      nouveauStatut = 'en_attente';
+      break;
+    case 'en_attente':
+      nouveauStatut = 'actif';
+      break;
+    default:
+      nouveauStatut = 'actif';
+  }
+  
+  // Simulation de chargement
+  setUpdatingStatus(utilisateur.id);
+  
+  // Simuler une requête API avec setTimeout
+  setTimeout(() => {
+    console.log(`Statut changé de "${utilisateur.statut}" à "${nouveauStatut}" pour ${utilisateur.nomPrenom}`);
+    
+    // Ici vous mettriez à jour votre état global ou appelleriez votre API
+    // Pour l'exemple, on affiche juste une alerte
+    const statutDisplay = nouveauStatut === 'actif' ? 'Actif' : 
+                         nouveauStatut === 'inactif' ? 'Inactif' : 
+                         'En attente';
+    
+    alert(`Statut de "${utilisateur.nomPrenom}" changé à "${statutDisplay}"`);
+    
+    setUpdatingStatus(null);
+    
+    // Si vous utilisez un état local pour les données :
+    // const updatedData = tableData.map(user => 
+    //   user.id === utilisateur.id 
+    //     ? { ...user, statut: nouveauStatut } 
+    //     : user
+    // );
+    // setTableData(updatedData);
+    
+  }, 500); // Simulation de délai réseau
+};
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
       {/* En-tête avec filtres */}
@@ -446,7 +1123,25 @@ export default function BasicTablesUsers() {
                         />
                       </svg>
                     </button>
-
+                      {/* Désactiver/Réactiver */}
+                      <button 
+                        onClick={() => handleToggleStatus(utilisateur)}
+                        className="p-1.5 text-amber-600 hover:text-amber-800 hover:bg-amber-50 rounded transition-colors" // p-1 changé en p-1.5
+                        title={utilisateur.statut === "actif" ? "Désactiver" : "Réactiver"}
+                      >
+                        {utilisateur.statut === "actif" ? (
+                          // Icône pour désactiver (œil barré)
+                          <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"> {/* w-5 h-5 changé en w-4.5 h-4.5 */}
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L6.59 6.59m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                          </svg>
+                        ) : (
+                          // Icône pour réactiver (œil normal)
+                          <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"> {/* w-5 h-5 changé en w-4.5 h-4.5 */}
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                        )}
+                      </button>
                     {/* Bouton Supprimer */}
                     <button
                       onClick={() => handleDelete(utilisateur)}
@@ -475,6 +1170,9 @@ export default function BasicTablesUsers() {
           </TableBody>
         </Table>
       </div>
+      <EditUserModal />
+      <ViewUserModal />
+      <DeleteConfirmationModal />
     </div>
   );
 }

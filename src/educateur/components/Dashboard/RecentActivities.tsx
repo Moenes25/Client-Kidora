@@ -1,6 +1,11 @@
 // src/educateur/components/Dashboard/RecentActivities.tsx
 import { UserIcon, CheckCircleIcon, ChatIcon , TimeIcon } from "../../../icons";
 
+
+interface RecentActivitiesProps {
+  onAjouterObservation?: () => void;
+}
+
 const activities = [
   {
     id: 1,
@@ -40,7 +45,7 @@ const activities = [
   },
 ];
 
-export default function RecentActivities() {
+export default function RecentActivities({ onAjouterObservation }: RecentActivitiesProps) {
   return (
     <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-300 dark:bg-white shadow-sm">
       <div className="flex items-center justify-between mb-6">
@@ -84,7 +89,9 @@ export default function RecentActivities() {
       </div>
 
       <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-200">
-        <button className="w-full py-2.5 bg-gray-50 dark:bg-gray-100 text-gray-700 dark:text-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-200 transition-colors text-sm font-medium">
+        <button 
+         onClick={onAjouterObservation}
+        className="w-full py-2.5 bg-gray-50 dark:bg-gray-100 text-gray-700 dark:text-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-200 transition-colors text-sm font-medium">
           Ajouter une observation
         </button>
       </div>

@@ -6,11 +6,11 @@ const HomeParent = () => {
   const [children] = useState([
     {
       id: 1,
-      name: "Lucas Martin",
+      name: "Ahmed Ben Salah",
       age: "8 ans",
       class: "CE2",
-      educator: "Mme Sophie",
-      avatar: "LM",
+      educator: "Mme Fatma",
+      avatar: "/images/3-4_ans/enfant_1.jpg",
       health: {
         allergies: ["Aucune"],
         medicalNotes: "Porte des lunettes",
@@ -33,11 +33,11 @@ const HomeParent = () => {
     },
     {
       id: 2,
-      name: "Emma Dubois",
+      name: "Sara Ben Salah",
       age: "6 ans",
       class: "CP",
-      educator: "Mme Julie",
-      avatar: "ED",
+      educator: "Mme Amina",
+      avatar: "/images/3-4_ans/enfant_3.jpg",
       health: {
         allergies: ["Lactose"],
         medicalNotes: "Asthme léger",
@@ -56,6 +56,60 @@ const HomeParent = () => {
         motor: 88,
         cognitive: 85,
         social: 96
+      }
+    },
+    {
+      id: 3,
+      name: "Mohamed Ben Salah",
+      age: "10 ans",
+      class: "CM2",
+      educator: "M. Karim",
+      avatar: "/images/3-4_ans/enfant_6.jpg",
+      health: {
+        allergies: ["Arachides"],
+        medicalNotes: "Aucune",
+        vaccination: "À jour"
+      },
+      presence: {
+        today: false,
+        week: 3,
+        month: 16
+      },
+      performance: 75,
+      color: "from-green-500 to-emerald-500",
+      bgColor: "bg-green-50 dark:bg-green-900/20",
+      evolution: {
+        language: 80,
+        motor: 85,
+        cognitive: 92,
+        social: 78
+      }
+    },
+    {
+      id: 4,
+      name: "Nour Ben Salah",
+      age: "7 ans",
+      class: "CE1",
+      educator: "Mme Amina",
+      avatar: "/images/3-4_ans/enfant_4.jpg",
+      health: {
+        allergies: ["Pollen"],
+        medicalNotes: "Aucune",
+        vaccination: "À jour"
+      },
+      presence: {
+        today: true,
+        week: 4,
+        month: 19
+      },
+      performance: 88,
+      color: "from-amber-500 to-orange-500",
+      bgColor: "bg-amber-50 dark:bg-amber-900/20",
+      evolution: {
+        language: 90,
+        motor: 75,
+        cognitive: 88,
+        social: 85
       }
     }
   ]);
@@ -86,7 +140,7 @@ const HomeParent = () => {
       id: 2,
       type: "activity",
       title: "Photo activité disponible",
-      message: "Lucas pendant l'atelier peinture",
+      message: "Ahmed pendant l'atelier peinture",
       time: "10:45",
       priority: "medium",
       icon: "📸"
@@ -114,15 +168,15 @@ const HomeParent = () => {
   const [aiInsights] = useState([
     {
       title: "Conseil pédagogique IA",
-      content: "Recommandation : lecture interactive 20min/jour pour Lucas",
+      content: "Recommandation : lecture interactive 20min/jour pour Ahmed",
       category: "education",
-      child: "Lucas"
+      child: "Ahmed"
     },
     {
       title: "Analyse sommeil",
-      content: "Emma : qualité de sommeil excellente cette semaine",
+      content: "Sara : qualité de sommeil excellente cette semaine",
       category: "health",
-      child: "Emma"
+      child: "Sara"
     },
     {
       title: "Prédiction développement",
@@ -136,7 +190,7 @@ const HomeParent = () => {
     {
       id: 1,
       title: "Atelier peinture libre",
-      child: "Lucas",
+      child: "Ahmed",
       time: "10:00",
       skills: ["Créativité", "Motricité fine"],
       media: ["photo", "video"],
@@ -145,19 +199,37 @@ const HomeParent = () => {
     {
       id: 2,
       title: "Construction blocs",
-      child: "Emma",
+      child: "Sara",
       time: "11:30",
       skills: ["Logique", "Spatial"],
       media: ["photo"],
       aiAssessment: "Excellente résolution de problèmes"
+    },
+    {
+      id: 3,
+      title: "Jeux mathématiques",
+      child: "Mohamed",
+      time: "14:00",
+      skills: ["Logique", "Calcul"],
+      media: ["photo"],
+      aiAssessment: "Bon progrès en calcul mental"
+    },
+    {
+      id: 4,
+      title: "Chant et rythme",
+      child: "Nour",
+      time: "15:30",
+      skills: ["Musicalité", "Mémoire"],
+      media: ["video"],
+      aiAssessment: "Excellent sens du rythme"
     }
   ]);
 
   const [quickStats] = useState({
     attendance: {
-      present: 2,
-      absent: 0,
-      rate: "100%"
+      present: 3,
+      absent: 1,
+      rate: "75%"
     },
     activities: {
       completed: 8,
@@ -193,32 +265,42 @@ const HomeParent = () => {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-4 py-2 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full">
-            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            <span className="font-medium">Tous présents</span>
+          <div className={`flex items-center gap-2 px-4 py-2 rounded-full ${
+            quickStats.attendance.absent === 0 
+              ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' 
+              : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
+          }`}>
+            <div className={`w-2 h-2 rounded-full ${
+              quickStats.attendance.absent === 0 ? 'bg-green-500' : 'bg-amber-500'
+            }`}></div>
+            <span className="font-medium">
+              {quickStats.attendance.absent === 0 ? 'Tous présents' : `${quickStats.attendance.absent} absent(s)`}
+            </span>
           </div>
-          {/* <button className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-medium hover:opacity-90 transition-opacity">
-            🤖 IA Kidora
-          </button> */}
         </div>
       </div>
 
       {/* Section 1: Profil enfants rapide */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {children.map((child) => (
+        {children.slice(0, 2).map((child) => (
           <div 
             key={child.id}
             className={`p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 ${child.bgColor}`}
           >
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-4">
-                <div className={`w-14 h-14 rounded-full bg-gradient-to-r ${child.color} flex items-center justify-center text-white text-lg font-bold`}>
-                  {child.avatar}
+                <div className="relative">
+                  <img 
+                    src={child.avatar} 
+                    alt={child.name}
+                    className="w-14 h-14 rounded-full object-cover border-2 border-white dark:border-gray-700 shadow-md"
+                  />
+                  <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-white dark:border-gray-700 bg-gradient-to-r ${child.color}`}></div>
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-gray-900 dark:text-white">{child.name}</h3>
                   <p className="text-gray-600 dark:text-gray-300">{child.age} • {child.class}</p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Éducatrice : {child.educator}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Éducateur : {child.educator}</p>
                 </div>
               </div>
               <div className={`px-3 py-1 rounded-full ${child.presence.today ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400' : 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400'}`}>
@@ -249,7 +331,7 @@ const HomeParent = () => {
                   <span className="font-medium text-green-600 dark:text-green-400">Normale</span>
                 </div>
                 <div className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded">
-                  {child.health.allergies.length === 0 ? 'Aucune allergie' : `${child.health.allergies.length} allergie(s)`}
+                  {child.health.allergies[0] === "Aucune" ? 'Aucune allergie' : `${child.health.allergies.length} allergie(s)`}
                 </div>
               </div>
             </div>
@@ -268,12 +350,12 @@ const HomeParent = () => {
               >
                 Rapport →
               </Link>
-              <Link 
+              {/* <Link 
                 to={`/parent/enfant/${child.id}/messages`}
                 className="text-sm text-green-600 dark:text-green-400 hover:underline"
               >
                 Messages →
-              </Link>
+              </Link> */}
             </div>
           </div>
         ))}
@@ -289,7 +371,7 @@ const HomeParent = () => {
                 <span className="text-white font-bold">{quickStats.attendance.rate}</span>
               </div>
               <div className="text-white/80 text-sm">
-                {quickStats.attendance.present}/{quickStats.attendance.present + quickStats.attendance.absent} enfants
+                {quickStats.attendance.present}/{children.length} enfants
               </div>
             </div>
 
@@ -390,15 +472,13 @@ const HomeParent = () => {
                 </div>
               ))}
             </div>
-
-           
           </div>
         </div>
 
         {/* Notifications IA */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Notifications IA</h2>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Suivi en Temps Réel</h2>
             <span className="px-2 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-xs rounded-full">
               {aiNotifications.length} nouvelles
             </span>
@@ -456,43 +536,55 @@ const HomeParent = () => {
           </div>
           
           <div className="space-y-4">
-            {todayActivities.map((activity) => (
-              <div 
-                key={activity.id}
-                className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <div>
-                    <h4 className="font-medium text-gray-900 dark:text-white">{activity.title}</h4>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-sm text-gray-500 dark:text-gray-400">{activity.child}</span>
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{activity.time}</span>
+            {todayActivities.slice(0, 2).map((activity) => {
+              const child = children.find(c => c.name.split(" ")[0] === activity.child);
+              return (
+                <div 
+                  key={activity.id}
+                  className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      {child && (
+                        <img 
+                          src={child.avatar} 
+                          alt={child.name}
+                          className="w-10 h-10 rounded-full object-cover"
+                        />
+                      )}
+                      <div>
+                        <h4 className="font-medium text-gray-900 dark:text-white">{activity.title}</h4>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-sm text-gray-500 dark:text-gray-400">{activity.child}</span>
+                          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{activity.time}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex gap-1">
+                      {activity.media.includes("photo") && (
+                        <span className="text-blue-500">📷</span>
+                      )}
+                      {activity.media.includes("video") && (
+                        <span className="text-purple-500">🎥</span>
+                      )}
                     </div>
                   </div>
-                  <div className="flex gap-1">
-                    {activity.media.includes("photo") && (
-                      <span className="text-blue-500">📷</span>
-                    )}
-                    {activity.media.includes("video") && (
-                      <span className="text-purple-500">🎥</span>
-                    )}
+                  
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {activity.skills.map((skill, index) => (
+                      <span key={index} className="px-2 py-1 bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-300 text-xs rounded">
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                  
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                    <span className="font-medium">Observations : </span>
+                    {activity.aiAssessment}
                   </div>
                 </div>
-                
-                <div className="flex flex-wrap gap-2 mb-3">
-                  {activity.skills.map((skill, index) => (
-                    <span key={index} className="px-2 py-1 bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-300 text-xs rounded">
-                      {skill}
-                    </span>
-                  ))}
-                </div>
-                
-                <div className="text-sm text-gray-600 dark:text-gray-400">
-                  <span className="font-medium">Observations : </span>
-                  {activity.aiAssessment}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
           
           <div className="mt-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl">
@@ -521,12 +613,17 @@ const HomeParent = () => {
           </div>
           
           <div className="grid grid-cols-2 gap-4 mb-6">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="aspect-square rounded-xl overflow-hidden bg-gray-200 dark:bg-gray-700 relative group cursor-pointer">
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            {children.slice(0, 4).map((child, index) => (
+              <div key={child.id} className="aspect-square rounded-xl overflow-hidden bg-gray-200 dark:bg-gray-700 relative group cursor-pointer">
+                <img 
+                  src={child.avatar} 
+                  alt={child.name}
+                  className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 <div className="absolute bottom-2 left-2 text-white opacity-0 group-hover:opacity-100 transition-opacity">
-                  <div className="text-sm">Moment {i}</div>
-                  <div className="text-xs">Aujourd'hui</div>
+                  <div className="text-sm font-medium">{child.name.split(" ")[0]}</div>
+                  <div className="text-xs">{child.age}</div>
                 </div>
               </div>
             ))}
@@ -534,14 +631,17 @@ const HomeParent = () => {
           
           <div className="p-4 bg-gradient-to-r from-pink-50 to-rose-50 dark:from-pink-900/20 dark:to-rose-900/20 rounded-xl">
             <div className="flex items-center gap-3">
-              
-              
+              <div className="w-10 h-10 bg-pink-100 dark:bg-pink-900/30 rounded-lg flex items-center justify-center">
+                <span className="text-pink-600 dark:text-pink-400">🌟</span>
+              </div>
+              <div>
+                <h4 className="font-semibold text-gray-900 dark:text-white">Moment préféré aujourd'hui</h4>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Ahmed pendant l'atelier peinture</p>
+              </div>
             </div>
           </div>
         </div>
       </div>
-
-      
 
       {/* Section 5: Messagerie rapide */}
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
@@ -565,8 +665,8 @@ const HomeParent = () => {
                 <span className="text-blue-600 dark:text-blue-400">👩‍🏫</span>
               </div>
               <div>
-                <h4 className="font-semibold text-gray-900 dark:text-white">Éducatrice Lucas</h4>
-                <p className="text-sm text-gray-600 dark:text-gray-300">Mme Sophie</p>
+                <h4 className="font-semibold text-gray-900 dark:text-white">Éducatrice Ahmed</h4>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Mme Fatma</p>
               </div>
             </div>
             <button className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors">
@@ -577,11 +677,11 @@ const HomeParent = () => {
           <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-xl">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
-                <span className="text-purple-600 dark:text-purple-400">👨‍🏫</span>
+                <span className="text-purple-600 dark:text-purple-400">👩‍🏫</span>
               </div>
               <div>
-                <h4 className="font-semibold text-gray-900 dark:text-white">Éducatrice Emma</h4>
-                <p className="text-sm text-gray-600 dark:text-gray-300">Mme Julie</p>
+                <h4 className="font-semibold text-gray-900 dark:text-white">Éducatrice Sara & Nour</h4>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Mme Amina</p>
               </div>
             </div>
             <button className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-purple-200 dark:border-purple-800 text-purple-600 dark:text-purple-400 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/30 transition-colors">
@@ -592,11 +692,11 @@ const HomeParent = () => {
           <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-xl">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
-                <span className="text-green-600 dark:text-green-400">🏫</span>
+                <span className="text-green-600 dark:text-green-400">👨‍🏫</span>
               </div>
               <div>
-                <h4 className="font-semibold text-gray-900 dark:text-white">Administration</h4>
-                <p className="text-sm text-gray-600 dark:text-gray-300">Direction</p>
+                <h4 className="font-semibold text-gray-900 dark:text-white">Éducateur Mohamed</h4>
+                <p className="text-sm text-gray-600 dark:text-gray-300">M. Karim</p>
               </div>
             </div>
             <button className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-green-200 dark:border-green-800 text-green-600 dark:text-green-400 rounded-lg hover:bg-green-50 dark:hover:bg-green-900/30 transition-colors">

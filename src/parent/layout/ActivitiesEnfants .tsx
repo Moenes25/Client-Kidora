@@ -7,7 +7,7 @@ const ActivitiesEnfants = () => {
     {
       id: 1,
       title: "Atelier Peinture Libre",
-      child: "Lucas",
+      child: "Mohamed",
       date: "Aujourd'hui, 10:30",
       type: "Créativité",
       skills: ["Motricité fine", "Couleurs", "Expression"],
@@ -26,7 +26,7 @@ const ActivitiesEnfants = () => {
     {
       id: 2,
       title: "Jeux de Construction",
-      child: "Emma",
+      child: "Nour",
       date: "Aujourd'hui, 14:00",
       type: "Logique",
       skills: ["Esprit logique", "Coordination", "Patience"],
@@ -45,7 +45,7 @@ const ActivitiesEnfants = () => {
     {
       id: 3,
       title: "Lecture Interactive",
-      child: "Mohamed",
+      child: "Ahmed",
       date: "Demain, 09:00",
       type: "Langage",
       skills: ["Vocabulaire", "Compréhension", "Expression"],
@@ -59,7 +59,7 @@ const ActivitiesEnfants = () => {
     {
       id: 4,
       title: "Sortie au Parc",
-      child: "Tous",
+      child: "Sara",
       date: "Hier, 15:30",
       type: "Social",
       skills: ["Interaction", "Motricité globale", "Découverte"],
