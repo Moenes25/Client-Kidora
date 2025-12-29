@@ -1,4 +1,4 @@
-import { Users, Calendar, Clock, UserCheck } from "lucide-react";
+import { Users, Calendar,  UserCheck } from "lucide-react";
 
 interface ClassInfo {
   id: string;

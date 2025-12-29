@@ -1,4 +1,4 @@
-import { Users, Calendar, MapPin } from "lucide-react";
+import { Users, Calendar } from "lucide-react";
 
 interface ClassType {
   id: string;

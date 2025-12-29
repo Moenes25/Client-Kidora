@@ -25,7 +25,6 @@ import ActivitiesPage from "./educateur/pages/Activities";
 import ReportsPage from "./educateur/pages/Reports";
 import TableUsers from "./pages/Tables/TableUsers";
 import TableEnfants from "./pages/Tables/TableEnfants";
-import GestionEducateurs from "./components/tables/BasictTableEducateur";
 import TableEducateurs from "./pages/Tables/TableEducateurs";
 import AppLayoutParent from "./parent/layout/AppLayout";
 import HomeParent from "./parent/pages/Home";
