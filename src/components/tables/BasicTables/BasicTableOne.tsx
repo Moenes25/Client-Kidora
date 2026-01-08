@@ -925,6 +925,10 @@ export default function BasicTableOne() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedParent, setSelectedParent] = useState<Parent | null>(null);
   const [parents, setParents] = useState<Parent[]>(tableData);
+  
+  // Nouveaux états pour la sélection
+  const [selectedParents, setSelectedParents] = useState<number[]>([]);
+  const [isAllSelected, setIsAllSelected] = useState(false);
 
   // Options uniques pour les filtres
   const statutOptions = useMemo(() => {
@@ -945,6 +949,61 @@ export default function BasicTableOne() {
       return matchesStatut && matchesRelation;
     });
   }, [parents, statutFilter, relationFilter]);
+
+  // Gestion de la sélection
+  useEffect(() => {
+    if (selectedParents.length === filteredData.length && filteredData.length > 0) {
+      setIsAllSelected(true);
+    } else {
+      setIsAllSelected(false);
+    }
+  }, [selectedParents, filteredData]);
+
+  // Sélectionner/déselectionner tous
+  const handleSelectAll = () => {
+    if (isAllSelected) {
+      setSelectedParents([]);
+    } else {
+      const allIds = filteredData.map(parent => parent.id);
+      setSelectedParents(allIds);
+    }
+    setIsAllSelected(!isAllSelected);
+  };
+
+  // Sélectionner/déselectionner un parent
+  const handleSelectParent = (id: number) => {
+    if (selectedParents.includes(id)) {
+      setSelectedParents(selectedParents.filter(parentId => parentId !== id));
+    } else {
+      setSelectedParents([...selectedParents, id]);
+    }
+  };
+
+  // Actions multiples
+  const handleActivateSelected = () => {
+    setParents(prev => prev.map(parent => 
+      selectedParents.includes(parent.id) ? { ...parent, statut: "Actif" } : parent
+    ));
+    setSelectedParents([]);
+  };
+
+  const handleDeactivateSelected = () => {
+    setParents(prev => prev.map(parent => 
+      selectedParents.includes(parent.id) ? { ...parent, statut: "Inactif" } : parent
+    ));
+    setSelectedParents([]);
+  };
+
+  const handleDeleteSelected = () => {
+    if (window.confirm(`Êtes-vous sûr de vouloir supprimer ${selectedParents.length} parent(s) ?`)) {
+      setParents(prev => prev.filter(parent => !selectedParents.includes(parent.id)));
+      setSelectedParents([]);
+    }
+  };
+
+  const handleCancelSelection = () => {
+    setSelectedParents([]);
+  };
 
   // Fonction pour créer un nouveau parent
   const handleCreateParent = (newParentData: Omit<Parent, 'id' | 'enfants'>) => {
@@ -988,51 +1047,57 @@ export default function BasicTableOne() {
   };
 
   // Fonction pour basculer le statut (Actif/Inactif)
-const handleToggleStatus = (parent: Parent) => {
-  setParents(prev => prev.map(p => 
-    p.id === parent.id 
-      ? { 
-          ...p, 
-          statut: p.statut === "Actif" ? "Inactif" : "Actif" 
-        } 
-      : p
-  ));
-};
+  const handleToggleStatus = (parent: Parent) => {
+    setParents(prev => prev.map(p => 
+      p.id === parent.id 
+        ? { 
+            ...p, 
+            statut: p.statut === "Actif" ? "Inactif" : "Actif" 
+          } 
+        : p
+    ));
+  };
 
   return (
     <>
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
         {/* En-tête avec titre et bouton */}
-        <div className="p-6 border-b border-gray-100 dark:border-white/[0.05] bg-white dark:bg-gray-900/50">
+        <div className="p-4 border-b border-gray-100 dark:border-white/[0.05] bg-gray-50 dark:bg-gray-900/50">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <h2 className="text-xl font-semibold text-gray-800 dark:text-white">
-                Liste des Parents
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
+                Toutes les Parents
               </h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                Gérez les parents et leurs informations
-              </p>
+              <div className="flex items-center gap-3 mt-2">
+                <span className="text-gray-400 dark:text-gray-500">•</span>
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  Gérez les parents et leurs informations
+                </span>
+              </div>
             </div>
             
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
-            >
-              <svg 
-                className="w-5 h-5" 
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
+            <div className="flex items-center gap-3">
+              {/* Bouton Nouveau Parent seulement */}
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 shadow-sm hover:shadow-md"
               >
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth="2" 
-                  d="M12 4v16m8-8H4"
-                />
-              </svg>
-              Nouveau Parent
-            </button>
+                <svg 
+                  className="w-5 h-5" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth="2" 
+                    d="M12 4v16m8-8H4"
+                  />
+                </svg>
+                Nouveau Parent
+              </button>
+            </div>
           </div>
         </div>
 
@@ -1094,59 +1159,134 @@ const handleToggleStatus = (parent: Parent) => {
           {/* Compteur de résultats */}
           <div className="mt-3 text-sm text-gray-600 dark:text-gray-400">
             {filteredData.length} parent(s) trouvé(s)
+            {selectedParents.length > 0 && (
+              <span className="ml-2 font-medium text-blue-600 dark:text-blue-400">
+                • {selectedParents.length} sélectionné(s)
+              </span>
+            )}
           </div>
         </div>
 
+        {/* Header d'actions multiples (apparaît quand des éléments sont sélectionnés) */}
+        {selectedParents.length > 0 && (
+          <div className="bg-indigo-500 dark:from-blue-900/20 dark:to-indigo-900/20 border-b border-blue-100 dark:border-blue-800/30 p-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 flex items-center justify-center bg-blue-100 dark:bg-blue-800 rounded-full">
+                    <span className="text-sm font-semibold text-blue-600 dark:text-blue-300">
+                      {selectedParents.length}
+                    </span>
+                  </div>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    parent(s) sélectionné(s)
+                  </span>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleActivateSelected}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-green-700 bg-green-50 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50 rounded-lg transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                  Activer
+                </button>
+                
+                <button
+                  onClick={handleDeactivateSelected}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-orange-700 bg-orange-50 hover:bg-orange-100 dark:bg-orange-900/30 dark:text-orange-400 dark:hover:bg-orange-900/50 rounded-lg transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 12H6" />
+                  </svg>
+                  Désactiver
+                </button>
+                
+                <button
+                  onClick={handleDeleteSelected}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 rounded-lg transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  Supprimer
+                </button>
+                
+                <button
+                  onClick={handleCancelSelection}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  Annuler
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="max-w-full overflow-x-auto">
           <Table>
-            {/* Table Header */}
-            <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
+            {/* Table Header - MODIFIÉ avec le même dégradé que le bouton */}
+            <TableHeader className="border-b border-gray-100 dark:border-white/[0.05] bg-gray-700">
               <TableRow>
                 <TableCell
                   isHeader
-                  className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                  className="px-5 py-3 font-medium text-white text-start text-theme-xs"
                 >
-                  Nom et Prénom
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={isAllSelected}
+                      onChange={handleSelectAll}
+                      className="w-4 h-4 text-white bg-white/20 border-white/30 rounded focus:ring-white dark:focus:ring-white focus:ring-2 mr-3"
+                    />
+                    Nom et Prénom
+                  </div>
                 </TableCell>
                 <TableCell
                   isHeader
-                  className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                  className="px-5 py-3 font-medium text-white text-start text-theme-xs"
                 >
                   Email
                 </TableCell>
                 <TableCell
                   isHeader
-                  className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                  className="px-5 py-3 font-medium text-white text-start text-theme-xs"
                 >
                   Téléphone
                 </TableCell>
                 <TableCell
                   isHeader
-                  className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                  className="px-5 py-3 font-medium text-white text-start text-theme-xs"
                 >
                   Relation
                 </TableCell>
                 <TableCell
                   isHeader
-                  className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                  className="px-5 py-3 font-medium text-white text-start text-theme-xs"
                 >
                   Enfants
                 </TableCell>
                 <TableCell
                   isHeader
-                  className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                  className="px-5 py-3 font-medium text-white text-start text-theme-xs"
                 >
                   Statut
                 </TableCell>
                 <TableCell
                   isHeader
-                  className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                  className="px-5 py-3 font-medium text-white text-start text-theme-xs"
                 >
                   Profession
                 </TableCell>
                 <TableCell
                   isHeader
-                  className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                  className="px-5 py-3 font-medium text-white text-start text-theme-xs"
                 >
                   Actions
                 </TableCell>
@@ -1155,143 +1295,151 @@ const handleToggleStatus = (parent: Parent) => {
 
             {/* Table Body */}
             <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-              {filteredData.map((parent) => (
-                <TableRow key={parent.id}>
-                  <TableCell className="px-5 py-4 sm:px-6 text-start">
-                    <div className="flex items-center gap-3">
+              {filteredData.map((parent) => {
+                const isSelected = selectedParents.includes(parent.id);
+                return (
+                  <TableRow 
+                    key={parent.id}
+                    className={isSelected ? "bg-blue-50 dark:bg-blue-900/10" : ""}
+                  >
+                    <TableCell className="px-5 py-4 sm:px-6 text-start">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 overflow-hidden rounded-full">
-                          <img
-                            width={40}
-                            height={40}
-                            src={parent.image}
-                            alt={parent.nomPrenom}
-                          />
-                        </div>
-                        <span className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
-                          {parent.nomPrenom}
-                        </span>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                    <a href={`mailto:${parent.email}`} className="hover:text-blue-600 hover:underline">
-                      {parent.email}
-                    </a>
-                  </TableCell>
-                  <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                    <a href={`tel:${parent.telephone}`} className="hover:text-blue-600 hover:underline">
-                      {parent.telephone}
-                    </a>
-                  </TableCell>
-                  <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                    <span className="px-2 py-1 text-xs bg-blue-50 text-blue-600 dark:bg-blue-100 dark:text-blue-700 rounded-full">
-                      {parent.relation}
-                    </span>
-                  </TableCell>
-                  <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                    <div className="flex -space-x-2">
-                      {parent.enfants.images.slice(0, 3).map((image, index) => (
-                        <div
-                          key={index}
-                          className="relative w-8 h-8 overflow-hidden border-2 border-white rounded-full dark:border-gray-900"
-                        >
-                          <img
-                            width={32}
-                            height={32}
-                            src={image}
-                            alt={`Enfant ${index + 1}`}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      ))}
-                      {parent.enfants.images.length > 3 && (
-                        <div className="relative w-8 h-8 flex items-center justify-center bg-gray-200 border-2 border-white rounded-full dark:border-gray-900 dark:bg-gray-700">
-                          <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                            +{parent.enfants.images.length - 3}
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => handleSelectParent(parent.id)}
+                          className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                        />
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 overflow-hidden rounded-full">
+                            <img
+                              width={40}
+                              height={40}
+                              src={parent.image}
+                              alt={parent.nomPrenom}
+                            />
+                          </div>
+                          <span className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
+                            {parent.nomPrenom}
                           </span>
                         </div>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                    <Badge
-                      size="sm"
-                      color={
-                        parent.statut === "Actif"
-                          ? "success"
-                          : parent.statut === "En attente"
-                            ? "warning"
-                            : "error"
-                      }
-                    >
-                      {parent.statut}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                    {parent.profession}
-                  </TableCell>
-                  <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                    <div className="flex items-center gap-1.5"> {/* gap-2 changé en gap-1.5 */}
-                      {/* Voir détails */}
-                      <button 
-                        onClick={() => handleViewDetails(parent)}
-                        className="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors" // p-1 changé en p-1.5
-                        title="Voir détails"
+                      </div>
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                      <a href={`mailto:${parent.email}`} className="hover:text-blue-600 hover:underline">
+                        {parent.email}
+                      </a>
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                      <a href={`tel:${parent.telephone}`} className="hover:text-blue-600 hover:underline">
+                        {parent.telephone}
+                      </a>
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                      <span className="px-2 py-1 text-xs bg-blue-50 text-blue-600 dark:bg-blue-100 dark:text-blue-700 rounded-full">
+                        {parent.relation}
+                      </span>
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                      <div className="flex -space-x-2">
+                        {parent.enfants.images.slice(0, 3).map((image, index) => (
+                          <div
+                            key={index}
+                            className="relative w-8 h-8 overflow-hidden border-2 border-white rounded-full dark:border-gray-900"
+                          >
+                            <img
+                              width={32}
+                              height={32}
+                              src={image}
+                              alt={`Enfant ${index + 1}`}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        ))}
+                        {parent.enfants.images.length > 3 && (
+                          <div className="relative w-8 h-8 flex items-center justify-center bg-gray-200 border-2 border-white rounded-full dark:border-gray-900 dark:bg-gray-700">
+                            <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                              +{parent.enfants.images.length - 3}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                      <Badge
+                        size="sm"
+                        color={
+                          parent.statut === "Actif"
+                            ? "success"
+                            : parent.statut === "En attente"
+                              ? "warning"
+                              : "error"
+                        }
                       >
-                        <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"> {/* w-5 h-5 changé en w-4.5 h-4.5 */}
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                        </svg>
-                      </button>
-                      
-                      {/* Modifier */}
-                      <button 
-                        onClick={() => handleEdit(parent)}
-                        className="p-1.5 text-green-600 hover:text-green-800 hover:bg-green-50 rounded transition-colors" // p-1 changé en p-1.5
-                        title="Modifier"
-                      >
-                        <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"> {/* w-5 h-5 changé en w-4.5 h-4.5 */}
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                      </button>
-                      
-                   
-                      
-                      {/* Supprimer */}
-                      <button 
-                        onClick={() => handleDelete(parent)}
-                        className="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors" // p-1 changé en p-1.5
-                        title="Supprimer"
-                      >
-                        <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"> {/* w-5 h-5 changé en w-4.5 h-4.5 */}
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
+                        {parent.statut}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                      {parent.profession}
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                      <div className="flex items-center gap-1.5">
+                        {/* Voir détails */}
+                        <button 
+                          onClick={() => handleViewDetails(parent)}
+                          className="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
+                          title="Voir détails"
+                        >
+                          <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                        </button>
+                        
+                        {/* Modifier */}
+                        <button 
+                          onClick={() => handleEdit(parent)}
+                          className="p-1.5 text-green-600 hover:text-green-800 hover:bg-green-50 rounded transition-colors"
+                          title="Modifier"
+                        >
+                          <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </button>
+                        
+                        {/* Supprimer */}
+                        <button 
+                          onClick={() => handleDelete(parent)}
+                          className="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
+                          title="Supprimer"
+                        >
+                          <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </div>
       </div>
 
-      {/* Modal de création */}
+      {/* Les modals restent inchangés... */}
       <CreateParentModal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         onSave={handleCreateParent}
       />
 
-      {/* Modal de détails */}
       <ViewDetailsModal
         isOpen={showViewModal}
         onClose={() => setShowViewModal(false)}
         parent={selectedParent}
       />
 
-      {/* Modal de modification */}
       <EditParentModal
         isOpen={showEditModal}
         onClose={() => setShowEditModal(false)}
@@ -1299,7 +1447,6 @@ const handleToggleStatus = (parent: Parent) => {
         onSave={handleEditParent}
       />
 
-      {/* Modal de suppression */}
       <DeleteConfirmationModal
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}

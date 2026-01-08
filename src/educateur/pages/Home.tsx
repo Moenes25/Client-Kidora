@@ -194,11 +194,11 @@ export default function HomeEducateur() {
 
 // Sentiments (couleurs émotionnelles)
 const sentimentsOptions = [
-  { value: 'tres_positif', label: 'Très positif 🟢', color: 'bg-green-100 text-green-800' },
-  { value: 'positif', label: 'Positif 🟡', color: 'bg-yellow-100 text-yellow-800' },
-  { value: 'neutre', label: 'Neutre ⚪', color: 'bg-gray-100 text-gray-800' },
-  { value: 'preoccupant', label: 'Préoccupant 🟠', color: 'bg-orange-100 text-orange-800' },
-  { value: 'inquietant', label: 'Inquiétant 🔴', color: 'bg-red-100 text-red-800' },
+  { value: 'tres_positif', label: 'Très positif 🟢', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' },
+  { value: 'positif', label: 'Positif 🟡', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300' },
+  { value: 'neutre', label: 'Neutre ⚪', color: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300' },
+  { value: 'preoccupant', label: 'Préoccupant 🟠', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300' },
+  { value: 'inquietant', label: 'Inquiétant 🔴', color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' },
 ];
 
 // Contextes rapides
@@ -387,14 +387,14 @@ const intensitesOptions = [
       />
       
       {/* En-tête */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-900">
+      {/* <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
           Bonjour, Éducateur 👋
         </h1>
-        <p className="text-gray-600 dark:text-gray-700">
+        <p className="text-gray-600 dark:text-gray-400">
           Voici un aperçu de votre journée
         </p>
-      </div>
+      </div> */}
 
       {/* Metrics */}
       <div className="mb-6">
@@ -422,31 +422,31 @@ const intensitesOptions = [
           <RecentActivities onAjouterObservation={() => setShowAjouterObservation(true)} />
           
           {/* 2. Actions rapides */}
-          <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-300 dark:bg-white p-5 shadow-sm">
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-900 mb-4">
+          <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5 shadow-sm">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
               Actions Rapides
             </h3>
             <div className="space-y-3">
               <button 
                 onClick={() => setShowGestionPresence(true)}
-                className="w-full flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-50 text-blue-600 dark:text-blue-700 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-100 transition-colors"
+                className="w-full flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
               >
                 <span className="font-medium">Gérer présence</span>
-                <span className="text-xs bg-blue-100 dark:bg-blue-200 px-2 py-1 rounded">+</span>
+                <span className="text-xs bg-blue-100 dark:bg-blue-800 px-2 py-1 rounded">+</span>
               </button>
               <button 
                 onClick={() => setShowAjouterActivite(true)}
-                className="w-full flex items-center justify-between p-3 bg-green-50 dark:bg-green-50 text-green-600 dark:text-green-700 rounded-lg hover:bg-green-100 dark:hover:bg-green-100 transition-colors">
+                className="w-full flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/50 transition-colors">
                 <span className="font-medium">Ajouter activité</span>
-                <span className="text-xs bg-green-100 dark:bg-green-200 px-2 py-1 rounded">+</span>
+                <span className="text-xs bg-green-100 dark:bg-green-800 px-2 py-1 rounded">+</span>
               </button>
-              <button className="w-full flex items-center justify-between p-3 bg-purple-50 dark:bg-purple-50 text-purple-600 dark:text-purple-700 rounded-lg hover:bg-purple-100 dark:hover:bg-purple-100 transition-colors">
+              <button className="w-full flex items-center justify-between p-3 bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-lg hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-colors">
                 <span className="font-medium">Créer rapport</span>
-                <span className="text-xs bg-purple-100 dark:bg-purple-200 px-2 py-1 rounded">📊</span>
+                <span className="text-xs bg-purple-100 dark:bg-purple-800 px-2 py-1 rounded">📊</span>
               </button>
-              <button className="w-full flex items-center justify-between p-3 bg-amber-50 dark:bg-amber-50 text-amber-600 dark:text-amber-700 rounded-lg hover:bg-amber-100 dark:hover:bg-amber-100 transition-colors">
+              <button className="w-full flex items-center justify-between p-3 bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-lg hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-colors">
                 <span className="font-medium">Partager avec parents</span>
-                <span className="text-xs bg-amber-100 dark:bg-amber-200 px-2 py-1 rounded">📧</span>
+                <span className="text-xs bg-amber-100 dark:bg-amber-800 px-2 py-1 rounded">📧</span>
               </button>
             </div>
           </div>
@@ -459,32 +459,32 @@ const intensitesOptions = [
         </div>
         
         <div className="col-span-12 lg:col-span-4">
-          <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-300 dark:bg-white p-5 shadow-sm h-full">
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-900 mb-4">
+          <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5 shadow-sm h-full">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
               Aujourd'hui
             </h3>
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-100 rounded-lg">
-                <span className="text-gray-600 dark:text-gray-700">Heures d'activités</span>
-                <span className="font-semibold text-gray-900 dark:text-gray-900">4h 30m</span>
+              <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <span className="text-gray-600 dark:text-gray-400">Heures d'activités</span>
+                <span className="font-semibold text-gray-900 dark:text-white">4h 30m</span>
               </div>
-              <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-100 rounded-lg">
-                <span className="text-gray-600 dark:text-gray-700">Enfants présents</span>
-                <span className="font-semibold text-green-600 dark:text-green-700">
+              <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <span className="text-gray-600 dark:text-gray-400">Enfants présents</span>
+                <span className="font-semibold text-green-600 dark:text-green-400">
                   {Math.round((enfants.filter(e => e.present).length / enfants.length) * 100)}%
                 </span>
               </div>
-              <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-100 rounded-lg">
-                <span className="text-gray-600 dark:text-gray-700">Tâches terminées</span>
-                <span className="font-semibold text-blue-600 dark:text-blue-700">12/15</span>
+              <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <span className="text-gray-600 dark:text-gray-400">Tâches terminées</span>
+                <span className="font-semibold text-blue-600 dark:text-blue-400">12/15</span>
               </div>
-              <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-100 rounded-lg">
-                <span className="text-gray-600 dark:text-gray-700">Observations</span>
-                <span className="font-semibold text-purple-600 dark:text-purple-700">8</span>
+              <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <span className="text-gray-600 dark:text-gray-400">Observations</span>
+                <span className="font-semibold text-purple-600 dark:text-purple-400">8</span>
               </div>
-              <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-100 rounded-lg">
-                <span className="text-gray-600 dark:text-gray-700">Absents</span>
-                <span className="font-semibold text-amber-600 dark:text-amber-700">
+              <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <span className="text-gray-600 dark:text-gray-400">Absents</span>
+                <span className="font-semibold text-amber-600 dark:text-amber-400">
                   {enfants.filter(e => !e.present).length}
                 </span>
               </div>
@@ -497,20 +497,20 @@ const intensitesOptions = [
       {/* Modal de gestion des présences */}
       {showGestionPresence && (
         <div className="fixed inset-0 flex items-center justify-center p-4 z-[100000]">
-          <div className="bg-white dark:bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200 dark:border-gray-300 mt-16">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200 dark:border-gray-800 mt-16">
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-gray-900">
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">
                     Gérer les présences
                   </h3>
-                  <p className="text-gray-600 dark:text-gray-700">
+                  <p className="text-gray-600 dark:text-gray-400">
                     {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
                   </p>
                 </div>
                 <button 
                   onClick={() => setShowGestionPresence(false)}
-                  className="text-gray-500 hover:text-gray-700 dark:text-gray-600 dark:hover:text-gray-800"
+                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
                 >
                   <CloseIcon className="size-6" />
                 </button>
@@ -518,16 +518,16 @@ const intensitesOptions = [
 
               <div className="space-y-3 mb-6">
                 {enfants.map(enfant => (
-                  <div key={enfant.id} className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-100 transition-colors">
+                  <div key={enfant.id} className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-800 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                     <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${enfant.present ? 'bg-green-100 text-green-600 dark:bg-green-200 dark:text-green-700' : 'bg-red-100 text-red-600 dark:bg-red-200 dark:text-red-700'}`}>
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${enfant.present ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'}`}>
                         {enfant.nom.split(' ').map(n => n[0]).join('')}
                       </div>
                       <div>
-                        <div className="font-medium text-gray-900 dark:text-gray-900">
+                        <div className="font-medium text-gray-900 dark:text-white">
                           {enfant.nom}
                         </div>
-                        <div className="text-sm text-gray-500 dark:text-gray-700">
+                        <div className="text-sm text-gray-500 dark:text-gray-400">
                           {enfant.classe}
                         </div>
                       </div>
@@ -535,18 +535,18 @@ const intensitesOptions = [
                     
                     <div className="flex items-center gap-3">
                       {enfant.present && enfant.heureArrivee && (
-                        <span className="text-sm text-green-600 dark:text-green-700">
+                        <span className="text-sm text-green-600 dark:text-green-400">
                           Arrivé à {enfant.heureArrivee}
                         </span>
                       )}
                       {!enfant.present && enfant.raison && (
-                        <span className="text-sm text-red-600 dark:text-red-700">
+                        <span className="text-sm text-red-600 dark:text-red-400">
                           {enfant.raison}
                         </span>
                       )}
                       <button
                         onClick={() => togglePresence(enfant.id)}
-                        className={`px-4 py-2 rounded-lg font-medium ${enfant.present ? 'bg-red-50 text-red-600 dark:bg-red-100 dark:text-red-700 hover:bg-red-100 dark:hover:bg-red-200' : 'bg-green-50 text-green-600 dark:bg-green-100 dark:text-green-700 hover:bg-green-100 dark:hover:bg-green-200'}`}
+                        className={`px-4 py-2 rounded-lg font-medium ${enfant.present ? 'bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/50' : 'bg-green-50 text-green-600 dark:bg-green-900/30 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/50'}`}
                       >
                         {enfant.present ? 'Marquer absent' : 'Marquer présent'}
                       </button>
@@ -556,24 +556,24 @@ const intensitesOptions = [
               </div>
 
               <div className="grid grid-cols-2 gap-4 mb-6">
-                <div className="p-4 bg-green-50 dark:bg-green-100 rounded-lg flex items-center">
-                  <CheckCircleIcon className="size-5 text-green-600 dark:text-green-700 mr-3" />
+                <div className="p-4 bg-green-50 dark:bg-green-900/30 rounded-lg flex items-center">
+                  <CheckCircleIcon className="size-5 text-green-600 dark:text-green-400 mr-3" />
                   <div>
-                    <div className="text-xl font-bold text-green-600 dark:text-green-700">
+                    <div className="text-xl font-bold text-green-600 dark:text-green-400">
                       {enfants.filter(e => e.present).length}
                     </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-700">
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
                       Présents
                     </div>
-                  </div>
                 </div>
-                <div className="p-4 bg-red-50 dark:bg-red-100 rounded-lg flex items-center">
-                  <CloseIcon className="size-5 text-red-600 dark:text-red-700 mr-3" />
+                </div>
+                <div className="p-4 bg-red-50 dark:bg-red-900/30 rounded-lg flex items-center">
+                  <CloseIcon className="size-5 text-red-600 dark:text-red-400 mr-3" />
                   <div>
-                    <div className="text-xl font-bold text-red-600 dark:text-red-700">
+                    <div className="text-xl font-bold text-red-600 dark:text-red-400">
                       {enfants.filter(e => !e.present).length}
                     </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-700">
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
                       Absents
                     </div>
                   </div>
@@ -589,7 +589,7 @@ const intensitesOptions = [
                 </button>
                 <button
                   onClick={() => setShowGestionPresence(false)}
-                  className="px-6 py-3 border border-gray-300 dark:border-gray-400 text-gray-700 dark:text-gray-800 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-100 transition-colors"
+                  className="px-6 py-3 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                 >
                   Annuler
                 </button>
@@ -602,20 +602,20 @@ const intensitesOptions = [
       {/* Modal ajouter activité */}
       {showAjouterActivite && (
         <div className="fixed inset-0 flex items-center justify-center p-4 z-[100000]">
-          <div className="bg-white dark:bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200 dark:border-gray-300 mt-16">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200 dark:border-gray-800 mt-16">
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-gray-900">
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">
                     Ajouter une activité
                   </h3>
-                  <p className="text-gray-600 dark:text-gray-700">
+                  <p className="text-gray-600 dark:text-gray-400">
                     Créez une nouvelle activité éducative
                   </p>
                 </div>
                 <button 
                   onClick={() => setShowAjouterActivite(false)}
-                  className="text-gray-500 hover:text-gray-700 dark:text-gray-600 dark:hover:text-gray-800"
+                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
                 >
                   <CloseIcon className="size-6" />
                 </button>
@@ -624,7 +624,7 @@ const intensitesOptions = [
               <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); ajouterActivite(); }}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-800 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Titre de l'activité *
                     </label>
                     <input
@@ -632,20 +632,20 @@ const intensitesOptions = [
                       required
                       value={nouvelleActivite.titre}
                       onChange={(e) => setNouvelleActivite({...nouvelleActivite, titre: e.target.value})}
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800"
                       placeholder="Ex: Atelier Peinture Libre"
                     />
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-800 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Type d'activité *
                     </label>
                     <select
                       required
                       value={nouvelleActivite.type}
                       onChange={(e) => setNouvelleActivite({...nouvelleActivite, type: e.target.value as any})}
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800"
                     >
                       <option value="creatif">Créatif</option>
                       <option value="sportif">Sportif</option>
@@ -658,7 +658,7 @@ const intensitesOptions = [
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-800 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Description *
                   </label>
                   <textarea
@@ -666,14 +666,14 @@ const intensitesOptions = [
                     value={nouvelleActivite.description}
                     onChange={(e) => setNouvelleActivite({...nouvelleActivite, description: e.target.value})}
                     rows={3}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800"
                     placeholder="Décrivez l'activité..."
                   />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-800 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Date *
                     </label>
                     <input
@@ -681,12 +681,12 @@ const intensitesOptions = [
                       required
                       value={nouvelleActivite.date}
                       onChange={(e) => setNouvelleActivite({...nouvelleActivite, date: e.target.value})}
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800"
                     />
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-800 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Heure *
                     </label>
                     <input
@@ -694,12 +694,12 @@ const intensitesOptions = [
                       required
                       value={nouvelleActivite.heure}
                       onChange={(e) => setNouvelleActivite({...nouvelleActivite, heure: e.target.value})}
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800"
                     />
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-800 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Durée (minutes) *
                     </label>
                     <input
@@ -709,21 +709,21 @@ const intensitesOptions = [
                       max="240"
                       value={nouvelleActivite.duree}
                       onChange={(e) => setNouvelleActivite({...nouvelleActivite, duree: parseInt(e.target.value)})}
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-800 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Classe *
                     </label>
                     <select
                       required
                       value={nouvelleActivite.classe}
                       onChange={(e) => setNouvelleActivite({...nouvelleActivite, classe: e.target.value})}
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800"
                     >
                       <option value="(3-4) ans">(3-4) ans</option>
                       <option value="(4-5) ans">(4-5) ans</option>
@@ -736,7 +736,7 @@ const intensitesOptions = [
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-800 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Nombre maximum d'enfants *
                     </label>
                     <input
@@ -746,33 +746,33 @@ const intensitesOptions = [
                       max="30"
                       value={nouvelleActivite.enfantsMax}
                       onChange={(e) => setNouvelleActivite({...nouvelleActivite, enfantsMax: parseInt(e.target.value)})}
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-800 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Objectifs (séparés par des virgules)
                   </label>
                   <input
                     type="text"
                     value={nouvelleActivite.objectifs.join(', ')}
                     onChange={(e) => setNouvelleActivite({...nouvelleActivite, objectifs: e.target.value.split(',').map(o => o.trim()).filter(o => o)})}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800"
                     placeholder="Ex: Développer la créativité, Coordination main-œil, Expression des émotions"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-800 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Matériel nécessaire (séparés par des virgules)
                   </label>
                   <input
                     type="text"
                     value={nouvelleActivite.materiel.join(', ')}
                     onChange={(e) => setNouvelleActivite({...nouvelleActivite, materiel: e.target.value.split(',').map(m => m.trim()).filter(m => m)})}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800"
                     placeholder="Ex: Peinture, Pinceaux, Toiles, Tabliers"
                   />
                 </div>
@@ -788,7 +788,7 @@ const intensitesOptions = [
                   <button
                     type="button"
                     onClick={() => setShowAjouterActivite(false)}
-                    className="px-6 py-3 border border-gray-300 dark:border-gray-400 text-gray-700 dark:text-gray-800 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-100 transition-colors"
+                    className="px-6 py-3 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                   >
                     Annuler
                   </button>
@@ -804,8 +804,8 @@ const intensitesOptions = [
         <div className="fixed inset-0 z-[100000] overflow-y-auto">
           <div className="fixed inset-0 bg-black/50 z-[100000]" onClick={() => setShowAjouterObservation(false)} />
           <div className="relative z-[100001] flex min-h-full items-center justify-center p-4">
-            <div className="relative w-full max-w-4xl transform overflow-hidden rounded-xl bg-white dark:bg-gray-800 shadow-2xl transition-all">
-              <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+            <div className="relative w-full max-w-4xl transform overflow-hidden rounded-xl bg-white dark:bg-gray-900 shadow-2xl transition-all">
+              <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-800 px-6 py-4">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                     Ajouter une observation
@@ -816,7 +816,7 @@ const intensitesOptions = [
                 </div>
                 <button
                   onClick={() => setShowAjouterObservation(false)}
-                  className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
+                  className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-300"
                 >
                   ✕
                 </button>
@@ -839,7 +839,7 @@ const intensitesOptions = [
                           <button
                             type="button"
                             onClick={() => setNouvelleObservation({...nouvelleObservation, typeCible: 'enfant', cibleId: ''})}
-                            className={`px-4 py-3 rounded-lg border text-left ${nouvelleObservation.typeCible === 'enfant' ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300' : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'}`}
+                            className={`px-4 py-3 rounded-lg border text-left ${nouvelleObservation.typeCible === 'enfant' ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' : 'border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-600'}`}
                           >
                             <div className="flex items-center gap-3">
                               <div className={`p-2 rounded-lg ${nouvelleObservation.typeCible === 'enfant' ? 'bg-blue-100 dark:bg-blue-800' : 'bg-gray-100 dark:bg-gray-700'}`}>
@@ -856,7 +856,7 @@ const intensitesOptions = [
                           <button
                             type="button"
                             onClick={() => setNouvelleObservation({...nouvelleObservation, typeCible: 'classe', cibleId: ''})}
-                            className={`px-4 py-3 rounded-lg border text-left ${nouvelleObservation.typeCible === 'classe' ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-300' : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'}`}
+                            className={`px-4 py-3 rounded-lg border text-left ${nouvelleObservation.typeCible === 'classe' ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400' : 'border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-600'}`}
                           >
                             <div className="flex items-center gap-3">
                               <div className={`p-2 rounded-lg ${nouvelleObservation.typeCible === 'classe' ? 'bg-purple-100 dark:bg-purple-800' : 'bg-gray-100 dark:bg-gray-700'}`}>
@@ -882,7 +882,7 @@ const intensitesOptions = [
                             required
                             value={nouvelleObservation.cibleId}
                             onChange={(e) => setNouvelleObservation({...nouvelleObservation, cibleId: e.target.value})}
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-800"
                           >
                             <option value="">Sélectionnez un enfant...</option>
                             {enfants.map(enfant => (
@@ -896,7 +896,7 @@ const intensitesOptions = [
                             required
                             value={nouvelleObservation.cibleId}
                             onChange={(e) => setNouvelleObservation({...nouvelleObservation, cibleId: e.target.value})}
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-800"
                           >
                             <option value="">Sélectionnez une classe...</option>
                             {classes.map(classe => (
@@ -916,7 +916,7 @@ const intensitesOptions = [
                           type="date"
                           value={nouvelleObservation.date}
                           onChange={(e) => setNouvelleObservation({...nouvelleObservation, date: e.target.value})}
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg"
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-800"
                         />
                       </div>
                       <div>
@@ -927,7 +927,7 @@ const intensitesOptions = [
                           type="time"
                           value={nouvelleObservation.heure}
                           onChange={(e) => setNouvelleObservation({...nouvelleObservation, heure: e.target.value})}
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg"
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-800"
                         />
                       </div>
                     </div>
@@ -1005,7 +1005,7 @@ const intensitesOptions = [
                           value={nouvelleObservation.descriptionRapide}
                           onChange={(e) => setNouvelleObservation({...nouvelleObservation, descriptionRapide: e.target.value})}
                           rows={3}
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg"
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-800"
                           placeholder="Ex: A bien participé à l'activité, semblait fatigué en fin de journée, a aidé un camarade en difficulté..."
                         />
                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -1021,7 +1021,7 @@ const intensitesOptions = [
                           <select
                             value={nouvelleObservation.contexte}
                             onChange={(e) => setNouvelleObservation({...nouvelleObservation, contexte: e.target.value})}
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-800"
                           >
                             <option value="">Non spécifié</option>
                             {contextesRapides.map(contexte => (
@@ -1037,7 +1037,7 @@ const intensitesOptions = [
                           <select
                             value={nouvelleObservation.intensite}
                             onChange={(e) => setNouvelleObservation({...nouvelleObservation, intensite: e.target.value})}
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-800"
                           >
                             {intensitesOptions.map(intensite => (
                               <option key={intensite.value} value={intensite.value}>{intensite.label}</option>
@@ -1078,7 +1078,7 @@ const intensitesOptions = [
                   )}
                 </div>
 
-                <div className="flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700 px-6 py-4">
+                <div className="flex justify-end gap-3 border-t border-gray-200 dark:border-gray-800 px-6 py-4">
                   <button
                     type="button"
                     onClick={() => setShowAjouterObservation(false)}

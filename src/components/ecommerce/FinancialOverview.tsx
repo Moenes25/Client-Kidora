@@ -43,8 +43,9 @@ export default function FinancialOverview() {
   ];
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 mb-6">
-      <div className="flex justify-between items-center mb-6">
+    // <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 mb-6">
+     <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 h-full flex flex-col">
+     <div className="flex justify-between items-center mb-6">
         <h3 className="text-lg font-semibold text-gray-800 dark:text-white">
           Aperçu Financier
         </h3>

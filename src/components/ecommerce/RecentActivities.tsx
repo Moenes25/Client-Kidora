@@ -1,5 +1,6 @@
 // components/nursery/RecentActivities.tsx
 import { Activity, Utensils, Music, BookOpen, Palette, Gamepad } from "lucide-react";
+import { useState } from "react";
 
 interface ActivityItem {
   id: number;
@@ -47,17 +48,35 @@ const activities: ActivityItem[] = [
     time: "11:00 - 11:45",
     duration: "45 min",
     educator: "Marie Dubois"
+  },
+  {
+    id: 5,
+    child: "Léa Moreau",
+    activity: "Lecture",
+    type: 'learning',
+    time: "09:30 - 10:15",
+    duration: "45 min",
+    educator: "Jean Martin"
+  },
+  {
+    id: 6,
+    child: "Noah Girard",
+    activity: "Jeux éducatifs",
+    type: 'play',
+    time: "15:30 - 16:15",
+    duration: "45 min",
+    educator: "Sophie Petit"
   }
 ];
 
 const getActivityIcon = (type: ActivityItem['type']) => {
   switch (type) {
-    case 'meal': return <Utensils className="w-5 h-5" />;
-    case 'nap': return <Activity className="w-5 h-5" />;
-    case 'learning': return <BookOpen className="w-5 h-5" />;
-    case 'play': return <Gamepad className="w-5 h-5" />;
-    case 'art': return <Palette className="w-5 h-5" />;
-    case 'music': return <Music className="w-5 h-5" />;
+    case 'meal': return <Utensils className="w-4 h-4" />;
+    case 'nap': return <Activity className="w-4 h-4" />;
+    case 'learning': return <BookOpen className="w-4 h-4" />;
+    case 'play': return <Gamepad className="w-4 h-4" />;
+    case 'art': return <Palette className="w-4 h-4" />;
+    case 'music': return <Music className="w-4 h-4" />;
   }
 };
 
@@ -73,73 +92,88 @@ const getActivityColor = (type: ActivityItem['type']) => {
 };
 
 export default function RecentActivities() {
+  const [showAll, setShowAll] = useState(false);
+  
+  // Afficher seulement 3 activités par défaut, toutes si showAll est vrai
+  const displayedActivities = showAll ? activities : activities.slice(0, 3);
+  
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
-      <div className="flex justify-between items-center mb-6">
+    <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700 h-full">
+      <div className="flex justify-between items-center mb-4">
         <div>
-          <h3 className="text-lg font-semibold text-gray-800 dark:text-white">
+          <h3 className="text-base font-semibold text-gray-800 dark:text-white">
             Activités Récentes
           </h3>
-          <p className="text-gray-600 dark:text-gray-400 text-sm">
+          <p className="text-gray-600 dark:text-gray-400 text-xs">
             Suivi des activités de la journée
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-600 dark:text-gray-400">
+        <div className="flex items-center gap-1">
+          <span className="text-xs text-gray-600 dark:text-gray-400">
             Aujourd'hui
           </span>
-          <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <button className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
           </button>
         </div>
       </div>
 
-      <div className="space-y-4">
-        {activities.map((activity) => (
-          <div key={activity.id} className="flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-xl transition-colors">
-            <div className="flex items-center gap-3">
-              <div className={`p-3 rounded-xl ${getActivityColor(activity.type)}`}>
+      <div className="space-y-3">
+        {displayedActivities.map((activity) => (
+          <div key={activity.id} className="p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors">
+            <div className="flex items-start gap-2">
+              <div className={`p-2 rounded-lg ${getActivityColor(activity.type)} flex-shrink-0`}>
                 {getActivityIcon(activity.type)}
               </div>
-              <div>
-                <h4 className="font-medium text-gray-800 dark:text-white">
-                  {activity.child}
-                </h4>
-                <p className="text-gray-600 dark:text-gray-400 text-sm">
-                  {activity.activity}
-                </p>
-              </div>
-            </div>
+              <div className="flex-grow min-w-0">
+                <div className="mb-1">
+                  <h4 className="text-sm font-medium text-gray-800 dark:text-white line-clamp-1">
+                    {activity.child}
+                  </h4>
+                  <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-1">
+                    {activity.activity}
+                  </p>
+                </div>
 
-            <div className="text-right">
-              <div className="flex items-center gap-2">
-                <span className="text-gray-800 dark:text-white font-medium">
-                  {activity.time}
-                </span>
-                <span className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded">
-                  {activity.duration}
-                </span>
+                <div className="flex flex-wrap items-center gap-2 text-xs">
+                  <div className="flex items-center gap-1 text-gray-500">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>{activity.time}</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-1 text-gray-500">
+                    <span className="text-gray-400">•</span>
+                    <span>{activity.duration}</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-1 text-gray-500">
+                    <span className="text-gray-400">•</span>
+                    <span>{activity.educator}</span>
+                  </div>
+                </div>
               </div>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                {activity.educator}
-              </p>
             </div>
           </div>
         ))}
       </div>
 
-      <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse" />
-            <span className="text-sm text-gray-600 dark:text-gray-400">
+          <div className="flex items-center gap-1">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+            <span className="text-xs text-gray-600 dark:text-gray-400">
               Activités en cours: 2
             </span>
           </div>
-          <button className="text-blue-600 dark:text-blue-400 text-sm font-medium hover:underline">
-            Voir le planning complet →
+          <button 
+            onClick={() => setShowAll(!showAll)}
+            className="text-blue-600 dark:text-blue-400 text-xs font-medium hover:underline"
+          >
+            {showAll ? "Réduire le planning" : "Voir le planning complet →"}
           </button>
         </div>
       </div>

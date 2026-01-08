@@ -2,6 +2,7 @@ import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import ComponentCard from "../../components/common/ComponentCard";
 import PageMeta from "../../components/common/PageMeta";
 import BasicTableOne from "../../components/tables/BasicTables/BasicTableOne";
+import { GroupIcon, UserGroup02Icon } from "../../icons";
 
 export default function BasicTables() {
   return (
@@ -12,7 +13,7 @@ export default function BasicTables() {
       />
       {/* <PageBreadcrumb pageTitle="Listes des Parents" /> */}
       <div className="space-y-6">
-        <ComponentCard title="Parents">
+        <ComponentCard title="Parents" counterLabel="parents" counterValue="8"  icon={<GroupIcon />}>
           <BasicTableOne />
         </ComponentCard>
       </div>

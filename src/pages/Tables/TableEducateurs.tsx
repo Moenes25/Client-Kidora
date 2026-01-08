@@ -3,6 +3,8 @@ import ComponentCard from "../../components/common/ComponentCard";
 import PageMeta from "../../components/common/PageMeta";
 import BasicTableOne from "../../components/tables/BasicTables/BasicTableOne";
 import GestionEducateurs from "../../components/tables/BasictTableEducateur";
+import { GroupIcon } from "../../icons";
+// import { GroupIcon } from "lucide-react";
 
 export default function TableEducateurs() {
   return (
@@ -13,7 +15,7 @@ export default function TableEducateurs() {
       />
       {/* <PageBreadcrumb pageTitle="Listes des Parents" /> */}
       <div className="space-y-6">
-        <ComponentCard title="Educateurs">
+        <ComponentCard title="Educateurs" counterLabel="éducateurs" counterValue="8" icon={<GroupIcon />}>
          <GestionEducateurs />
         </ComponentCard>
       </div>

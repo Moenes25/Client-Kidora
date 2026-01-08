@@ -18,14 +18,14 @@ export default function ClassesPage() {
   ];
 
   return (
-    <div className="container mx-auto px-4 py-6">
+    <div className="container mx-auto px-4 pt-1 pb-2">
       <PageMeta 
         title="Gestion des Classes - KI DORA"
         description="Gestion des classes d'enfants par âge et par groupe"
       />
       
       {/* En-tête */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Classes</h1>
           <p className="text-gray-600 dark:text-gray-400">
@@ -44,11 +44,11 @@ export default function ClassesPage() {
       </div>
 
       {/* Statistiques */}
-      <div className="mb-6">
+      <div className="mb-3">
         <ClassStatistics />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Liste des classes */}
         <div className="lg:col-span-2">
           <ClassList 

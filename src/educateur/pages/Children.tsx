@@ -233,31 +233,31 @@ export default function ChildrenPage() {
       <div className="mb-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-900">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
               Liste des Enfants
             </h1>
-            <p className="text-gray-600 dark:text-gray-700 mt-1">
+            <p className="text-gray-600 dark:text-gray-400 mt-1">
               Consultez les informations détaillées et les observations sur chaque enfant
             </p>
           </div>
           
           <div className="flex flex-wrap gap-3">
-            <div className="flex gap-2 bg-gray-100 dark:bg-gray-200 p-1 rounded-lg">
+            <div className="flex gap-2 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
               <button 
                 onClick={() => setViewMode('list')}
-                className={`px-3 py-1.5 rounded-md transition-colors ${viewMode === 'list' ? 'bg-white dark:bg-white shadow-sm' : 'hover:bg-gray-200 dark:hover:bg-gray-300'}`}
+                className={`px-3 py-1.5 rounded-md transition-colors ${viewMode === 'list' ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-900 dark:text-white' : 'hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'}`}
               >
                 Liste
               </button>
               <button 
                 onClick={() => setViewMode('grid')}
-                className={`px-3 py-1.5 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-white dark:bg-white shadow-sm' : 'hover:bg-gray-200 dark:hover:bg-gray-300'}`}
+                className={`px-3 py-1.5 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-900 dark:text-white' : 'hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'}`}
               >
                 Grille
               </button>
             </div>
             
-            <button className="px-4 py-2 bg-gray-100 dark:bg-gray-200 text-gray-700 dark:text-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-300 transition-colors flex items-center gap-2">
+            <button className="px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex items-center gap-2">
               <DownloadIcon className="size-5" />
               Exporter la liste
             </button>
@@ -278,7 +278,7 @@ export default function ChildrenPage() {
               placeholder="Rechercher un enfant par nom, prénom ou classe..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-100 border border-gray-300 dark:border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-600"
+              className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-500"
             />
           </div>
           
@@ -290,7 +290,7 @@ export default function ChildrenPage() {
               <select
                 value={filterClass}
                 onChange={(e) => setFilterClass(e.target.value)}
-                className="pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-100 border border-gray-300 dark:border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-600"
+                className="pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-500"
               >
                 <option value="all">Toutes les classes</option>
                 {classes.filter(c => c !== "all").map(classe => (
@@ -305,7 +305,7 @@ export default function ChildrenPage() {
               <select
                 value={filterPresence}
                 onChange={(e) => setFilterPresence(e.target.value)}
-                className="px-4 py-3 bg-gray-50 dark:bg-gray-100 border border-gray-300 dark:border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-600"
+                className="px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-500"
               >
                 <option value="all">Tous les statuts</option>
                 <option value="present">Présents</option>
@@ -319,25 +319,25 @@ export default function ChildrenPage() {
 
       {/* Affichage selon le mode sélectionné */}
       {viewMode === 'list' ? (
-        <div className="bg-white dark:bg-white rounded-2xl border border-gray-200 dark:border-gray-300 overflow-hidden">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50 dark:bg-gray-100">
+              <thead className="bg-indigo-500 dark:from-blue-900/20 dark:to-indigo-900/20">
                 <tr>
-                  <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700 dark:text-gray-800">Enfant</th>
-                  <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700 dark:text-gray-800">Âge/Classe</th>
-                  <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700 dark:text-gray-800">Contact parents</th>
-                  <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700 dark:text-gray-800">Dernière observation</th>
-                  <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700 dark:text-gray-800">Actions</th>
+                  <th className="py-3 px-4 text-left text-sm font-semibold text-white">Enfant</th>
+                  <th className="py-3 px-4 text-left text-sm font-semibold text-white">Âge/Classe</th>
+                  <th className="py-3 px-4 text-left text-sm font-semibold text-white">Contact parents</th>
+                  <th className="py-3 px-4 text-left text-sm font-semibold text-white">Dernière observation</th>
+                  <th className="py-3 px-4 text-left text-sm font-semibold text-white">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-gray-200">
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
                 {filteredEnfants.map(enfant => (
-                  <tr key={enfant.id} className="hover:bg-gray-50 dark:hover:bg-gray-100 transition-colors">
+                  <tr key={enfant.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                     <td className="py-4 px-4">
                       <div className="flex items-center gap-3">
                         <div className="relative">
-                          <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-300">
+                          <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700">
                             {enfant.photo ? (
                               <img 
                                 src={enfant.photo} 
@@ -349,8 +349,8 @@ export default function ChildrenPage() {
                                   const parent = target.parentElement;
                                   if (parent) {
                                     parent.innerHTML = `
-                                      <div class="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-200">
-                                        <span class="font-medium text-gray-600 dark:text-gray-700">
+                                      <div class="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-800">
+                                        <span class="font-medium text-gray-600 dark:text-gray-300">
                                           ${enfant.prenom[0]}${enfant.nom[0]}
                                         </span>
                                       </div>
@@ -359,8 +359,8 @@ export default function ChildrenPage() {
                                 }}
                               />
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-200">
-                                <span className="font-medium text-gray-600 dark:text-gray-700">
+                              <div className="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-800">
+                                <span className="font-medium text-gray-600 dark:text-gray-300">
                                   {enfant.prenom[0]}{enfant.nom[0]}
                                 </span>
                               </div>
@@ -368,23 +368,23 @@ export default function ChildrenPage() {
                           </div>
                         </div>
                         <div>
-                          <div className="font-medium text-gray-900 dark:text-gray-900">
+                          <div className="font-medium text-gray-900 dark:text-white">
                             {enfant.prenom} {enfant.nom}
                           </div>
-                          <div className="text-sm text-gray-500 dark:text-gray-700">
+                          <div className="text-sm text-gray-500 dark:text-gray-400">
                             {enfant.allergies?.join(", ") || "Aucune allergie"}
                           </div>
                         </div>
                       </div>
                     </td>
                     <td className="py-4 px-4">
-                      <div className="font-medium text-gray-900 dark:text-gray-900">{enfant.age} ans</div>
+                      <div className="font-medium text-gray-900 dark:text-white">{enfant.age} ans</div>
                       <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium mt-1 ${
-                        enfant.classe.includes("3-4") ? "bg-blue-100 text-blue-800 dark:bg-blue-100 dark:text-blue-700" :
-                        enfant.classe.includes("4-5") ? "bg-indigo-100 text-indigo-800 dark:bg-indigo-100 dark:text-indigo-700" :
-                        enfant.classe.includes("6-7") ? "bg-green-100 text-green-800 dark:bg-green-100 dark:text-green-700" :
-                        enfant.classe.includes("8-9") ? "bg-amber-100 text-amber-800 dark:bg-amber-100 dark:text-amber-700" :
-                        "bg-purple-100 text-purple-800 dark:bg-purple-100 dark:text-purple-700"
+                        enfant.classe.includes("3-4") ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400" :
+                        enfant.classe.includes("4-5") ? "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400" :
+                        enfant.classe.includes("6-7") ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" :
+                        enfant.classe.includes("8-9") ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400" :
+                        "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400"
                       }`}>
                         {enfant.classe}
                       </div>
@@ -392,16 +392,16 @@ export default function ChildrenPage() {
                     
                     <td className="py-4 px-4">
                       <div className="space-y-1">
-                        <div className="text-sm font-medium text-gray-900 dark:text-gray-900">
+                        <div className="text-sm font-medium text-gray-900 dark:text-white">
                           {enfant.parentNom}
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-700">
+                        <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                           <svg xmlns="http://www.w3.org/2000/svg" className="size-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
                           </svg>
                           {enfant.parentTelephone}
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-700">
+                        <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                           <MailIcon className="size-3" />
                           {enfant.parentEmail}
                         </div>
@@ -409,11 +409,11 @@ export default function ChildrenPage() {
                     </td>
                     <td className="py-4 px-4">
                       <div className="max-w-xs">
-                        <div className="text-sm text-gray-600 dark:text-gray-700 line-clamp-2">
+                        <div className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
                           {enfant.derniereObservation || "Aucune observation récente"}
                         </div>
                         {enfant.derniereObservationDate && (
-                          <div className="text-xs text-gray-500 dark:text-gray-600 mt-1">
+                          <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">
                             <CalenderIcon className="inline size-3 mr-1" />
                             {new Date(enfant.derniereObservationDate).toLocaleDateString('fr-FR')}
                           </div>
@@ -424,14 +424,14 @@ export default function ChildrenPage() {
                       <div className="flex items-center gap-2">
                         <button 
                           onClick={() => setSelectedEnfant(enfant)}
-                          className="px-3 py-2 bg-blue-50 dark:bg-blue-100 text-blue-600 dark:text-blue-700 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-200 transition-colors text-sm font-medium flex items-center gap-2"
+                          className="px-3 py-2 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors text-sm font-medium flex items-center gap-2"
                           title="Voir le profil complet"
                         >
                           <EyeIcon className="size-4" />
                           Voir profil
                         </button>
                         <button 
-                          className="px-3 py-2 bg-gray-50 dark:bg-gray-100 text-gray-700 dark:text-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-200 transition-colors text-sm font-medium flex items-center gap-2"
+                          className="px-3 py-2 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-sm font-medium flex items-center gap-2"
                           title="Contacter les parents"
                         >
                           <MailIcon className="size-4" />
@@ -448,10 +448,10 @@ export default function ChildrenPage() {
           {filteredEnfants.length === 0 && (
             <div className="text-center py-12">
               <UserIcon className="size-12 text-gray-400 dark:text-gray-500 mx-auto mb-3" />
-              <p className="text-gray-500 dark:text-gray-600">Aucun enfant trouvé avec ces critères</p>
+              <p className="text-gray-500 dark:text-gray-400">Aucun enfant trouvé avec ces critères</p>
               <button 
                 onClick={() => {setSearchTerm(""); setFilterClass("all"); setFilterPresence("all");}}
-                className="mt-2 text-blue-600 dark:text-blue-700 hover:underline"
+                className="mt-2 text-blue-600 dark:text-blue-400 hover:underline"
               >
                 Réinitialiser les filtres
               </button>
@@ -462,10 +462,10 @@ export default function ChildrenPage() {
         // Mode grille
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredEnfants.map(enfant => (
-            <div key={enfant.id} className="bg-white dark:bg-white rounded-2xl border border-gray-200 dark:border-gray-300 p-5 hover:shadow-lg transition-shadow">
+            <div key={enfant.id} className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5 hover:shadow-lg transition-shadow">
               <div className="flex flex-col items-center text-center">
                 <div className="relative mb-4">
-                  <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-300 border-4 border-white dark:border-gray-200">
+                  <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 border-4 border-white dark:border-gray-800">
                     {enfant.photo ? (
                       <img 
                         src={enfant.photo} 
@@ -473,14 +473,14 @@ export default function ChildrenPage() {
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-200">
-                        <span className="font-medium text-gray-600 dark:text-gray-700 text-lg">
+                      <div className="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-800">
+                        <span className="font-medium text-gray-600 dark:text-gray-300 text-lg">
                           {enfant.prenom[0]}{enfant.nom[0]}
                         </span>
                       </div>
                     )}
                   </div>
-                  <div className={`absolute -bottom-2 -right-2 w-6 h-6 rounded-full border-2 border-white dark:border-gray-200 flex items-center justify-center ${
+                  <div className={`absolute -bottom-2 -right-2 w-6 h-6 rounded-full border-2 border-white dark:border-gray-800 flex items-center justify-center ${
                     enfant.presence === 'present' ? 'bg-green-500 dark:bg-green-600' :
                     enfant.presence === 'absent' ? 'bg-red-500 dark:bg-red-600' :
                     'bg-amber-500 dark:bg-amber-600'
@@ -489,38 +489,38 @@ export default function ChildrenPage() {
                   </div>
                 </div>
                 
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-900">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                   {enfant.prenom} {enfant.nom}
                 </h3>
                 
                 <div className="mt-2 flex items-center gap-2">
-                  <span className="text-sm text-gray-600 dark:text-gray-700">{enfant.age} ans</span>
-                  <span className="text-sm text-gray-400 dark:text-gray-500">•</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">{enfant.age} ans</span>
+                  <span className="text-sm text-gray-400 dark:text-gray-600">•</span>
                   <span className={`text-xs font-medium px-2 py-0.5 rounded ${
-                    enfant.classe.includes("3-4") ? "bg-blue-100 text-blue-800 dark:bg-blue-100 dark:text-blue-700" :
-                    "bg-purple-100 text-purple-800 dark:bg-purple-100 dark:text-purple-700"
+                    enfant.classe.includes("3-4") ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400" :
+                    "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400"
                   }`}>
                     {enfant.classe}
                   </span>
                 </div>
                 
                 <div className="mt-4 w-full">
-                  <div className="text-sm text-gray-500 dark:text-gray-700 text-left mb-2">
+                  <div className="text-sm text-gray-500 dark:text-gray-400 text-left mb-2">
                     <strong>Points forts :</strong>
                     <div className="flex flex-wrap gap-1 mt-1">
                       {enfant.pointsFort?.slice(0, 2).map((point, idx) => (
-                        <span key={idx} className="text-xs bg-green-50 text-green-700 dark:bg-green-100 dark:text-green-800 px-2 py-0.5 rounded">
+                        <span key={idx} className="text-xs bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400 px-2 py-0.5 rounded">
                           {point}
                         </span>
                       ))}
                     </div>
                   </div>
                   
-                  <div className="text-sm text-gray-500 dark:text-gray-700 text-left mb-4">
+                  <div className="text-sm text-gray-500 dark:text-gray-400 text-left mb-4">
                     <strong>Activités préférées :</strong>
                     <div className="flex flex-wrap gap-1 mt-1">
                       {enfant.activitesPreferees?.slice(0, 2).map((activite, idx) => (
-                        <span key={idx} className="text-xs bg-blue-50 text-blue-700 dark:bg-blue-100 dark:text-blue-800 px-2 py-0.5 rounded">
+                        <span key={idx} className="text-xs bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 px-2 py-0.5 rounded">
                           {activite}
                         </span>
                       ))}
@@ -528,7 +528,7 @@ export default function ChildrenPage() {
                   </div>
                 </div>
                 
-                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-200 w-full">
+                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-800 w-full">
                   <div className="flex justify-between gap-2">
                     <button 
                       onClick={() => setSelectedEnfant(enfant)}
@@ -537,7 +537,7 @@ export default function ChildrenPage() {
                       Voir profil
                     </button>
                     <button 
-                      className="px-3 py-2 bg-gray-100 dark:bg-gray-200 text-gray-700 dark:text-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-300 transition-colors"
+                      className="px-3 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                       title="Contacter parents"
                     >
                       <MailIcon className="size-4" />

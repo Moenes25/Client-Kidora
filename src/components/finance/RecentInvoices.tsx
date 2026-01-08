@@ -8,13 +8,13 @@ export default function RecentInvoices() {
     { id: "INV-004", parent: "Marie Petit", child: "Hugo", amount: "450 DT", date: "01 Juin 2024", status: "overdue" },
   ];
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "paid": return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
-      case "pending": return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400";
-      case "overdue": return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400";
-    }
-  };
+ const getStatusColor = (status: string) => {
+  switch (status) {
+    case "paid": return "bg-gradient-to-r from-green-500 to-emerald-600 border-green-400 text-white";
+    case "pending": return "bg-gradient-to-r from-amber-500 to-yellow-600 border-amber-400 text-white";
+    case "overdue": return "bg-gradient-to-r from-red-500 to-rose-600 border-red-400 text-white";
+  }
+};
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
@@ -60,9 +60,9 @@ export default function RecentInvoices() {
                   {invoice.date}
                 </td>
                 <td className="py-3">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(invoice.status)}`}>
+                  <span className={`px-3 py-1.5 rounded-full text-xs font-medium ${getStatusColor(invoice.status)} shadow-sm`}>
                     {invoice.status === "paid" ? "Payée" : 
-                     invoice.status === "pending" ? "En attente" : "En retard"}
+                    invoice.status === "pending" ? "En attente" : "En retard"}
                   </span>
                 </td>
                 <td className="py-3">

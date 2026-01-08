@@ -2,10 +2,14 @@ import { CheckCircle, Clock, AlertCircle } from "lucide-react";
 
 export default function PaymentStatus() {
   const payments = [
-    { status: "paid", label: "Payés", count: 42, amount: "10,450 DT", color: "green" },
-    { status: "pending", label: "En attente", count: 5, amount: "2,850 DT", color: "yellow" },
-    { status: "overdue", label: "En retard", count: 1, amount: "350 DT", color: "red" }
-  ];
+  { status: "paid", label: "Payés", count: 42, amount: "10,450 DT", 
+    bgColor: "bg-gradient-to-br from-green-500 to-emerald-600 border-green-400" },
+  { status: "pending", label: "En attente", count: 5, amount: "2,850 DT", 
+    bgColor: "bg-gradient-to-br from-amber-500 to-yellow-600 border-amber-400" },
+  { status: "overdue", label: "En retard", count: 1, amount: "350 DT", 
+    bgColor: "bg-gradient-to-br from-red-500 to-rose-600 border-red-400" }
+];
+
 
   const getIcon = (status: string) => {
     switch (status) {
@@ -26,7 +30,8 @@ export default function PaymentStatus() {
           <div key={payment.status} className="p-4 rounded-lg border border-gray-200 dark:border-gray-700">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-lg bg-${payment.color}-100 dark:bg-${payment.color}-900/30 text-${payment.color}-600`}>
+                {/* <div className={`p-2 rounded-lg bg-${payment.color}-100 dark:bg-${payment.color}-900/30 text-${payment.color}-600`}> */}
+                <div key={payment.status} className={`${payment.bgColor} rounded-xl p-5 border shadow-sm`}>
                   {getIcon(payment.status)}
                 </div>
                 <div>
@@ -58,7 +63,7 @@ export default function PaymentStatus() {
               </div>
               <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                 <div 
-                  className={`bg-${payment.color}-500 h-2 rounded-full`}
+                  className={`bg-${payment.bgColor}-500 h-2 rounded-full`}
                   style={{ width: `${(payment.count / 48) * 100}%` }}
                 />
               </div>

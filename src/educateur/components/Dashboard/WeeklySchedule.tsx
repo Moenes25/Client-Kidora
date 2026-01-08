@@ -9,8 +9,8 @@ export default function WeeklySchedule() {
   ];
   
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-300 dark:bg-white shadow-sm h-full">
-      <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-900 mb-4">
+    <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900 shadow-sm h-full">
+      <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
         Planning de la semaine
       </h3>
       
@@ -21,16 +21,16 @@ export default function WeeklySchedule() {
           {days.map((day, index) => (
             <div 
               key={index} 
-              className={`flex-1 p-3 rounded-xl border ${day.isToday ? 'border-blue-500 bg-blue-50 dark:bg-blue-100' : 'border-gray-200 dark:border-gray-300 bg-gray-50 dark:bg-gray-100'}`}
+              className={`flex-1 p-3 rounded-xl border ${day.isToday ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800'}`}
             >
               <div className="text-center">
-                <div className={`text-sm font-medium ${day.isToday ? 'text-blue-600 dark:text-blue-700' : 'text-gray-500 dark:text-gray-700'}`}>
+                <div className={`text-sm font-medium ${day.isToday ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`}>
                   {day.name}
                 </div>
-                <div className={`text-xl font-bold mt-1 ${day.isToday ? 'text-blue-700 dark:text-blue-800' : 'text-gray-800 dark:text-gray-900'}`}>
+                <div className={`text-xl font-bold mt-1 ${day.isToday ? 'text-blue-700 dark:text-blue-300' : 'text-gray-800 dark:text-white'}`}>
                   {day.date}
                 </div>
-                <div className="text-xs text-gray-500 dark:text-gray-700 mt-2">
+                <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                   {day.activities} act.
                 </div>
               </div>
@@ -39,30 +39,30 @@ export default function WeeklySchedule() {
         </div>
         
         {/* Ligne des heures/activités en dessous */}
-        <div className="pt-4 border-t border-gray-200 dark:border-gray-200">
+        <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between">
-            <div className="text-sm font-medium text-gray-700 dark:text-gray-800">
+            <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
               Aujourd'hui (17 Mars)
             </div>
-            <button className="text-sm text-blue-600 dark:text-blue-700 hover:underline">
+            <button className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
               Voir détails →
             </button>
           </div>
           
           <div className="mt-3 space-y-2">
-            <div className="flex items-center p-2 bg-blue-50 dark:bg-blue-100 rounded-lg">
-              <div className="w-2 h-2 bg-blue-500 dark:bg-blue-600 rounded-full mr-3"></div>
+            <div className="flex items-center p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+              <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
               <div className="flex-1">
-                <div className="text-sm font-medium text-gray-800 dark:text-gray-900">Activité matinale</div>
-                <div className="text-xs text-gray-500 dark:text-gray-700">9:00 - 10:30</div>
+                <div className="text-sm font-medium text-gray-800 dark:text-white">Activité matinale</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">9:00 - 10:30</div>
               </div>
             </div>
             
-            <div className="flex items-center p-2 bg-green-50 dark:bg-green-100 rounded-lg">
-              <div className="w-2 h-2 bg-green-500 dark:bg-green-600 rounded-full mr-3"></div>
+            <div className="flex items-center p-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
+              <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
               <div className="flex-1">
-                <div className="text-sm font-medium text-gray-800 dark:text-gray-900">Atelier créatif</div>
-                <div className="text-xs text-gray-500 dark:text-gray-700">11:00 - 12:30</div>
+                <div className="text-sm font-medium text-gray-800 dark:text-white">Atelier créatif</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">11:00 - 12:30</div>
               </div>
             </div>
           </div>

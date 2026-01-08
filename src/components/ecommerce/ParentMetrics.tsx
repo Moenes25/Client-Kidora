@@ -1,12 +1,11 @@
 // components/ecommerce/ParentMetrics.tsx
 export default function ParentMetrics() {
   return (
-    <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
-      <div className="flex items-center justify-between mb-4">
-        <div className="p-3 bg-white dark:bg-gray-800 rounded-xl">
-          {/* Icône Parents */}
+    <div className="bg-gradient-to-br from-orange-500 to-red-500 rounded-xl p-5 border border-orange-400 shadow-sm">
+      <div className="flex items-start justify-between mb-3">
+        <div className="p-2.5 bg-orange-400 rounded-lg">
           <svg 
-            className="w-6 h-6 text-purple-600 dark:text-purple-400" 
+            className="w-5 h-5 text-white" 
             fill="none" 
             stroke="currentColor" 
             viewBox="0 0 24 24"
@@ -19,17 +18,15 @@ export default function ParentMetrics() {
             />
           </svg>
         </div>
-        {/* <span className="text-sm font-medium text-green-600 bg-green-50 dark:bg-green-900/30 px-2 py-1 rounded-full">
-          +8%
-        </span> */}
       </div>
       
-      <h3 className="text-2xl font-bold text-gray-800 dark:text-white">38</h3>
-      <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">Parents actives</p>
-      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-        <div className="flex justify-between text-sm">
-          <span className="text-gray-500">Nouveaux ce mois: 5</span>
-          <span className="font-medium text-green-600">+13.2%</span>
+      <h3 className="text-xl font-bold text-white">38</h3>
+      <p className="text-orange-100 text-xs font-medium mt-0.5">Parents actives</p>
+      
+      <div className="mt-3 pt-3 border-t border-orange-300/60">
+        <div className="flex justify-between items-center text-xs">
+          <span className="text-orange-200 font-medium">Nouveaux ce mois: 5</span>
+          <span className="font-bold text-green-300 bg-green-900/30 px-1.5 py-0.5 rounded">+13.2%</span>
         </div>
       </div>
     </div>

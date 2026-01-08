@@ -1,12 +1,11 @@
 // components/ecommerce/ChildrenTotalMetrics.tsx
 export default function ChildrenTotalMetrics() {
   return (
-    <div className="bg-gradient-to-br from-cyan-50 to-blue-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
-      <div className="flex items-center justify-between mb-4">
-        <div className="p-3 bg-white dark:bg-gray-800 rounded-xl">
-          {/* Icône Enfants */}
+    <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-5 border border-green-400 shadow-sm">
+      <div className="flex items-start justify-between mb-3">
+        <div className="p-2.5 bg-green-400 rounded-lg">
           <svg 
-            className="w-6 h-6 text-cyan-600 dark:text-cyan-400" 
+            className="w-5 h-5 text-white" 
             fill="none" 
             stroke="currentColor" 
             viewBox="0 0 24 24"
@@ -19,28 +18,27 @@ export default function ChildrenTotalMetrics() {
             />
           </svg>
         </div>
-        <span className="text-sm font-medium text-green-600 bg-green-50 dark:bg-green-900/30 px-2 py-1 rounded-full">
+        <span className="text-xs font-medium text-green-100 bg-green-600/80 px-1.5 py-0.5 rounded-full">
           {/* +5% */}
         </span>
       </div>
       
-      <h3 className="text-2xl font-bold text-gray-800 dark:text-white">48</h3>
-      <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">Enfants inscrits</p>
-      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-        <div className="flex justify-between text-sm">
-          <div>
-            <span className="text-gray-500">Par classe:</span>
-            <div className="flex gap-2 mt-1">
-              <span className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded">
-                18 Petits
-              </span>
-              <span className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded">
-                16 Moyens
-              </span>
-              <span className="text-xs px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded">
-                14 Grands
-              </span>
-            </div>
+      <h3 className="text-xl font-bold text-white">48</h3>
+      <p className="text-green-100 text-xs font-medium mt-0.5">Enfants inscrits</p>
+      
+      <div className="mt-3 pt-3 border-t border-green-300/60">
+        <div>
+          <span className="text-xs font-medium text-green-200">Par classe:</span>
+          <div className="flex gap-1.5 mt-1.5">
+            <span className="text-xs px-1.5 py-0.5 bg-green-700/70 text-green-100 rounded-lg">
+              18 Petits
+            </span>
+            <span className="text-xs px-1.5 py-0.5 bg-green-700/70 text-green-100 rounded-lg">
+              16 Moyens
+            </span>
+            <span className="text-xs px-1.5 py-0.5 bg-green-700/70 text-green-100 rounded-lg">
+              14 Grands
+            </span>
           </div>
         </div>
       </div>

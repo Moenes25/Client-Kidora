@@ -20,7 +20,7 @@ const allEducators: Educator[] = [
     role: "Éducatrice principale",
     status: 'present',
     avatar: "/images/3-4_ans/educatrice_1.jpg",
-    assignedClass: "Petits (2-3 ans)",
+    assignedClass: "C1",
     timeIn: "08:00",
     timeOut: "17:00"
   },
@@ -30,7 +30,7 @@ const allEducators: Educator[] = [
     role: "Assistant éducateur",
     status: 'present',
     avatar: "/images/user/user-35.jpg",
-    assignedClass: "Moyens (3-4 ans)",
+    assignedClass: "C2",
     timeIn: "08:30",
     timeOut: "17:30"
   },
@@ -40,7 +40,7 @@ const allEducators: Educator[] = [
     role: "Éducatrice",
     status: 'present',
     avatar: "/images/user/user-36.jpg",
-    assignedClass: "Grands (4-5 ans)",
+    assignedClass: "C3",
     timeIn: "08:15",
     timeOut: "16:45"
   },
@@ -50,7 +50,7 @@ const allEducators: Educator[] = [
     role: "Assistant",
     status: 'present',
     avatar: "/images/user/user-37.jpg",
-    assignedClass: "Petits (2-3 ans)",
+    assignedClass: "C4",
     timeIn: "09:00",
     timeOut: "18:00"
   },
@@ -60,7 +60,7 @@ const allEducators: Educator[] = [
     role: "Stagiaire",
     status: 'present',
     avatar: "/images/user/user-38.jpg",
-    assignedClass: "Grands (4-5 ans)",
+    assignedClass: "C5",
     timeIn: "08:45",
     timeOut: "16:30"
   },
@@ -70,7 +70,7 @@ const allEducators: Educator[] = [
     role: "Éducateur spécialisé",
     status: 'present',
     avatar: "/images/user/user-39.jpg",
-    assignedClass: "Moyens (3-4 ans)",
+    assignedClass: "C6",
     timeIn: "08:20",
     timeOut: "17:15"
   },
@@ -80,7 +80,7 @@ const allEducators: Educator[] = [
     role: "Éducatrice spécialisée",
     status: 'absent',
     avatar: "/images/user/user-40.jpg",
-    assignedClass: "Moyens (3-4 ans)"
+    assignedClass: "C7"
   },
   {
     id: 8,
@@ -161,8 +161,9 @@ export default function EducatorList() {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
-      <div className="flex justify-between items-center mb-6">
+    // <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
+   <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 h-full flex flex-col">
+   <div className="flex justify-between items-center mb-6">
         <div>
           <h3 className="text-lg font-semibold text-gray-800 dark:text-white">
             Équipe présente aujourd'hui

@@ -8,12 +8,11 @@ export default function EducateursMetrics() {
   ];
 
   return (
-    <div className="bg-gradient-to-br from-teal-50 to-emerald-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
-      <div className="flex items-center justify-between mb-4">
-        <div className="p-3 bg-white dark:bg-gray-800 rounded-xl">
-          {/* Icône Éducateurs */}
+    <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl p-5 border border-indigo-400 shadow-sm">
+      <div className="flex items-start justify-between mb-3">
+        <div className="p-2.5 bg-indigo-400 rounded-lg">
           <svg 
-            className="w-6 h-6 text-teal-600 dark:text-teal-400" 
+            className="w-5 h-5 text-white" 
             fill="none" 
             stroke="currentColor" 
             viewBox="0 0 24 24"
@@ -26,47 +25,42 @@ export default function EducateursMetrics() {
             />
           </svg>
         </div>
-        {/* <span className="text-sm font-medium text-green-600 bg-green-50 dark:bg-green-900/30 px-2 py-1 rounded-full">
-          +1
-        </span> */}
       </div>
       
-      <h3 className="text-2xl font-bold text-gray-800 dark:text-white">8</h3>
-      <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">Éducateurs actifs</p>
+      <h3 className="text-xl font-bold text-white">8</h3>
+      <p className="text-indigo-100 text-xs font-medium mt-0.5">Éducateurs actifs</p>
       
-      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-        <div className="space-y-2">
-          <div className="flex justify-between items-center text-sm">
-            <span className="text-gray-500">Présents aujourd'hui:</span>
-            <span className="font-medium text-green-600">6</span>
+      <div className="mt-3 pt-3 border-t border-indigo-300/60">
+        <div className="space-y-1.5 mb-2.5">
+          <div className="flex justify-between items-center text-xs">
+            <span className="text-indigo-200 font-medium">Présents:</span>
+            <span className="font-bold text-green-300">6</span>
           </div>
-          <div className="flex justify-between items-center text-sm">
-            <span className="text-gray-500">Absents aujourd'hui:</span>
-            <span className="font-medium text-red-600">2</span>
+          <div className="flex justify-between items-center text-xs">
+            <span className="text-indigo-200 font-medium">Absents:</span>
+            <span className="font-bold text-red-300">2</span>
           </div>
         </div>
         
-        <div className="mt-3 flex items-center gap-2">
-          <div className="flex -space-x-2">
-            {/* Images des éducateurs */}
+        <div className="flex items-center gap-1.5">
+          <div className="flex -space-x-1.5">
             {educators.map((educator) => (
               <div 
                 key={educator.id} 
-                className="relative w-8 h-8 rounded-full border-2 border-white dark:border-gray-800 overflow-hidden"
+                className="relative w-6 h-6 rounded-full border border-indigo-300 overflow-hidden"
               >
                 <img
                   src={educator.avatar}
                   alt={educator.name}
                   className="w-full h-full object-cover"
                   onError={(e) => {
-                    // Fallback si l'image n'existe pas
-                    e.currentTarget.src = `https://ui-avatars.com/api/?name=${educator.name}&background=teal&color=fff&size=32`;
+                    e.currentTarget.src = `https://ui-avatars.com/api/?name=${educator.name}&background=indigo&color=fff&size=24`;
                   }}
                 />
               </div>
             ))}
           </div>
-          <span className="text-xs text-gray-500">+4 autres</span>
+          <span className="text-xs text-indigo-200 font-medium">+4 autres</span>
         </div>
       </div>
     </div>

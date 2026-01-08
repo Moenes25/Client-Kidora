@@ -45,21 +45,22 @@ export default function RevenueChart() {
         </div>
         
         <div className="flex items-center gap-2">
-          <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+          <div className="flex bg-gray-100 dark:bg-gray-700/50 rounded-lg p-1 backdrop-blur-sm">
             {(["monthly", "yearly"] as const).map((range) => (
               <button
                 key={range}
-                className={`px-3 py-1 text-sm rounded-md transition-all ${
+                className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${
                   timeRange === range
-                    ? "bg-white dark:bg-gray-600 text-gray-800 dark:text-white shadow-sm"
-                    : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white"
+                    ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-sm"
+                    : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-600/50"
                 }`}
                 onClick={() => setTimeRange(range)}
               >
-                {range === "monthly" ? "Mois" : "Année"}
+                {range === "monthly" ? "Mensuel" : "Annuel"}
               </button>
             ))}
           </div>
+
           <button 
             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
             title="Exporter les données"

@@ -3,6 +3,7 @@ import Chart from "react-apexcharts";
 import { ApexOptions } from "apexcharts";
 import { Calendar, Users, CheckCircle } from "lucide-react";
 import { useState } from "react";
+import React from "react";
 
 export default function AttendanceChart() {
   const [timeRange, setTimeRange] = useState<'week' | 'month'>('week');
@@ -151,116 +152,121 @@ export default function AttendanceChart() {
     }
   };
 
-  return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6">
-        <div>
-          <h3 className="text-lg font-semibold text-gray-800 dark:text-white">
-            {timeRange === 'week' ? 'Présence Hebdomadaire' : 'Présence Mensuelle'}
-          </h3>
-          <p className="text-gray-600 dark:text-gray-400 text-sm">
-            {timeRange === 'week' 
-              ? 'Suivi des présences des enfants cette semaine' 
-              : 'Analyse des présences sur le mois en cours'}
-          </p>
-        </div>
-        
-        <div className="flex gap-2 mt-3 sm:mt-0">
-          <button 
-            onClick={() => setTimeRange('week')}
-            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-              timeRange === 'week'
-                ? 'bg-blue-600 text-white hover:bg-blue-700'
-                : 'text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
-            }`}
-          >
-            Cette semaine
-          </button>
-          <button 
-            onClick={() => setTimeRange('month')}
-            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-              timeRange === 'month'
-                ? 'bg-blue-600 text-white hover:bg-blue-700'
-                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-            }`}
-          >
-            Ce mois
-          </button>
-        </div>
+  // components/nursery/AttendanceChart.tsx (seulement la partie du retour JSX)
+return (
+  <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700 h-full">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4">
+      <div>
+        <h3 className="text-base font-semibold text-gray-800 dark:text-white">
+          {timeRange === 'week' ? 'Présence Hebdomadaire' : 'Présence Mensuelle'}
+        </h3>
+        <p className="text-gray-600 dark:text-gray-400 text-xs">
+          {timeRange === 'week' 
+            ? 'Suivi des présences des enfants cette semaine' 
+            : 'Analyse des présences sur le mois en cours'}
+        </p>
       </div>
+      
+      <div className="flex gap-1.5 mt-2 sm:mt-0">
+        <button 
+          onClick={() => setTimeRange('week')}
+          className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+            timeRange === 'week'
+              ? 'bg-blue-600 text-white hover:bg-blue-700'
+              : 'text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
+          }`}
+        >
+          Cette semaine
+        </button>
+        <button 
+          onClick={() => setTimeRange('month')}
+          className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+            timeRange === 'month'
+              ? 'bg-blue-600 text-white hover:bg-blue-700'
+              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+          }`}
+        >
+          Ce mois
+        </button>
+      </div>
+    </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        {currentData.stats.map((stat, index) => (
-          <div key={index} className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-xl">
-            <div className="flex items-center justify-between">
-              <div className={`p-2 rounded-lg ${stat.color}`}>
-                {stat.icon}
-              </div>
-              {stat.change && (
-                <span className={`text-sm font-medium ${
-                  stat.change.startsWith('+') ? 'text-green-600' : 'text-red-600'
-                }`}>
-                  {stat.change}
-                </span>
-              )}
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+      {currentData.stats.map((stat, index) => (
+        <div key={index} className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg">
+          <div className="flex items-center justify-between">
+            <div className={`p-1.5 rounded ${stat.color}`}>
+              {React.cloneElement(stat.icon, { className: "w-4 h-4" })}
             </div>
-            <p className="text-2xl font-bold text-gray-800 dark:text-white mt-3">
-              {stat.value}
-            </p>
-            <p className="text-gray-600 dark:text-gray-400 text-sm">
-              {stat.label}
-            </p>
-            {stat.subtext && (
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                {stat.subtext}
-              </p>
+            {stat.change && (
+              <span className={`text-xs font-medium ${
+                stat.change.startsWith('+') ? 'text-green-600' : 'text-red-600'
+              }`}>
+                {stat.change}
+              </span>
             )}
           </div>
-        ))}
-      </div>
+          <p className="text-lg font-bold text-gray-800 dark:text-white mt-2">
+            {stat.value}
+          </p>
+          <p className="text-gray-600 dark:text-gray-400 text-xs">
+            {stat.label}
+          </p>
+          {stat.subtext && (
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+              {stat.subtext}
+            </p>
+          )}
+        </div>
+      ))}
+    </div>
 
-      {/* Information supplémentaire selon la vue */}
-      <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-        <div className="flex items-center gap-2 text-blue-700 dark:text-blue-300 text-sm">
-          <span className="font-medium">
+    <div className="mb-3 p-2.5 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+      <div className="flex items-center gap-1.5 text-blue-700 dark:text-blue-300 text-xs">
+        <span>
+          {timeRange === 'week' 
+            ? '📊 Cette semaine : Tendance positive de présence (+5% vs semaine dernière)'
+            : '📈 Ce mois-ci : Meilleure performance le lundi avec 95% de présence'}
+        </span>
+      </div>
+    </div>
+
+    <div className="min-w-0" style={{ height: '250px' }}>
+      <Chart 
+        options={{
+          ...options,
+          chart: {
+            ...options.chart,
+            height: 250
+          }
+        }} 
+        series={currentData.series} 
+        type="area" 
+        height={250}
+      />
+    </div>
+
+    <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between text-xs">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1">
+            <div className="w-2 h-2 bg-blue-500 rounded"></div>
+            <span className="text-gray-600 dark:text-gray-400">Présents</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-2 h-2 bg-purple-500 rounded"></div>
+            <span className="text-gray-600 dark:text-gray-400">Total inscrits</span>
+          </div>
+        </div>
+        <div className="mt-1 sm:mt-0">
+          <span className="text-gray-500 dark:text-gray-400">
             {timeRange === 'week' 
-              ? '📊 Cette semaine : Tendance positive de présence (+5% vs semaine dernière)'
-              : '📈 Ce mois-ci : Meilleure performance le lundi avec 95% de présence'}
+              ? 'Données mises à jour aujourd\'hui à 18:00'
+              : 'Données du mois en cours'}
           </span>
         </div>
       </div>
-
-      <div className="min-w-0">
-        <Chart 
-          options={options} 
-          series={currentData.series} 
-          type="area" 
-          height={320} 
-        />
-      </div>
-
-      {/* Légende et détails */}
-      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between text-sm">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-blue-500 rounded"></div>
-              <span className="text-gray-600 dark:text-gray-400">Présents</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-purple-500 rounded"></div>
-              <span className="text-gray-600 dark:text-gray-400">Total inscrits</span>
-            </div>
-          </div>
-          <div className="mt-2 sm:mt-0">
-            <span className="text-gray-500 dark:text-gray-400">
-              {timeRange === 'week' 
-                ? 'Données mises à jour aujourd\'hui à 18:00'
-                : 'Données du mois en cours'}
-            </span>
-          </div>
-        </div>
-      </div>
     </div>
-  );
+  </div>
+);
 }

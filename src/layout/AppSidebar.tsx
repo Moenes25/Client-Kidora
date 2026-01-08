@@ -16,11 +16,9 @@ import {
   TableIcon,
   UserCircleIcon,
   UserGroup02Icon,
-  
 } from "../icons";
 // import { UserGroup02Icon } from '@hugeicons-pro/core-stroke-rounded';
 import { useSidebar } from "../context/SidebarContext";
-
 
 type NavItem = {
   name: string;
@@ -28,12 +26,14 @@ type NavItem = {
   path?: string;
   subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
 };
+
 const SettingsIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
   </svg>
-)
+);
+
 const navItems: NavItem[] = [
   {
     icon: <GridIcon />,
@@ -41,12 +41,6 @@ const navItems: NavItem[] = [
     path: "/",
     // subItems: [{ name: "Ecommerce", path: "/", pro: false }],
   },
-  // {
-  //   icon: <GroupIcon />,
-  //   name: "Parents",
-  //   path: "#",
-  //   // subItems: [{ name: "Ecommerce", path: "/", pro: false }],
-  // },
   {
     name: "Utilisateurs",
     icon: <UserGroup02Icon />,
@@ -56,110 +50,51 @@ const navItems: NavItem[] = [
     name: "Parents",
     icon: <GroupIcon />,
     path: "/basic-tables",
-    // subItems: [{ name: "Basic Tables", path: "/basic-tables", pro: false }],
   },
   {
     name: "Educateurs",
     icon: <GroupIcon />,
     path: "/educateurs",
-    // subItems: [{ name: "Basic Tables", path: "/basic-tables", pro: false }],
   },
   {
    name: "Enfants",
-   icon : <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path d="M256 128C256 92.7 284.7 64 320 64C355.3 64 384 92.7 384 128C384 163.3 355.3 192 320 192C284.7 192 256 163.3 256 128zM304 448L304 544C304 561.7 289.7 576 272 576C254.3 576 240 561.7 240 544L240 351.8L219.1 385C209.7 400 189.9 404.4 175 395C160.1 385.6 155.5 365.9 164.9 351L204.8 287.7C229.7 248 273.2 224 320 224C366.8 224 410.3 248 435.2 287.6L475.1 351C484.5 366 480 385.7 465.1 395.1C450.2 404.5 430.4 400 421 385.1L400 351.8L400 544C400 561.7 385.7 576 368 576C350.3 576 336 561.7 336 544L336 448L304 448z"/></svg>,
+   icon: <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path d="M256 128C256 92.7 284.7 64 320 64C355.3 64 384 92.7 384 128C384 163.3 355.3 192 320 192C284.7 192 256 163.3 256 128zM304 448L304 544C304 561.7 289.7 576 272 576C254.3 576 240 561.7 240 544L240 351.8L219.1 385C209.7 400 189.9 404.4 175 395C160.1 385.6 155.5 365.9 164.9 351L204.8 287.7C229.7 248 273.2 224 320 224C366.8 224 410.3 248 435.2 287.6L475.1 351C484.5 366 480 385.7 465.1 395.1C450.2 404.5 430.4 400 421 385.1L400 351.8L400 544C400 561.7 385.7 576 368 576C350.3 576 336 561.7 336 544L336 448L304 448z"/></svg>,
    path: "/enfants",
   },
-
   {
     name: "Classes",
-    icon: <BoxCubeIcon />, // Vous pouvez créer une icône spécifique
+    icon: <BoxCubeIcon />,
     path: "/classes",
   },
-  
   {
     name: "Finance", 
     icon: <PieChartIcon />,
     path: "/finance",
   },
-  
   {
     icon: <CalenderIcon />,
     name: "Calendar",
     path: "/calendar",
   },
-{
-  icon: ( <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M14 3v4a1 1 0 0 0 1 1h4"/>
-          <path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/>
-          <path d="M9 9h1"/>
-          <path d="M9 13h6"/>
-          <path d="M9 17h6"/>
-        </svg>), // Vous devez avoir ou créer cette icône
-  name: "Rapports",
-  path: "/reports",
-},
-  // {
-  //   icon: <UserCircleIcon />,
-  //   name: "User Profile",
-  //   path: "/profile",
-  // },
   {
-  icon: <SettingsIcon />, // Vous devez avoir ou créer cette icône
-  name: "Paramètres",
-  path: "/parametres",
-},
-  
-  // {
-  //   name: "Forms",
-  //   icon: <ListIcon />,
-  //   subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
-  // },
-  // {
-  //   name: "Tables",
-  //   icon: <TableIcon />,
-  //   path: "/basic-tables",
-  //   // subItems: [{ name: "Basic Tables", path: "/basic-tables", pro: false }],
-  // },
-  // {
-  //   name: "Pages",
-  //   icon: <PageIcon />,
-  //   subItems: [
-  //     { name: "Blank Page", path: "/blank", pro: false },
-  //     { name: "404 Error", path: "/error-404", pro: false },
-  //   ],
-  // },
+    icon: ( 
+      <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14 3v4a1 1 0 0 0 1 1h4"/>
+        <path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/>
+        <path d="M9 9h1"/>
+        <path d="M9 13h6"/>
+        <path d="M9 17h6"/>
+      </svg>
+    ),
+    name: "Rapports",
+    path: "/reports",
+  },
+  {
+    icon: <SettingsIcon />,
+    name: "Paramètres",
+    path: "/parametres",
+  },
 ];
-
-// const othersItems: NavItem[] = [
-//   {
-//     icon: <PieChartIcon />,
-//     name: "Charts",
-//     subItems: [
-//       { name: "Line Chart", path: "/line-chart", pro: false },
-//       { name: "Bar Chart", path: "/bar-chart", pro: false },
-//     ],
-//   },
-//   {
-//     icon: <BoxCubeIcon />,
-//     name: "UI Elements",
-//     subItems: [
-//       { name: "Alerts", path: "/alerts", pro: false },
-//       { name: "Avatar", path: "/avatars", pro: false },
-//       { name: "Badge", path: "/badge", pro: false },
-//       { name: "Buttons", path: "/buttons", pro: false },
-//       { name: "Images", path: "/images", pro: false },
-//       { name: "Videos", path: "/videos", pro: false },
-//     ],
-//   },
-//   {
-//     icon: <PlugInIcon />,
-//     name: "Authentication",
-//     subItems: [
-//       { name: "Sign In", path: "/signin", pro: false },
-//       { name: "Sign Up", path: "/signup", pro: false },
-//     ],
-//   },
-// ];
 
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
@@ -169,40 +104,13 @@ const AppSidebar: React.FC = () => {
     type: "main" | "others";
     index: number;
   } | null>(null);
-  const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>(
-    {}
-  );
+  const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>({});
   const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  // const isActive = (path: string) => location.pathname === path;
   const isActive = useCallback(
     (path: string) => location.pathname === path,
     [location.pathname]
   );
-
-  // useEffect(() => {
-  //   let submenuMatched = false;
-  //   ["main", "others"].forEach((menuType) => {
-  //     const items = menuType === "main" ? navItems : othersItems;
-  //     items.forEach((nav, index) => {
-  //       if (nav.subItems) {
-  //         nav.subItems.forEach((subItem) => {
-  //           if (isActive(subItem.path)) {
-  //             setOpenSubmenu({
-  //               type: menuType as "main" | "others",
-  //               index,
-  //             });
-  //             submenuMatched = true;
-  //           }
-  //         });
-  //       }
-  //     });
-  //   });
-
-  //   if (!submenuMatched) {
-  //     setOpenSubmenu(null);
-  //   }
-  // }, [location, isActive]);
 
   useEffect(() => {
     if (openSubmenu !== null) {
@@ -354,58 +262,53 @@ const AppSidebar: React.FC = () => {
 
   return (
     <aside
-      className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-5 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 
+      className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-4 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 dark:text-gray-100 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 
         ${
           isExpanded || isMobileOpen
-            ? "w-[290px]"
+            ? "w-[250px]"
             : isHovered
-            ? "w-[290px]"
-            : "w-[90px]"
+            ? "w-[250px]"
+            : "w-[70px]"
         }
         ${isMobileOpen ? "translate-x-0" : "-translate-x-full"}
         lg:translate-x-0`}
       onMouseEnter={() => !isExpanded && setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div
-        className={`py-8 flex ${
-          !isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
-        }`}
-      >
-        <Link to="/">
-          {isExpanded || isHovered || isMobileOpen ? (
-            <>
-              <img
-                className="dark:hidden"
-                src="/images/logo/logo.png"
-                alt="Logo"
-                width={150}
-                height={40}
-              />
-              <img
-                className="hidden dark:block"
-                src="/images/logo/logo-dark.png"
-                alt="Logo"
-                width={150}
-                height={40}
-              />
-            </>
-          ) : (
+      {/* Header avec logo */}
+      <div className={["shrink-0", !isExpanded && !isHovered ? "px-2 pt-5" : "px-6 pt-6"].join(" ")}>
+        <div className={[
+          "relative rounded-3xl flex items-center justify-center",
+          !isExpanded && !isHovered && !isMobileOpen ? "p-1.5" : "p-5", // ← Réduit le padding en mode fermé
+          "bg-white dark:bg-gray-900",
+        ].join(" ")}>
+          
+          <Link to="/" className="flex items-center justify-center w-full h-full">
             <img
-              src="/images/logo/logo-icon.png"
-              alt="Logo"
-              width={32}
-              height={32}
+              src="/images/logo/logo_kidora.png" // ← Même logo
+              alt="Kidora Logo"
+              className={[
+                "object-contain transition-all duration-300",
+                !isExpanded && !isHovered && !isMobileOpen 
+                  ? "h-10 w-10" // ← Taille maximale pour le mode fermé
+                  : "max-h-16 w-auto max-w-[200px]" // ← Taille pour le mode ouvert
+              ].join(" ")}
             />
-          )}
-        </Link>
+          </Link>
+        </div>
       </div>
-      <div className="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">
-        <nav className="mb-6">
-          <div className="flex flex-col gap-4">
+
+      {/* Séparateur */}
+      {/* <div className="mt-3 mb-4 h-px bg-indigo-100/80 dark:bg-white/20 shrink-0" /> */}
+      <div className="mt-3 mb-4 h-px shrink-0" />
+
+      {/* Zone de navigation scrollable */}
+      <div className="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar px-1.5 pr-2 min-h-0 min-w-0 [scrollbar-gutter:stable] group flex-1">
+        <nav className="mb-4">
+          <div className="flex flex-col gap-3">
             <div>
               <h2
-                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
+                className={`mb-3 text-xs uppercase flex leading-[18px] text-gray-400 ${
                   !isExpanded && !isHovered
                     ? "lg:justify-center"
                     : "justify-start"
@@ -414,30 +317,13 @@ const AppSidebar: React.FC = () => {
                 {isExpanded || isHovered || isMobileOpen ? (
                   "Menu"
                 ) : (
-                  <HorizontaLDots className="size-6" />
+                  <HorizontaLDots className="size-5" />
                 )}
               </h2>
               {renderMenuItems(navItems, "main")}
             </div>
-            <div className="">
-              <h2
-                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
-                  !isExpanded && !isHovered
-                    ? "lg:justify-center"
-                    : "justify-start"
-                }`}
-              >
-                {isExpanded || isHovered || isMobileOpen ? (
-                  "Others"
-                ) : (
-                  <HorizontaLDots />
-                )}
-              </h2>
-              {/* {renderMenuItems(othersItems, "others")} */}
-            </div>
           </div>
         </nav>
-        {/* {isExpanded || isHovered || isMobileOpen ? <SidebarWidget /> : null} */}
       </div>
     </aside>
   );

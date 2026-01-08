@@ -162,6 +162,9 @@ export default function GestionEnfants() {
   const [classeFilter, setClasseFilter] = useState<string>("");
   const [statutFilter, setStatutFilter] = useState<string>("");
   const [parentFilter, setParentFilter] = useState<string>("");
+  const [selectedEnfants, setSelectedEnfants] = useState<number[]>([]);
+  const [isSelectAll, setIsSelectAll] = useState(false);
+  const [showSelectionHeader, setShowSelectionHeader] = useState(false);
 
   const [selectedEnfant, setSelectedEnfant] = useState<Enfant | null>(null);
   const [modalType, setModalType] = useState<'view' | 'edit' | 'delete' | null>(null);
@@ -217,6 +220,63 @@ export default function GestionEnfants() {
     return statut === 'actif' ? 'Actif' : 
            statut === 'inactif' ? 'Inactif' : 
            'En attente';
+  };
+
+  // Gestion de la sélection
+  const handleSelectEnfant = (enfantId: number) => {
+    setSelectedEnfants(prev => {
+      const newSelected = prev.includes(enfantId)
+        ? prev.filter(id => id !== enfantId)
+        : [...prev, enfantId];
+      
+      // Afficher/cacher le header de sélection
+      if (newSelected.length > 0 && !showSelectionHeader) {
+        setShowSelectionHeader(true);
+      } else if (newSelected.length === 0 && showSelectionHeader) {
+        setShowSelectionHeader(false);
+      }
+      
+      // Mettre à jour l'état "sélectionner tout"
+      setIsSelectAll(newSelected.length === filteredEnfants.length);
+      
+      return newSelected;
+    });
+  };
+
+  const handleSelectAll = () => {
+    if (isSelectAll) {
+      // Désélectionner tout
+      setSelectedEnfants([]);
+      setIsSelectAll(false);
+      setShowSelectionHeader(false);
+    } else {
+      // Sélectionner tout
+      const allIds = filteredEnfants.map(enfant => enfant.id);
+      setSelectedEnfants(allIds);
+      setIsSelectAll(true);
+      setShowSelectionHeader(true);
+    }
+  };
+
+  const handleCancelSelection = () => {
+    setSelectedEnfants([]);
+    setIsSelectAll(false);
+    setShowSelectionHeader(false);
+  };
+
+  const handleDeleteSelected = () => {
+    if (selectedEnfants.length === 0) return;
+    
+    const enfantsNames = filteredEnfants
+      .filter(enfant => selectedEnfants.includes(enfant.id))
+      .map(enfant => `${enfant.prenom} ${enfant.nom}`)
+      .join(', ');
+    
+    console.log(`Suppression des enfants sélectionnés: ${enfantsNames}`);
+    alert(`${selectedEnfants.length} enfant(s) supprimé(s) : ${enfantsNames}`);
+    
+    // Réinitialiser la sélection
+    handleCancelSelection();
   };
 
   const handleView = (enfant: Enfant) => {
@@ -1011,15 +1071,18 @@ const AddEnfantModal = ({
 
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
+      {/* Header de sélection */}
+     
+
       {/* En-tête avec filtres et boutons de vue */}
       <div className="p-6 border-b border-gray-100 dark:border-white/[0.05] bg-white dark:bg-gray-900/50">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <h2 className="text-xl font-semibold text-gray-800 dark:text-white">
-                Liste des Educateurs
+                Liste des Enfants
               </h2>
               <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                Gérez les éducateurs et leurs informations
+                Gérez les enfants et leurs informations
               </p>
             </div>
             
@@ -1151,47 +1214,95 @@ const AddEnfantModal = ({
           {filteredEnfants.length} enfant(s) trouvé(s)
         </div>
       </div>
-
+       
+         {selectedEnfants.length > 0 && (
+          <div className="bg-indigo-500 dark:from-blue-900/20 dark:to-indigo-900/20 border-b border-blue-100 dark:border-blue-800/30 p-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 flex items-center justify-center bg-blue-100 dark:bg-blue-800 rounded-full">
+                  <span className="text-sm font-semibold text-blue-600 dark:text-blue-300">
+                    {selectedEnfants.length}
+                  </span>
+                </div>
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  enfant(s) sélectionné(s)
+                </span>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleDeleteSelected}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 rounded-lg transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                Supprimer
+              </button>
+              
+              <button
+                onClick={handleCancelSelection}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                Annuler
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Affichage en mode Liste */}
       {viewMode === 'liste' ? (
         <div className="max-w-full overflow-x-auto">
           <Table>
             {/* Table Header */}
-            <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
+             <TableHeader className="border-b border-gray-100 dark:border-white/[0.05] bg-gray-700">
               <TableRow>
                 <TableCell
                   isHeader
-                  className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                 className="px-5 py-3 font-medium text-white text-start text-theme-xs"
                 >
-                  Enfant
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={isSelectAll}
+                      onChange={handleSelectAll}
+                      className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                    />
+                    <span className="ml-2">Enfant</span>
+                  </div>
                 </TableCell>
                 <TableCell
                   isHeader
-                  className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                  className="px-5 py-3 font-medium text-white text-start text-theme-xs"
                 >
                   Parent
                 </TableCell>
                 <TableCell
                   isHeader
-                  className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                  className="px-5 py-3 font-medium text-white text-start text-theme-xs"
                 >
                   Âge & Classe
                 </TableCell>
                 <TableCell
                   isHeader
-                  className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                 className="px-5 py-3 font-medium text-white text-start text-theme-xs"
                 >
                   Statut
                 </TableCell>
                 <TableCell
                   isHeader
-                  className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                 className="px-5 py-3 font-medium text-white text-start text-theme-xs"
                 >
                   Date d'inscription
                 </TableCell>
                 <TableCell
                   isHeader
-                  className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                  className="px-5 py-3 font-medium text-white text-start text-theme-xs"
                 >
                   Actions
                 </TableCell>
@@ -1201,24 +1312,32 @@ const AddEnfantModal = ({
             {/* Table Body */}
             <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
               {filteredEnfants.map((enfant) => (
-                <TableRow key={enfant.id}>
+                <TableRow key={enfant.id} className={selectedEnfants.includes(enfant.id) ? 'bg-blue-50 dark:bg-blue-900/20' : ''}>
                   <TableCell className="px-5 py-4 sm:px-6 text-start">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 overflow-hidden rounded-full">
-                        <img
-                          width={40}
-                          height={40}
-                          src={enfant.image}
-                          alt={`${enfant.prenom} ${enfant.nom}`}
-                        />
-                      </div>
-                      <div>
-                        <span className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
-                          {enfant.prenom} {enfant.nom}
-                        </span>
-                        <span className="block text-gray-500 text-theme-xs dark:text-gray-400">
-                          ID: {enfant.id}
-                        </span>
+                      <input
+                        type="checkbox"
+                        checked={selectedEnfants.includes(enfant.id)}
+                        onChange={() => handleSelectEnfant(enfant.id)}
+                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                      />
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 overflow-hidden rounded-full">
+                          <img
+                            width={40}
+                            height={40}
+                            src={enfant.image}
+                            alt={`${enfant.prenom} ${enfant.nom}`}
+                          />
+                        </div>
+                        <div>
+                          <span className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
+                            {enfant.prenom} {enfant.nom}
+                          </span>
+                          <span className="block text-gray-500 text-theme-xs dark:text-gray-400">
+                            ID: {enfant.id}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </TableCell>
@@ -1304,26 +1423,34 @@ const AddEnfantModal = ({
             {filteredEnfants.map((enfant) => (
               <div 
                 key={enfant.id} 
-                className="border border-gray-200 rounded-lg p-4 hover:shadow-lg transition-shadow dark:border-gray-700 dark:hover:border-gray-600"
+                className={`border rounded-lg p-4 hover:shadow-lg transition-shadow dark:hover:border-gray-600 ${selectedEnfants.includes(enfant.id) ? 'border-blue-300 bg-blue-50 dark:border-blue-700 dark:bg-blue-900/20' : 'border-gray-200 dark:border-gray-700'}`}
               >
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 overflow-hidden rounded-full">
-                      <img
-                        width={48}
-                        height={48}
-                        src={enfant.image}
-                        alt={`${enfant.prenom} ${enfant.nom}`}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div>
-                      <h3 className="font-medium text-gray-900 dark:text-white">
-                        {enfant.prenom} {enfant.nom}
-                      </h3>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        {enfant.age} ans • {enfant.classe}
-                      </p>
+                    <input
+                      type="checkbox"
+                      checked={selectedEnfants.includes(enfant.id)}
+                      onChange={() => handleSelectEnfant(enfant.id)}
+                      className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                    />
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 overflow-hidden rounded-full">
+                        <img
+                          width={48}
+                          height={48}
+                          src={enfant.image}
+                          alt={`${enfant.prenom} ${enfant.nom}`}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div>
+                        <h3 className="font-medium text-gray-900 dark:text-white">
+                          {enfant.prenom} {enfant.nom}
+                        </h3>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          {enfant.age} ans • {enfant.classe}
+                        </p>
+                      </div>
                     </div>
                   </div>
                   <Badge

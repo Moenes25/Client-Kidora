@@ -1,6 +1,4 @@
-// Home.tsx - Version finale avec toutes les cartes
 import PageMeta from "../../components/common/PageMeta";
-import ChildMetrics from "../../components/ecommerce/ChildMetrics";
 import ParentMetrics from "../../components/ecommerce/ParentMetrics";
 import ChildrenTotalMetrics from "../../components/ecommerce/ChildrenTotalMetrics";
 import AttendanceChart from "../../components/ecommerce/AttendanceChart";
@@ -9,48 +7,63 @@ import RecentActivities from "../../components/ecommerce/RecentActivities";
 import EducatorList from "../../components/ecommerce/EducatorList";
 import ParentCommunications from "../../components/ecommerce/ParentCommunications";
 import EducateursMetrics from "../../components/ecommerce/EducateursMetrics";
+import RapportsMetrics from "../../components/ecommerce/RapportsMetrics";
+
 export default function NurseryDashboard() {
   return (
     <>
-      <PageMeta
+    <PageMeta
         title="Tableau de Bord KI DORA - Gestion Crèche/École"
         description="Système de gestion pour crèche et école maternelle KI DORA"
       />
-      
-      {/* Section Accès Rapide */}
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">
-          Accès Rapide
-        </h2>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          {/* Boutons d'accès rapide */}
-        </div>
-      </div>
 
       <div className="grid grid-cols-12 gap-6">
-        {/* Métriques principales - 3 cartes */}
-        <div className="col-span-12 lg:col-span-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            <EducateursMetrics />
-            <ParentMetrics />
+        {/* Première ligne : 4 cartes sur toute la largeur */}
+        <div className="col-span-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <ChildrenTotalMetrics />
+            <EducateursMetrics />
+            <RapportsMetrics />
+            <ParentMetrics />
           </div>
-          <AttendanceChart />
         </div>
 
-        {/* Sidebar avec informations */}
+        {/* Deuxième ligne : AttendanceChart et RecentActivities avec hauteur égale */}
+        <div className="col-span-12 lg:col-span-8">
+          <div className="h-full">
+            <AttendanceChart />
+          </div>
+        </div>
+        
         <div className="col-span-12 lg:col-span-4">
-          <FinancialOverview />
-          <EducatorList />
+          <div className="h-full">
+            <RecentActivities />
+          </div>
         </div>
 
-        {/* Liste récente et communications */}
-        <div className="col-span-12 lg:col-span-7">
-          <RecentActivities />
+        {/* Troisième ligne : 3 cartes avec hauteur égale */}
+        <div className="col-span-12 lg:col-span-4">
+          <div className="h-full flex flex-col">
+            <div className="flex-1">
+              <FinancialOverview />
+            </div>
+          </div>
         </div>
 
-        <div className="col-span-12 lg:col-span-5">
-          <ParentCommunications />
+        <div className="col-span-12 lg:col-span-4">
+          <div className="h-full flex flex-col">
+            <div className="flex-1">
+              <EducatorList />
+            </div>
+          </div>
+        </div>
+
+        <div className="col-span-12 lg:col-span-4">
+          <div className="h-full flex flex-col">
+            <div className="flex-1">
+              <ParentCommunications />
+            </div>
+          </div>
         </div>
       </div>
     </>
