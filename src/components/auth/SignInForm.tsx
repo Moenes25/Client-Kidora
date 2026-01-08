@@ -199,17 +199,17 @@ export default function SignInForm() {
       </form>
 
       {/* Lien d'inscription */}
-      <div className="mt-3 pt-3 border-t border-gray-200 text-center"> {/* mt-3 pt-3 */}
-        <p className="text-gray-600 text-xs"> {/* text-xs */}
-          Vous n'avez pas de compte ?{" "}
-          <Link
+      {/* <div className="mt-3 pt-3 border-t border-gray-200 text-center"> mt-3 pt-3 */}
+        {/* <p className="text-gray-600 text-xs"> text-xs */}
+          {/* Vous n'avez pas de compte ?{" "} */}
+          {/* <Link
             to="/signup"
             className="text-blue-600 hover:text-blue-800 font-medium text-xs"
           >
             S'inscrire
           </Link>
         </p>
-      </div>
+      </div> */}
 
       {/* Boutons d'accès rapide (optionnel, pour le développement) */}
       <div className="mt-3"> {/* mt-3 */}
