@@ -1,4 +1,3 @@
-// pages/Enfants.tsx
 import { useState } from "react";
 import { Link } from "react-router";
 
@@ -117,6 +116,13 @@ const Enfants = () => {
       class: "CE2",
       educator: "Mme Fatma",
       avatar: "/images/3-4_ans/enfant_1.jpg",
+      educational: {
+        level: "Niveau CE2 - Bon élève",
+        strengths: ["Mathématiques", "Logique", "Calcul mental"],
+        areasToImprove: ["Écriture", "Orthographe"],
+        notes: "Très bon en calcul, besoin de travailler l'écriture",
+        schoolType: "école"
+     },
       health: {
         allergies: ["Aucune"],
         medicalNotes: "Porte des lunettes",
@@ -129,7 +135,13 @@ const Enfants = () => {
       },
       performance: 82,
       color: "from-blue-500 to-cyan-500",
-      bgColor: "bg-blue-50 dark:bg-blue-900/20"
+      bgColor: "bg-blue-50 dark:bg-blue-900/20",
+      evolution: { 
+      language: 85,
+      motor: 78,
+      cognitive: 90,
+      social: 82
+    }
     },
     {
       id: 2,
@@ -138,6 +150,13 @@ const Enfants = () => {
       class: "CP",
       educator: "Mme Amina",
       avatar: "/images/3-4_ans/enfant_3.jpg",
+      educational: {
+        level: "Pré-scolaire - Développement normal",
+        strengths: ["Socialisation", "Créativité", "Langage"],
+        areasToImprove: ["Motricité fine", "Concentration"],
+        notes: "S'adapte bien au groupe, créative dans les jeux",
+        schoolType: "crèche"
+      },
       health: {
         allergies: ["Lactose"],
         medicalNotes: "Asthme léger",
@@ -150,7 +169,13 @@ const Enfants = () => {
       },
       performance: 91,
       color: "from-purple-500 to-pink-500",
-      bgColor: "bg-purple-50 dark:bg-purple-900/20"
+      bgColor: "bg-purple-50 dark:bg-purple-900/20",
+      evolution: { 
+      language: 95,
+      motor: 88,
+      cognitive: 85,
+      social: 96
+    }
     },
     {
       id: 3,
@@ -159,6 +184,13 @@ const Enfants = () => {
       class: "CM2",
       educator: "M. Karim",
       avatar: "/images/3-4_ans/enfant_6.jpg",
+      educational: {
+        level: "Niveau CM2 - Moyen",
+        strengths: ["Sciences", "Sport", "Mémoire"],
+        areasToImprove: ["Rédaction", "Organisation"],
+        notes: "Bon en sciences, besoin de structurer ses devoirs",
+        schoolType: "école"
+      },
       health: {
         allergies: ["Arachides"],
         medicalNotes: "Aucune",
@@ -171,7 +203,13 @@ const Enfants = () => {
       },
       performance: 75,
       color: "from-green-500 to-emerald-500",
-      bgColor: "bg-green-50 dark:bg-green-900/20"
+      bgColor: "bg-green-50 dark:bg-green-900/20",
+      evolution: { 
+        language: 90,
+        motor: 78,
+        cognitive: 65,
+        social: 92
+    }
     },
     {
       id: 4,
@@ -180,6 +218,13 @@ const Enfants = () => {
       class: "CE1",
       educator: "Mme Amina",
       avatar: "/images/3-4_ans/enfant_4.jpg",
+      educational: {
+        level: "Niveau CE1 - Bon en français",
+        strengths: ["Lecture", "Expression", "Arts"],
+        areasToImprove: ["Mathématiques", "Confiance"],
+        notes: "Excellente lectrice, timide en groupe",
+        schoolType: "école"
+      },
       health: {
         allergies: ["Pollen"],
         medicalNotes: "Aucune",
@@ -192,8 +237,15 @@ const Enfants = () => {
       },
       performance: 88,
       color: "from-amber-500 to-orange-500",
-      bgColor: "bg-amber-50 dark:bg-amber-900/20"
+      bgColor: "bg-amber-50 dark:bg-amber-900/20",
+      evolution: { 
+        language: 80,
+        motor: 73,
+        cognitive: 90,
+        social: 93
+    }
     },
+   
   
   ]);
 
@@ -223,24 +275,13 @@ const Enfants = () => {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* En-tête */}
-      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Profil de Vos Enfants
-          </h1>
-          <p className="text-gray-600 dark:text-gray-300 mt-2">
-            Suivez le développement complet de chaque enfant
-          </p>
-        </div>
-        <button className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-medium hover:opacity-90 transition-opacity">
-          + Ajouter un enfant
-        </button>
-      </div>
-
+    // <div className="space-y-6 animate-fade-in">
+     <div className="max-w-5xl w-full mx-auto space-y-6 animate-fade-in">
       {/* Cartes enfants principales */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      {/* <div className="grid grid-cols-1 gap-6 lg:grid-cols-3"> */}
+      <div className="py-6 px-4 bg-gradient-to-br from-indigo-500 to-purple-600 max-w-4xl w-full mx-auto  animate-fade-in">
+      <div className="max-w-4xl w-full mx-auto space-y-6 animate-fade-in  " >
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {children.map((child) => (
           
           <div 
@@ -269,27 +310,85 @@ const Enfants = () => {
               </div>
             </div>
 
-            {/* Santé */}
-            <div className="mb-6 p-4 bg-white/50 dark:bg-gray-800/50 rounded-xl">
-              <h4 className="font-semibold text-gray-900 dark:text-white mb-3">Santé & Médical</h4>
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-300">Allergies :</span>
-                  <span className="font-medium">{child.health.allergies.join(", ")}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-300">Notes médicales :</span>
-                  <span className="font-medium">{child.health.medicalNotes}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-300">Vaccination :</span>
-                  <span className="font-medium text-green-600 dark:text-green-400">{child.health.vaccination}</span>
-                </div>
-              </div>
+        <div className="mb-6 p-4 bg-white/50 dark:bg-gray-800/50 rounded-xl">
+  {/* <div className="flex items-center justify-between mb-4">
+    <h4 className="font-semibold text-gray-900 dark:text-white">
+      {child.educational.schoolType === 'crèche' ? "Développement" : "Profil Éducatif"}
+    </h4>
+    <span className={`text-xs px-2 py-1 rounded-full ${
+      child.educational.schoolType === 'crèche' 
+        ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'
+        : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
+    }`}>
+      {child.educational.schoolType === 'crèche' ? "Crèche" : "École"}
+    </span>
+  </div> */}
+  
+  {/* Structure similaire à l'image */}
+  <div className="space-y-4">
+    {/* Section 1: Score général */}
+    <div className="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 p-3 rounded-lg">
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="text-sm text-gray-600 dark:text-gray-300">performance générale</div>
+          <div className="text-2xl font-bold text-gray-900 dark:text-white">{child.performance}%</div>
+        </div>
+        <div className="text-3xl">📊</div>
+      </div>
+    </div>
+    
+    {/* Section 2: Matières/Compétences principales */}
+    <div>
+      <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        {child.educational.schoolType === 'crèche' ? "Compétences principales" : "Matières principales"}
+      </div>
+      <div className="space-y-2">
+        {child.educational.strengths.slice(0, 3).map((strength, index) => (
+          <div key={index} className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+              <span className="text-sm text-gray-700 dark:text-gray-300">{strength}</span>
             </div>
+            <div className="text-sm font-medium text-gray-900 dark:text-white">
+              {Math.min(95, 75 + index * 10)}%
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+    
+    {/* Section 3: Domaines à améliorer */}
+    <div>
+      <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        {child.educational.schoolType === 'crèche' ? "À développer" : "À améliorer"}
+      </div>
+      <div className="space-y-2">
+        {child.educational.areasToImprove.slice(0, 2).map((area, index) => (
+          <div key={index} className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-amber-500"></div>
+              <span className="text-sm text-gray-700 dark:text-gray-300">{area}</span>
+            </div>
+            <div className="text-sm font-medium text-amber-600 dark:text-amber-400">
+              {Math.max(55, 70 - index * 15)}%
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+    
+    {/* Section 4: Note synthétique */}
+    <div className="pt-3 border-t border-gray-200 dark:border-gray-600">
+      <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Synthèse</div>
+      <div className="text-sm text-gray-600 dark:text-gray-300">
+        {child.educational.notes}
+      </div>
+    </div>
+  </div>
+</div>
 
             {/* Présence */}
-            <div className="mb-6">
+            {/* <div className="mb-6">
               <h4 className="font-semibold text-gray-900 dark:text-white mb-3">Présence</h4>
               <div className="grid grid-cols-3 gap-4">
                 <div className="text-center p-3 bg-white dark:bg-gray-800 rounded-lg">
@@ -305,7 +404,7 @@ const Enfants = () => {
                   <div className="text-sm text-gray-500 dark:text-gray-400">Performance</div>
                 </div>
               </div>
-            </div>
+            </div> */}
 
             {/* Liens rapides */}
             <div className="grid grid-cols-3 gap-3">
@@ -345,102 +444,140 @@ const Enfants = () => {
           </div>
         ))}
       </div>
-
-      {/* Section 4: Suivi pédagogique */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white">Suivi Pédagogique</h2>
-          <Link 
-            to="/parent/suivi-pedagogique" 
-            className="px-4 py-2 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg text-sm font-medium hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
-          >
-            Détails complets
-          </Link>
-        </div>
-
-        {/* Sélection d'enfant pour le suivi */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Suivi pour :
-          </label>
-          <div className="flex flex-wrap gap-2">
-            {children.map((child) => (
-              <button
-                key={child.id}
-                className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${
-                  child.name === selectedChildForTracking
-                    ? `bg-gradient-to-r ${child.color} text-white`
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                }`}
-                onClick={() => setSelectedChildForTracking(child.name)}
-              >
-                <img 
-                  src={child.avatar} 
-                  alt={child.name}
-                  className="w-6 h-6 rounded-full object-cover"
-                />
-                {child.name.split(" ")[0]}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Compétences avec barres de progression */}
-        <div className="space-y-4 mb-6">
-          <div>
-            <div className="flex justify-between text-sm mb-2">
-              <span className="text-gray-900 dark:text-white font-medium">Langage</span>
-              <span className="text-gray-600 dark:text-gray-300">85%</span>
-            </div>
-            <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-              <div className="h-full bg-blue-500 rounded-full" style={{ width: '85%' }}></div>
-            </div>
-            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              Objectif hebdomadaire : +5% de vocabulaire
-            </div>
-          </div>
-
-          <div>
-            <div className="flex justify-between text-sm mb-2">
-              <span className="text-gray-900 dark:text-white font-medium">Motricité</span>
-              <span className="text-gray-600 dark:text-gray-300">78%</span>
-            </div>
-            <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-              <div className="h-full bg-green-500 rounded-full" style={{ width: '78%' }}></div>
-            </div>
-            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              Objectif hebdomadaire : coordination main-œil
-            </div>
-          </div>
-
-          <div>
-            <div className="flex justify-between text-sm mb-2">
-              <span className="text-gray-900 dark:text-white font-medium">Cognition</span>
-              <span className="text-gray-600 dark:text-gray-300">92%</span>
-            </div>
-            <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-              <div className="h-full bg-purple-500 rounded-full" style={{ width: '92%' }}></div>
-            </div>
-            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              Objectif hebdomadaire : résolution de problèmes
-            </div>
-          </div>
-
-          <div>
-            <div className="flex justify-between text-sm mb-2">
-              <span className="text-gray-900 dark:text-white font-medium">Social</span>
-              <span className="text-gray-600 dark:text-gray-300">88%</span>
-            </div>
-            <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-              <div className="h-full bg-amber-500 rounded-full" style={{ width: '88%' }}></div>
-            </div>
-            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              Objectif hebdomadaire : partage et coopération
-            </div>
-          </div>
-        </div>
+      </div>
       </div>
 
+    {/* Section 4: Suivi pédagogique avec graphique à barres */}
+<div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+  <div className="flex items-center justify-between mb-6">
+    <h2 className="text-xl font-bold text-gray-900 dark:text-white">Suivi Pédagogique</h2>
+    <Link 
+      to="/parent/suivi-pedagogique" 
+      className="px-4 py-2 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg text-sm font-medium hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
+    >
+      Détails complets
+    </Link>
+  </div>
+
+  {/* Sélection d'enfant pour le suivi */}
+  <div className="mb-6">
+    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+      Suivi pour :
+    </label>
+    <div className="flex flex-wrap gap-2">
+      {children.map((child) => (
+        <button
+          key={child.id}
+          className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${
+            child.name === selectedChildForTracking
+              ? `bg-gradient-to-r ${child.color} text-white`
+              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+          }`}
+          onClick={() => setSelectedChildForTracking(child.name)}
+        >
+          <img 
+            src={child.avatar} 
+            alt={child.name}
+            className="w-6 h-6 rounded-full object-cover"
+          />
+          {child.name.split(" ")[0]}
+        </button>
+      ))}
+    </div>
+  </div>
+
+  {/* Trouver l'enfant sélectionné */}
+  {(() => {
+    const selectedChild = children.find(child => child.name === selectedChildForTracking);
+    if (!selectedChild) return null;
+
+    const evolutionData = selectedChild.evolution || {
+      language: 85,
+      motor: 78,
+      cognitive: 90,
+      social: 82
+    };
+
+    return (
+      <div>
+        {/* Graphique à barres verticales */}
+       
+
+        {/* Détails des compétences */}
+        <div className="space-y-4">
+          {Object.entries(evolutionData).map(([key, value]) => {
+            const getProgressColor = (val: number) => {
+              if (val >= 90) return 'bg-green-500';
+              if (val >= 75) return 'bg-blue-500';
+              if (val >= 60) return 'bg-amber-500';
+              return 'bg-red-500';
+            };
+
+            const getProgressText = (val: number) => {
+              if (val >= 90) return 'Excellent';
+              if (val >= 75) return 'Bon';
+              if (val >= 60) return 'Moyen';
+              return 'À améliorer';
+            };
+
+            const getIcon = (type: string) => {
+              switch(type) {
+                case 'language': return '💬';
+                case 'motor': return '🏃';
+                case 'cognitive': return '🧠';
+                case 'social': return '👥';
+                default: return '⭐';
+              }
+            };
+
+            return (
+              <div key={key} className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">{getIcon(key)}</span>
+                    <span className="font-medium text-gray-900 dark:text-white capitalize">
+                      {key === 'language' ? 'Langage' :
+                       key === 'motor' ? 'Motricité' :
+                       key === 'cognitive' ? 'Cognition' :
+                       key === 'social' ? 'Social' : key}
+                    </span>
+                  </div>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    value >= 90 ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400' :
+                    value >= 75 ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' :
+                    value >= 60 ? 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400' :
+                    'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
+                  }`}>
+                    {getProgressText(value)}
+                  </span>
+                </div>
+                
+                <div className="flex items-center justify-between text-sm mb-2">
+                  <span className="text-gray-600 dark:text-gray-300">Progression</span>
+                  <span className="font-medium text-gray-900 dark:text-white">{value}%</span>
+                </div>
+                
+                <div className="h-2 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
+                  <div 
+                    className={`h-full rounded-full ${getProgressColor(value)}`}
+                    style={{ width: `${value}%` }}
+                  ></div>
+                </div>
+                
+                <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                  {key === 'language' ? 'Vocabulaire enrichi, expression claire' :
+                   key === 'motor' ? 'Coordination main-œil améliorée' :
+                   key === 'cognitive' ? 'Excellente résolution de problèmes' :
+                   key === 'social' ? 'Bonne intégration dans les jeux de groupe' : ''}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  })()}
+</div>
       {/* Section 5: Évaluations rapides */}
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
         <div className="flex items-center justify-between mb-6">
@@ -510,7 +647,7 @@ const Enfants = () => {
       </div>
 
       {/* Évolution globale */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+      {/* <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
         <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Résumé d'évolution globale</h2>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
           <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
@@ -542,7 +679,7 @@ const Enfants = () => {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Galerie des enfants */}
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
@@ -572,6 +709,7 @@ const Enfants = () => {
         </div>
       </div>
     </div>
+    
   );
 };
  

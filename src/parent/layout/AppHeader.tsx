@@ -65,11 +65,16 @@ const AppHeader: React.FC = () => {
           <polyline points="9 22 9 12 15 12 15 22"/>
         </svg>
       ),
-      color: "text-blue-600 dark:text-blue-100",
-      bgColor: "bg-blue-100 dark:bg-blue-400/30",
-      borderColor: "border-blue-200 dark:border-blue-400/50",
-      activeBgColor: "bg-blue-500/10 dark:bg-blue-400/40",
-      activeColor: "text-blue-600 dark:text-white"
+      // color: "text-blue-600 dark:text-blue-100",
+      // bgColor: "bg-blue-100 dark:bg-blue-400/30",
+      // borderColor: "border-blue-200 dark:border-blue-400/50",
+      // activeBgColor: "bg-blue-500/10 dark:bg-blue-400/40",
+      // activeColor: "text-blue-600 dark:text-white"
+      color: "text-blue-100",
+      bgColor: "bg-blue-400/30",
+      borderColor: "border-blue-400/50",
+      activeBgColor: "bg-blue-400/40",
+      activeColor: "text-white"
     },
     { 
       name: "Enfants", 
@@ -82,11 +87,16 @@ const AppHeader: React.FC = () => {
           <path d="m19 12 2.5 4L19 20l-2-2-1-3"/>
         </svg>
       ),
-      color: "text-purple-600 dark:text-purple-100",
-      bgColor: "bg-purple-100 dark:bg-purple-400/30",
-      borderColor: "border-purple-200 dark:border-purple-400/50",
-      activeBgColor: "bg-purple-500/10 dark:bg-purple-400/40",
-      activeColor: "text-purple-600 dark:text-white"
+      // color: "text-purple-600 dark:text-purple-100",
+      // bgColor: "bg-purple-100 dark:bg-purple-400/30",
+      // borderColor: "border-purple-200 dark:border-purple-400/50",
+      // activeBgColor: "bg-purple-500/10 dark:bg-purple-400/40",
+      // activeColor: "text-purple-600 dark:text-white"
+      color: "text-purple-100",
+      bgColor: "bg-purple-400/30",
+      borderColor: "border-purple-400/50",
+      activeBgColor: "bg-purple-400/40",
+      activeColor: "text-white"
     },
     { 
       name: "Activités éducatives",
@@ -98,11 +108,16 @@ const AppHeader: React.FC = () => {
           <path d="m19.07 4.93-14.14 14.14"/>
         </svg>
       ),
-      color: "text-green-600 dark:text-green-100",
-      bgColor: "bg-green-100 dark:bg-green-400/30",
-      borderColor: "border-green-200 dark:border-green-400/50",
-      activeBgColor: "bg-green-500/10 dark:bg-green-400/40",
-      activeColor: "text-green-600 dark:text-white"
+      // color: "text-green-600 dark:text-green-100",
+      // bgColor: "bg-green-100 dark:bg-green-400/30",
+      // borderColor: "border-green-200 dark:border-green-400/50",
+      // activeBgColor: "bg-green-500/10 dark:bg-green-400/40",
+      // activeColor: "text-green-600 dark:text-white"
+       color: "text-green-100",
+      bgColor: "bg-green-400/30",
+      borderColor: "border-green-400/50",
+      activeBgColor: "bg-green-400/40",
+      activeColor: "text-white"
     },
     { 
       name: "profil", 
@@ -117,24 +132,30 @@ const AppHeader: React.FC = () => {
         // </svg>
         
      ,
-      color: "text-orange-600 dark:text-orange-100",
-      bgColor: "bg-orange-100 dark:bg-orange-400/30",
-      borderColor: "border-orange-200 dark:border-orange-400/50",
-      activeBgColor: "bg-orange-500/10 dark:bg-orange-400/40",
-      activeColor: "text-orange-600 dark:text-white"
+      // color: "text-orange-600 dark:text-orange-100",
+      // bgColor: "bg-orange-100 dark:bg-orange-400/30",
+      // borderColor: "border-orange-200 dark:border-orange-400/50",
+      // activeBgColor: "bg-orange-500/10 dark:bg-orange-400/40",
+      // activeColor: "text-orange-600 dark:text-white"
+      color: "text-orange-100",
+      bgColor: "bg-orange-400/30",
+      borderColor: "border-orange-400/50",
+      activeBgColor: "bg-orange-400/40",
+      activeColor: "text-white"
     }
   ];
 
   return (
-    <header className="sticky top-0 flex w-full bg-white border-gray-200 z-99999 dark:border-indigo-400/30 dark:bg-gradient-to-br dark:from-indigo-500 dark:to-purple-600 lg:border-b">
-      <div className="flex flex-col items-center justify-between grow lg:flex-row lg:px-6">
+    // <header className="sticky top-0 flex w-full bg-white border-gray-200 z-99999 dark:border-indigo-400/30 dark:bg-gradient-to-br dark:from-indigo-500 dark:to-purple-600 lg:border-b">
+         <header className="sticky top-0 flex w-full border-indigo-400/30 bg-gradient-to-br from-indigo-500 to-purple-600 z-99999 lg:border-b">
+     <div className="flex flex-col items-center justify-between grow lg:flex-row lg:px-6">
         <div className="flex items-center justify-between w-full gap-2 px-3 py-3 border-b border-gray-200 dark:border-indigo-400/20 sm:gap-4 lg:justify-normal lg:border-b-0 lg:px-0 lg:py-4">
-          <button
+          {/* <button
             className="items-center justify-center w-10 h-10 text-gray-500 border-gray-200 rounded-lg z-99999 dark:border-white/20 dark:text-white lg:flex lg:h-11 lg:w-11 lg:border dark:hover:bg-white/10"
             onClick={handleToggle}
             aria-label="Toggle Sidebar"
-          >
-            {isMobileOpen ? (
+          > */}
+            {/* {isMobileOpen ? (
               <svg
                 width="24"
                 height="24"
@@ -164,10 +185,10 @@ const AppHeader: React.FC = () => {
                   fill="currentColor"
                 />
               </svg>
-            )}
-          </button>
+            )} */}
+          {/* </button> */}
 
-          <Link to="/" className="lg:hidden">
+          {/* <Link to="/" className="lg:hidden">
             <img
               className="dark:hidden"
               src="./images/logo/logo.png"
@@ -178,22 +199,22 @@ const AppHeader: React.FC = () => {
               src="./images/logo/logo-dark.png"
               alt="Logo"
             />
-          </Link>
+          </Link> */}
 
           {/* Logo desktop à gauche */}
+          <div className="lg:hidden">
+            <h1 className="text-white font-bold text-lg tracking-wide">
+              <span className="text-white/90">KIDORA</span>
+              <span className="text-white font-bold">-Portail Parent</span>
+            </h1>
+          </div>
+
+          {/* Logo desktop remplacé par le titre */}
           <div className="hidden lg:flex items-center mr-6">
-            <Link to="/">
-              <img
-                className="dark:hidden h-8"
-                src="./images/logo/logo.png"
-                alt="Logo"
-              />
-              <img
-                className="hidden dark:block h-8"
-                src="./images/logo/logo-dark.png"
-                alt="Logo"
-              />
-            </Link>
+            <h1 className="text-white font-bold text-xl tracking-wider">
+              <span className="text-white/90">KIDORA</span>
+              <span className="text-white font-bold">-Portail Parent</span>
+            </h1>
           </div>
 
           {/* Navigation links - Desktop CENTRÉE */}
@@ -206,16 +227,16 @@ const AppHeader: React.FC = () => {
                     className={`flex items-center gap-2 px-5 py-2.5 rounded-lg transition-all duration-300 ${
                       isActive(link.path)
                         ? `${link.activeBgColor} ${link.activeColor} font-semibold shadow-sm`
-                        : "text-gray-600 dark:text-white/90 dark:hover:bg-white/10 dark:hover:text-white"
+                        : "text-white/90 hover:bg-white/10 hover:text-white"
                     }`}
                   >
-                    <span className={`${isActive(link.path) ? link.activeColor : "text-gray-500 dark:text-white/80"}`}>
+                    <span className={`${isActive(link.path) ? link.activeColor : "text-white/80"}`}>
                       {link.icon}
                     </span>
                     <span className="text-sm font-medium">{link.name}</span>
                   </Link>
                   {isActive(link.path) && (
-                    <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-3/4 h-0.5 bg-current rounded-full dark:bg-white"></div>
+                    <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-3/4 h-0.5 bg-white rounded-full dark:bg-current"></div>
                   )}
                 </div>
               ))}
@@ -244,7 +265,7 @@ const AppHeader: React.FC = () => {
 
           {/* Boutons à droite (thème, notifications, utilisateur) */}
           <div className="hidden lg:flex items-center gap-2">
-            {/* <ThemeToggleButton /> */}
+            <ThemeToggleButton />
             <NotificationDropdown />
             {/* <UserDropdown /> */}
            <Link
