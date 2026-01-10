@@ -80,12 +80,12 @@ const AppHeader: React.FC = () => {
             )}
           </button>
 
-          <Link to="/" className="lg:hidden">
+          {/* <Link to="/" className="lg:hidden">
             <img
               src="./images/logo/logo-dark.png"
               alt="Logo"
             />
-          </Link>
+          </Link> */}
 
           <button
             onClick={toggleApplicationMenu}

@@ -67,37 +67,37 @@ export default function App() {
              <Route path="enfant/:childId/evaluations" element={<ParentEvaluationsPage />} />
           </Route>
           {/* Dashboard Layout */}
-          <Route element={<AppLayout />}>
-            <Route index path="/" element={<Home />} />
+          <Route path='/admin' element={<AppLayout />}>
+            <Route index element={<Home />} />
 
             {/* Others Page */}
-            <Route path="/profile" element={<UserProfiles />} />
-            <Route path="/calendar" element={<Calendar />} />
-            <Route path="/blank" element={<Blank />} />
-             <Route path="/reports" element ={<ReportsPage/>}/>
+            <Route path="profile" element={<UserProfiles />} />
+            <Route path="calendar" element={<Calendar />} />
+            <Route path="blank" element={<Blank />} />
+             <Route path="reports" element ={<ReportsPage/>}/>
             {/* Forms */}
-            <Route path="/form-elements" element={<FormElements />} />
+            <Route path="form-elements" element={<FormElements />} />
 
             {/* Tables */}
-            <Route path="/basic-tables" element={<BasicTables />} />
-            <Route path="/users" element={<TableUsers />} />
-            <Route path="/enfants" element={<TableEnfants />} />
-            <Route path="/educateurs" element={<TableEducateurs />} />
-             <Route path="/classes" element={<ClassesPage />} />
-            <Route path="/finance" element={<FinancePage />} />
+            <Route path="basic-tables" element={<BasicTables />} />
+            <Route path="users" element={<TableUsers />} />
+            <Route path="enfants" element={<TableEnfants />} />
+            <Route path="educateurs" element={<TableEducateurs />} />
+             <Route path="classes" element={<ClassesPage />} />
+            <Route path="finance" element={<FinancePage />} />
             {/* Ui Elements */}
-            <Route path="/alerts" element={<Alerts />} />
-            <Route path="/avatars" element={<Avatars />} />
-            <Route path="/badge" element={<Badges />} />
-            <Route path="/buttons" element={<Buttons />} />
-            <Route path="/images" element={<Images />} />
-            <Route path="/videos" element={<Videos />} />
-            <Route path="/parametres" element={<ParametresPage />} />
+            <Route path="alerts" element={<Alerts />} />
+            <Route path="avatars" element={<Avatars />} />
+            <Route path="badge" element={<Badges />} />
+            <Route path="buttons" element={<Buttons />} />
+            <Route path="images" element={<Images />} />
+            <Route path="videos" element={<Videos />} />
+            <Route path="parametres" element={<ParametresPage />} />
             
 
             {/* Charts */}
-            <Route path="/line-chart" element={<LineChart />} />
-            <Route path="/bar-chart" element={<BarChart />} />
+            <Route path="line-chart" element={<LineChart />} />
+            <Route path="bar-chart" element={<BarChart />} />
           </Route>
 
           {/* Auth Layout */}

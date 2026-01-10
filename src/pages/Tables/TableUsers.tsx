@@ -2,6 +2,7 @@
 import ComponentCard from "../../components/common/ComponentCard";
 import PageMeta from "../../components/common/PageMeta";
 import BasicTablesUsers from "../../components/tables/BasicTableUsers";
+import GestionUsers from "../../components/tables/Users/GestionUsers";
 import { UserGroup02Icon } from "../../icons";
 ;
 
@@ -16,7 +17,8 @@ export default function TableUsers() {
       <div className="space-y-6">
         <ComponentCard title="Utilisateurs" counterLabel="utilisateurs" counterValue="8" icon={<UserGroup02Icon />}>
           {/* <BasicTableOne /> */}
-          <BasicTablesUsers />
+          {/* <BasicTablesUsers /> */}
+          <GestionUsers />
         </ComponentCard>
       </div>
     </>
