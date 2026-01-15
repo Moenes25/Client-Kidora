@@ -9,17 +9,11 @@ export default function FinancialOverview() {
       amount: "12,450 DT",
       change: "+8.5%",
       trend: "up",
-      icon :( <svg
-      className="w-5 h-5 text-green-600"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-    >
-      <text x="2" y="17" fontSize="14" fontWeight="bold">
-        DT
-        </text>
-      </svg>
-    ),
-        
+      icon: (
+        <svg className="w-5 h-5 text-green-600" viewBox="0 0 24 24" fill="currentColor">
+          <text x="2" y="17" fontSize="14" fontWeight="bold">DT</text>
+        </svg>
+      ),
       color: "text-green-600 bg-green-100 dark:bg-green-900/30"
     },
     {
@@ -43,58 +37,88 @@ export default function FinancialOverview() {
   ];
 
   return (
-    // <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 mb-6">
-     <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 h-full flex flex-col">
-     <div className="flex justify-between items-center mb-6">
-        <h3 className="text-lg font-semibold text-gray-800 dark:text-white">
-          Aperçu Financier
-        </h3>
-        <button className="text-sm text-blue-600 dark:text-blue-400 font-medium">
-          Détails →
-        </button>
-      </div>
-
-      <div className="space-y-4">
-        {financialData.map((item) => (
-          <div key={item.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
-            <div className="flex items-center gap-3">
-              <div className={`p-2 rounded-lg ${item.color}`}>
-                {item.icon}
-                
-              </div>
-              <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">{item.title}</p>
-                <p className="text-lg font-bold text-gray-800 dark:text-white">{item.amount}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-1">
-              {item.trend === "up" ? (
-                <TrendingUp className="w-4 h-4 text-green-500" />
-              ) : (
-                <TrendingDown className="w-4 h-4 text-red-500" />
-              )}
-              <span className={`text-sm font-medium ${
-                item.trend === "up" ? "text-green-600" : "text-red-600"
-              }`}>
-                {item.change}
-              </span>
-            </div>
+    <div className="bg-white dark:bg-gray-800 rounded-xl p-0 border border-gray-200 dark:border-gray-700 h-full overflow-hidden flex flex-col">
+      {/* Header avec bg-indigo-500 */}
+      <div className="bg-indigo-500">
+        <div className="flex justify-between items-center text-white p-4">
+          <div>
+            <h3 className="text-base font-semibold">
+              Aperçu Financier
+            </h3>
+            {/* <p className="text-indigo-100 text-xs opacity-90">
+              Vue d'ensemble des finances ce mois-ci
+            </p> */}
           </div>
-        ))}
+          <button className="text-sm text-indigo-100 font-medium hover:text-white">
+            Détails →
+          </button>
+        </div>
+
+        {/* Note informative */}
+        {/* <div className="mb-3 p-2.5 bg-indigo-600/40 rounded-lg mx-4">
+          <div className="flex items-center gap-1.5 text-indigo-100 text-xs">
+            <span>
+              💰 Objectif mensuel atteint à 83%
+            </span>
+          </div>
+        </div> */}
       </div>
 
-      <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-        <div className="flex justify-between items-center">
-          <span className="text-gray-600 dark:text-gray-400">Objectif mensuel</span>
-          <span className="font-semibold text-gray-800 dark:text-white">€15,000</span>
+      {/* Contenu principal */}
+      <div className="p-4 flex-grow">
+        <div className="space-y-4">
+          {financialData.map((item) => (
+            <div key={item.id} className="flex items-center justify-between p-4 bg-teal-500/100 rounded-xl border border-teal-300">
+              <div className="flex items-center gap-3">
+                <div className={`p-2 rounded-lg ${
+                  item.trend === "up" 
+                    ? "bg-green-200 text-green-800" 
+                    : "bg-yellow-200 text-yellow-800"
+                }`}>
+                  {item.icon}
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-teal-50">{item.title}</p>
+                  <p className="text-lg font-bold text-white">{item.amount}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-1">
+                {item.trend === "up" ? (
+                  <TrendingUp className="w-4 h-4 text-green-300" />
+                ) : (
+                  <TrendingDown className="w-4 h-4 text-red-300" />
+                )}
+                <span className={`text-sm font-bold ${
+                  item.trend === "up" ? "text-green-300" : "text-red-300"
+                }`}>
+                  {item.change}
+                </span>
+              </div>
+            </div>
+          ))}
         </div>
-        <div className="mt-2 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+
+        {/* Barre de progression */}
+        <div className="mt-6 pt-6 border-t border-teal-300">
+        <div className="flex justify-between items-center">
+          <span className="text-sm font-semibold text-white bg-teal-600/70 px-2 py-1 rounded">Objectif mensuel</span>
+          <span className="font-bold text-white bg-teal-600/70 px-2 py-0.5 rounded">15,000 DT</span>
+        </div>
+        <div className="mt-2 w-full bg-teal-600/50 rounded-full h-2.5">
           <div 
-            className="bg-gradient-to-r from-green-500 to-green-600 h-2 rounded-full" 
+            className="bg-gradient-to-r from-green-300 to-green-400 h-2.5 rounded-full" 
             style={{ width: '83%' }}
           />
         </div>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">83% atteint</p>
+        <div className="flex justify-between items-center mt-2">
+          <p className="text-xs font-bold text-white bg-teal-600/60 px-2 py-1 rounded">
+            83% atteint
+          </p>
+          <p className="text-xs font-bold text-white bg-teal-700/70 px-2 py-1 rounded">
+            +2,450 DT restants
+          </p>
+        </div>
+      </div>
       </div>
     </div>
   );

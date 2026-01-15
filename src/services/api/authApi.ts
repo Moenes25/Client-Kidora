@@ -1,5 +1,6 @@
 import apiClient from './axiosConfig';
 import {LoginCredentials,LoginResponse,User, userData} from '../../types/auth.types';
+import axios from 'axios';
 
 const decodeJwt = (token: string): any => {
     try {
@@ -50,5 +51,54 @@ export const authApi = {
       localStorage.removeItem('user');
     }
 },
+getAllUsers : async () : Promise<User[]> => {
+    try {
+      const response = await apiClient.get<User[]>('/client/all');
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.message || 'Erreur lors de la récupération des utilisateurs');
+    }
+  },
+
+  deleteUser : async (id: string) : Promise<void> => {
+    try {
+      await apiClient.delete(`/client/delete-client/${id}`);
+    } catch (error: any) {
+      throw new Error(error.message || "Erreur lors de la suppression de l'utilisateur");
+    }
+  },
+
+  getImage: async (imagePath: string): Promise<Blob> => {
+    try {
+      const token = localStorage.getItem('token');
+      
+      // IMPORTANT: Créez une instance axios séparée sans le /api
+      const imageClient = axios.create({
+        baseURL: 'http://localhost:8086', // Pas de /api ici
+        responseType: 'blob',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      const response = await imageClient.get(imagePath);
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.message || 'Erreur lors du chargement de l\'image');
+    }
+  },
+
+  getImageUrl: (imagePath: string): string => {
+    const token = localStorage.getItem('token');
+    const baseURL = 'http://localhost:8086';
+    
+    if (!token) {
+      return '/images/default-avatar.jpg';
+    }
+    
+    const cleanPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
+    return `${baseURL}${cleanPath}?token=${encodeURIComponent(token)}`;
+  }
 
 }

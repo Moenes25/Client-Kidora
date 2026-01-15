@@ -1,3 +1,4 @@
+import { StatutClient } from '../../../types/auth.types';
 import { Enfant } from './types';
 
 interface DeleteConfirmationProps {
@@ -74,7 +75,7 @@ export default function DeleteConfirmation({
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 overflow-hidden rounded-full">
                   <img
-                    src={enfant.image}
+                    src={enfant.imageUrl}
                     alt={`${enfant.prenom} ${enfant.nom}`}
                     className="w-full h-full object-cover"
                   />
@@ -86,9 +87,9 @@ export default function DeleteConfirmation({
                       {enfant.classe}
                     </span>
                     <span className={`text-xs px-2 py-0.5 rounded-full ${
-                      enfant.statut === 'actif' 
+                      enfant.statut === StatutClient.ACTIF
                         ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                        : enfant.statut === 'inactif'
+                        : enfant.statut === StatutClient.INACTIF
                         ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
                         : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
                     }`}>

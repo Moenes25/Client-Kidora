@@ -45,110 +45,168 @@ export default function ClassesSummary() {
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900 shadow-sm">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h3 className="text-lg font-semibold text-gray-800 dark:text-white">
-            Classes Actives
-          </h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            Vue d'ensemble des classes
-          </p>
+    <div className="bg-white dark:bg-gray-800 rounded-xl p-0 border border-gray-200 dark:border-gray-700 h-full overflow-hidden flex flex-col shadow-sm">
+      {/* Header compact */}
+      <div className="bg-indigo-500">
+        <div className="flex justify-between items-center text-white p-3">
+          <div>
+            <h3 className="text-base font-semibold">
+              Classes Actives
+            </h3>
+            <p className="text-indigo-100 text-xs opacity-90 mt-0.5">
+              Vue d'ensemble des classes
+            </p>
+          </div>
         </div>
-        {/* <button className="text-blue-600 text-sm font-medium hover:text-blue-700 dark:text-blue-400">
-          Voir toutes →
-        </button> */}
       </div>
 
-      {/* Sélecteur de classe */}
-      <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Classe actuelle
-        </label>
-        <div className="relative">
-          <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="w-full flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-          >
-            <div className="text-left">
-              <div className="font-medium text-gray-900 dark:text-white">
-                {selectedClass.name}
-              </div>
-              <div className="text-sm text-gray-500 dark:text-gray-400">
-                {selectedClass.level} • {selectedClass.present}/{selectedClass.totalChildren} enfants présents
-              </div>
-            </div>
-            {isExpanded ? (
-              <ChevronUpIcon className="size-5 text-gray-500" />
-            ) : (
-              <ChevronDownIcon className="size-5 text-gray-500" />
-            )}
-          </button>
+      {/* Contenu principal compact */}
+      <div className="p-4 flex-grow">
+        {/* Sélecteur de classe compact */}
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Classe actuelle
+            </label>
+            <span className="text-xs text-amber-600 dark:text-amber-400 font-medium">
+              {classesData.length} disponibles
+            </span>
+          </div>
           
-          {isExpanded && (
-            <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg">
-              {classesData.map((classItem) => (
-                <button
-                  key={classItem.id}
-                  onClick={() => {
-                    setSelectedClass(classItem);
-                    setIsExpanded(false);
-                  }}
-                  className="w-full p-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors first:rounded-t-lg last:rounded-b-lg"
-                >
-                  <div className="font-medium text-gray-900 dark:text-white">
-                    {classItem.name}
-                  </div>
-                  <div className="text-sm text-gray-500 dark:text-gray-400">
-                    {classItem.level} • {classItem.present}/{classItem.totalChildren} enfants
-                  </div>
-                </button>
-              ))}
+          <div className="relative">
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="w-full flex items-center justify-between p-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-lg hover:from-amber-600 hover:to-amber-700 transition-all duration-200 shadow-sm group"
+            >
+              <div className="text-left">
+                <div className="font-semibold text-white">
+                  {selectedClass.name}
+                </div>
+                <div className="text-amber-100/90 text-xs mt-0.5">
+                  {selectedClass.level} • {selectedClass.teacher}
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="bg-white/20 px-2 py-1 rounded text-xs font-medium">
+                  {selectedClass.present}/{selectedClass.totalChildren}
+                </div>
+                {isExpanded ? (
+                  <ChevronUpIcon className="size-4 text-amber-100" />
+                ) : (
+                  <ChevronDownIcon className="size-4 text-amber-100" />
+                )}
+              </div>
+            </button>
+            
+            {isExpanded && (
+              <div className="absolute z-20 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg overflow-hidden">
+                {classesData.map((classItem) => (
+                  <button
+                    key={classItem.id}
+                    onClick={() => {
+                      setSelectedClass(classItem);
+                      setIsExpanded(false);
+                    }}
+                    className={`w-full p-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-700 last:border-b-0 ${selectedClass.id === classItem.id ? 'bg-amber-50 dark:bg-amber-900/20' : ''}`}
+                  >
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <div className="font-medium text-gray-900 dark:text-white">
+                          {classItem.name}
+                        </div>
+                        <div className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
+                          {classItem.level}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm font-bold text-amber-600 dark:text-amber-400">
+                          {classItem.present}/{classItem.totalChildren}
+                        </div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                          présents
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Statistiques compactes */}
+        <div className="mb-5">
+          <div className="grid grid-cols-3 gap-3">
+            <div className="bg-gradient-to-br from-blue-50 to-white dark:from-blue-900/20 dark:to-gray-800/50 p-3 rounded-lg border border-blue-100 dark:border-blue-800/30">
+              <div className="text-center">
+                <div className="text-xl font-bold text-blue-700 dark:text-blue-300">
+                  {selectedClass.totalChildren}
+                </div>
+                <div className="text-xs font-medium text-blue-600 dark:text-blue-400 mt-1">
+                  Enfants
+                </div>
+              </div>
             </div>
-          )}
+            
+            <div className="bg-gradient-to-br from-green-50 to-white dark:from-green-900/20 dark:to-gray-800/50 p-3 rounded-lg border border-green-100 dark:border-green-800/30">
+              <div className="text-center">
+                <div className="text-xl font-bold text-green-700 dark:text-green-300">
+                  {selectedClass.present}
+                </div>
+                <div className="text-xs font-medium text-green-600 dark:text-green-400 mt-1">
+                  Présents
+                </div>
+                <div className="text-xs text-green-500 dark:text-green-400 mt-0.5">
+                  {Math.round((selectedClass.present / selectedClass.totalChildren) * 100)}%
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-gradient-to-br from-purple-50 to-white dark:from-purple-900/20 dark:to-gray-800/50 p-3 rounded-lg border border-purple-100 dark:border-purple-800/30">
+              <div className="text-center">
+                <div className="text-xl font-bold text-purple-700 dark:text-purple-300">
+                  {selectedClass.activities}
+                </div>
+                <div className="text-xs font-medium text-purple-600 dark:text-purple-400 mt-1">
+                  Activités
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
 
-      {/* Statistiques de la classe sélectionnée */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-          <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-            {selectedClass.totalChildren}
-          </div>
-          <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            Enfants
-          </div>
-        </div>
-        <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-          <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-            {selectedClass.present}
-          </div>
-          <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            Présents
-          </div>
-        </div>
-        <div className="text-center p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-          <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-            {selectedClass.activities}
-          </div>
-          <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            Activités
+        {/* Informations enseignante compacte */}
+        <div className="mb-4 p-3 bg-gradient-to-r from-amber-50 to-amber-100/50 dark:from-amber-900/10 dark:to-amber-800/10 rounded-lg border border-amber-200 dark:border-amber-800/30">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-amber-600 text-white rounded-full flex items-center justify-center shadow-sm">
+              <UserIcon className="h-5 w-5" />
+            </div>
+            <div className="flex-1">
+              <p className="text-xs font-medium text-amber-700 dark:text-amber-300 uppercase tracking-wide">
+                Enseignante
+              </p>
+              <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                {selectedClass.teacher}
+              </p>
+              <p className="text-xs text-amber-600 dark:text-amber-400 mt-0.5">
+                Classe: {selectedClass.name}
+              </p>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Actions rapides */}
-      <div className="border-t border-gray-200 dark:border-gray-800 pt-6">
-        <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-          Actions Rapides
-        </h4>
-        <div className="grid grid-cols-2 gap-3">
-          <button className="p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors text-sm font-medium">
-            Marquer Présence
-          </button>
-          <button className="p-3 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors text-sm font-medium">
-            Ajouter Activité
-          </button>
+        {/* Actions rapides compactes */}
+        <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="grid grid-cols-2 gap-3">
+            <button className="p-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 text-sm font-semibold shadow-sm flex items-center justify-center gap-2">
+              <span className="text-sm">✓</span>
+              Marquer Présence
+            </button>
+            <button className="p-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg transition-all duration-200 text-sm font-semibold shadow-sm flex items-center justify-center gap-2">
+              <span className="text-sm">+</span>
+              Ajouter Activité
+            </button>
+          </div>
         </div>
       </div>
     </div>

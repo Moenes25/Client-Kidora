@@ -1,22 +1,36 @@
+import { useEffect } from "react";
 import { Educateur } from "./Types";
 
 interface DeleteConfirmationProps {
   isOpen: boolean;
   onClose: () => void;
-  educateur: Educateur;
-  onDelete: () => void;
+  educateur: Educateur | null;
+ 
+   onConfirm: () => void;
 }
 
 export default function DeleteConfirmation({
-     isOpen,
+  isOpen,
   onClose,
   educateur,
-  onDelete
+  onConfirm
 }: DeleteConfirmationProps) {
-    if (!isOpen) return null;
+   useEffect(() => {
+      if (isOpen) {
+        document.body.style.overflow = 'hidden';
+      } else {
+        document.body.style.overflow = 'unset';
+      }
+      return () => {
+        document.body.style.overflow = 'unset';
+      };
+    }, [isOpen]);
+    if (!isOpen || !educateur) return null;
 
-    const handleDelete = () => {
-    onDelete();
+   
+  const handleConfirm = () => {
+    onConfirm();
+    onClose();
   };
 
   return (
@@ -72,7 +86,7 @@ export default function DeleteConfirmation({
             </button>
             <button
               type="button"
-              onClick={handleDelete}
+              onClick={handleConfirm}
               className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700"
             >
               Supprimer

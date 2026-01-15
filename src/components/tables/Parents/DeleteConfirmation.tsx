@@ -62,19 +62,19 @@ export default function DeleteConfirmation({
               <div className="w-10 h-10 overflow-hidden rounded-full">
                 <img
                   src={parent.image}
-                  alt={parent.nomPrenom}
+                  alt={parent.nom + " " + parent.prenom}
                   className="w-full h-full object-cover"
                 />
               </div>
               <div>
-                <p className="font-medium text-gray-900 dark:text-white">{parent.nomPrenom}</p>
+                <p className="font-medium text-gray-900 dark:text-white">{parent.nom + " " + parent.prenom}</p>
                 <p className="text-sm text-gray-600 dark:text-gray-400">{parent.email}</p>
               </div>
             </div>
             <div className="mt-4">
               <p className="text-sm text-gray-600 dark:text-gray-400">
                 Cette action est irréversible. Toutes les informations concernant 
-                <span className="font-medium"> {parent.nomPrenom} </span> 
+                <span className="font-medium"> {parent.nom + " " + parent.prenom} </span>
                 seront définitivement supprimées.
               </p>
             </div>

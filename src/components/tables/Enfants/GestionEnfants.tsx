@@ -1,9 +1,13 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import EnfantsTable from "./EnfantsTable";
 import EnfantForm from "./EnfantForm";
 import EnfantDetails from "./EnfantDetails";
 import DeleteConfirmation from "./DeleteConfirmation";
-import { Enfant, EnfantFormData, enfantsData } from "./types";
+import { Enfant, EnfantFormData } from "./types";
+import { enfantApi, EnfantResponse } from "../../../services/api/enfantApi";
+import { parentApi } from "../../../services/api/parentApi";
+import { Parent } from "../Parents/types";
+import { StatutClient } from "../../../types/auth.types";
 
 
 
@@ -14,52 +18,147 @@ export default function GestionEnfants() {
   const [statutFilter, setStatutFilter] = useState<string>("");
   const [parentFilter, setParentFilter] = useState<string>("");
   
+  const [enfants, setEnfants] = useState<Enfant[]>([]);
+  const [filteredEnfants, setFilteredEnfants] = useState<Enfant[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  
   // États pour la sélection multiple
-  const [selectedEnfants, setSelectedEnfants] = useState<number[]>([]);
+  const [selectedEnfants, setSelectedEnfants] = useState<string[]>([]);
   const [isSelectAll, setIsSelectAll] = useState(false);
   const [showSelectionHeader, setShowSelectionHeader] = useState(false);
+
+  const [imageFile, setImageFile] = useState<File | null>(null);
 
   // États pour les modals
   const [selectedEnfant, setSelectedEnfant] = useState<Enfant | null>(null);
   const [modalType, setModalType] = useState<'view' | 'edit' | 'delete' | null>(null);
   const [editForm, setEditForm] = useState<EnfantFormData>({});
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [newEnfant, setNewEnfant] = useState<EnfantFormData>({
+  const [newEnfant, setNewEnfant] = useState<EnfantFormData & { parentId: string }>({
     nom: "",
     prenom: "",
     age: 3,
     classe: "Petite Section",
     image: "/images/default-child.jpg",
-    statut: 'en_attente',
-    dateInscription: new Date().toISOString().split('T')[0],
-    dernierAcces: new Date().toISOString().split('T')[0],
-    parent: {
-      nom: "",
-      prenom: "",
-      image: "/images/default-parent.jpg"
-    }
+    statut: StatutClient.EN_ATTENTE,
+    parentId: ""
   });
+
+  const [parents, setParents] = useState<Parent[]>([]);
+  const [parentOptions, setParentOptions] = useState<string[]>(["Tous"]);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      console.log("fetchData"); 
+      setLoading(true);
+      setError(null);
+      
+      // Charger les enfants
+      const enfantsData = await enfantApi.getAllEnfants();
+      
+      // Charger les parents
+      const parentsData = await parentApi.getAllParents();
+      console.log(" liste parents", parentsData);
+      
+      setParents(parentsData);
+      
+      // Créer les options de parent pour le filtre
+      const options = ["Tous", ...parentsData.map(p => `${p.prenom} ${p.nom}`)];
+      setParentOptions(options);
+      
+      console.log("parentsData  ==> ", parentsData);
+      // Convertir les données API en format frontend
+      const convertedEnfants: Enfant[] = enfantsData.map((enfant: EnfantResponse) => {
+        console.log("enfant", enfant);
+        const parent = parentsData.find(p => p.id === enfant.parentId);
+         console.log("parent === >", parent);
+        return {
+          id: enfant.idEnfant,
+          nom: enfant.nom,
+          prenom: enfant.prenom,
+          age: enfant.age,
+          classe: enfant.classe,
+          imageUrl: enfant.imageUrl || '/images/default-child.jpg',
+          // parent: {
+          //   nom: parent?.nom || 'Non',
+          //   prenom: parent?.prenom || 'Parent',
+          //   image: parent?.image || '/images/default-parent.jpg'
+          // },
+          parentId: parent?.id || '',
+          statut: StatutClient.ACTIF, // À adapter selon votre logique métier
+          dateInscription: new Date().toISOString().split('T')[0], // À adapter
+          dernierAcces: new Date().toISOString().split('T')[0] // À adapter
+        };
+      });
+      
+      setEnfants(convertedEnfants);
+      setFilteredEnfants(convertedEnfants);
+      
+    } catch (error: any) {
+      setError(`Erreur de chargement: ${error.message}`);
+      console.error("Erreur lors du chargement des données:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+   useEffect(() => {
+    let filtered = enfants;
+    
+    if (classeFilter && classeFilter !== "Toutes") {
+      filtered = filtered.filter(enfant => enfant.classe === classeFilter);
+    }
+    
+    if (statutFilter && statutFilter !== "Tous") {
+      filtered = filtered.filter(enfant => {
+        if (statutFilter === "Actif") return enfant.statut === StatutClient.ACTIF;
+        if (statutFilter === "Inactif") return enfant.statut === StatutClient.INACTIF;
+        if (statutFilter === "En attente") return enfant.statut === StatutClient.EN_ATTENTE;
+        // if (statutFilter === "Inactif") return enfant.statut === 'inactif';
+        // if (statutFilter === "En attente") return enfant.statut === 'en_attente';
+        return true;
+      });
+    }
+    
+    if (parentFilter && parentFilter !== "Tous") {
+      filtered = filtered.filter(enfant => 
+        `${enfant.parentId}` === parentFilter
+      );
+    }
+    
+    setFilteredEnfants(filtered);
+    // Réinitialiser la sélection quand les filtres changent
+    setSelectedEnfants([]);
+    setIsSelectAll(false);
+    setShowSelectionHeader(false);
+  }, [enfants, classeFilter, statutFilter, parentFilter]);
 
   // Options pour les filtres
   const classeOptions = ["Toutes", "Toute Petite Section", "Petite Section", "Moyenne Section", "Grande Section", "CP", "CE1"];
   const statutOptions = ["Tous", "Actif", "Inactif", "En attente"];
-  const parentOptions = ["Tous", "Sophie Martin", "Thomas Dubois", "Marie Lambert", "Jean Petit", "Laura Bernard", "Pierre Moreau", "Julie Leroy", "Marc Blanc"]; 
+  // const parentOptions = ["Tous", "Sophie Martin", "Thomas Dubois", "Marie Lambert", "Jean Petit", "Laura Bernard", "Pierre Moreau", "Julie Leroy", "Marc Blanc"]; 
 
   // Filtrer les données
-  const filteredEnfants = enfantsData.filter(enfant => {
-    const matchesClasse = !classeFilter || classeFilter === "Toutes" || enfant.classe === classeFilter;
-    const matchesStatut = !statutFilter || statutFilter === "Tous" || 
-      (statutFilter === "Actif" && enfant.statut === 'actif') ||
-      (statutFilter === "Inactif" && enfant.statut === 'inactif') ||
-      (statutFilter === "En attente" && enfant.statut === 'en_attente');
-    const matchesParent = !parentFilter || parentFilter === "Tous" || 
-      `${enfant.parent.prenom} ${enfant.parent.nom}` === parentFilter; 
+  // const filteredEnfants = enfantsData.filter(enfant => {
+  //   const matchesClasse = !classeFilter || classeFilter === "Toutes" || enfant.classe === classeFilter;
+  //   const matchesStatut = !statutFilter || statutFilter === "Tous" || 
+  //     (statutFilter === "Actif" && enfant.statut === 'actif') ||
+  //     (statutFilter === "Inactif" && enfant.statut === 'inactif') ||
+  //     (statutFilter === "En attente" && enfant.statut === 'en_attente');
+  //   const matchesParent = !parentFilter || parentFilter === "Tous" || 
+  //     `${enfant.parent.prenom} ${enfant.parent.nom}` === parentFilter; 
     
-    return matchesClasse && matchesStatut && matchesParent;
-  });
+  //   return matchesClasse && matchesStatut && matchesParent;
+  // });
 
   // Gestion de la sélection
-  const handleSelectEnfant = (enfantId: number) => {
+  const handleSelectEnfant = (enfantId: string) => {
     setSelectedEnfants(prev => {
       const newSelected = prev.includes(enfantId)
         ? prev.filter(id => id !== enfantId)
@@ -96,22 +195,40 @@ export default function GestionEnfants() {
     setShowSelectionHeader(false);
   };
 
-  const handleDeleteSelected = () => {
+  const handleDeleteSelected = async () => {
     if (selectedEnfants.length === 0) return;
     
-    const enfantsNames = filteredEnfants
-      .filter(enfant => selectedEnfants.includes(enfant.id))
-      .map(enfant => `${enfant.prenom} ${enfant.nom}`)
-      .join(', ');
+    if (!window.confirm(`Êtes-vous sûr de vouloir supprimer ${selectedEnfants.length} enfant(s) ?`)) {
+      return;
+    }
     
-    console.log(`Suppression des enfants sélectionnés: ${enfantsNames}`);
-    alert(`${selectedEnfants.length} enfant(s) supprimé(s) : ${enfantsNames}`);
-    
-    handleCancelSelection();
+    try {
+      // Supprimer chaque enfant sélectionné
+      const promises = selectedEnfants.map(id => enfantApi.deleteEnfant(id));
+      await Promise.all(promises);
+      
+      // Mettre à jour localement
+      setEnfants(prev => prev.filter(enfant => !selectedEnfants.includes(enfant.id)));
+      
+      const enfantsNames = filteredEnfants
+        .filter(enfant => selectedEnfants.includes(enfant.id))
+        .map(enfant => `${enfant.prenom} ${enfant.nom}`)
+        .join(', ');
+      
+      alert(`${selectedEnfants.length} enfant(s) supprimé(s) : ${enfantsNames}`);
+      
+      handleCancelSelection();
+      
+    } catch (error: any) {
+      console.error('Erreur lors de la suppression multiple:', error);
+      alert(`Erreur: ${error.message}`);
+    }
   };
+
 
   // Gestion des actions sur les enfants
   const handleView = (enfant: Enfant) => {
+    console.log("view", enfant);
     setSelectedEnfant(enfant);
     setModalType('view');
   };
@@ -124,8 +241,9 @@ export default function GestionEnfants() {
       age: enfant.age,
       classe: enfant.classe,
       statut: enfant.statut,
-      image: enfant.image,
-      parent: enfant.parent
+      image: enfant.imageUrl,
+      parentId: enfant.parentId
+      
     });
     setModalType('edit');
   };
@@ -135,19 +253,50 @@ export default function GestionEnfants() {
     setModalType('delete');
   };
 
-  const handleSaveEdit = () => {
-    if (selectedEnfant && editForm) {
-      console.log("Sauvegarder modifications:", editForm);
-      alert(`Modifications sauvegardées pour ${editForm.prenom} ${editForm.nom}`);
-      closeModal();
-    }
-  };
+  const handleSaveEdit = async () => { // Ajouté async
+  if (!selectedEnfant) return;
+  
+  try {
+    // Appel API
+    await enfantApi.updateEnfant(
+      selectedEnfant.id, // ID string
+      {
+        nom: editForm.nom || '',
+        prenom: editForm.prenom || '',
+        age: editForm.age || 3,
+        classe: editForm.classe || ''
+      }
+    );
+    
+    // Mise à jour locale
+    setEnfants(prev => prev.map(e => 
+      e.id === selectedEnfant.id 
+        ? { ...e, ...editForm } 
+        : e
+    ));
+    // ... reste du code
+  } catch (error: any) {
+    console.error("Erreur...", error);
+    alert(`Erreur: ${error.message}`);
+  }
+};
 
-  const confirmDelete = () => {
-    if (selectedEnfant) {
-      console.log(`Suppression de ${selectedEnfant.prenom} ${selectedEnfant.nom}`);
+  const confirmDelete = async () => { 
+    if (!selectedEnfant) return;
+    
+    try {
+      await enfantApi.deleteEnfant(selectedEnfant.id);
+      
+      // Mettre à jour localement
+      setEnfants(prev => prev.filter(e => e.id !== selectedEnfant.id));
+      setSelectedEnfants(prev => prev.filter(id => id !== selectedEnfant.id));
+      
       alert(`Enfant "${selectedEnfant.prenom} ${selectedEnfant.nom}" supprimé`);
       closeModal();
+      
+    } catch (error: any) {
+      console.error("Erreur lors de la suppression:", error);
+      alert(`Erreur: ${error.message}`);
     }
   };
 
@@ -162,49 +311,76 @@ export default function GestionEnfants() {
     setIsAddModalOpen(true);
   };
 
-  const handleSaveNew = () => {
-    // Générer un nouvel ID
-    const newId = Math.max(...enfantsData.map(e => e.id)) + 1;
-    
-    // Créer le nouvel enfant
-    const nouvelEnfant: Enfant = {
-      id: newId,
-      nom: newEnfant.nom || "",
-      prenom: newEnfant.prenom || "",
-      age: newEnfant.age || 3,
-      classe: newEnfant.classe || "Petite Section",
-      image: newEnfant.image || "/images/default-child.jpg",
-      statut: newEnfant.statut || 'en_attente',
-      dateInscription: newEnfant.dateInscription || new Date().toISOString().split('T')[0],
-      dernierAcces: newEnfant.dernierAcces || new Date().toISOString().split('T')[0],
-      parent: {
-        nom: newEnfant.parent?.nom || "",
-        prenom: newEnfant.parent?.prenom || "",
-        image: newEnfant.parent?.image || "/images/default-parent.jpg"
-      }
-    };
+  const handleSaveNew = async () => {
+    try {
+      if (!newEnfant.parentId) {
+      throw new Error("Veuillez sélectionner un parent valide");
+    }
+    if (!imageFile) {
+      throw new Error("Veuillez sélectionner une photo pour l'enfant");
+    }
+      // Trouver le parent sélectionné
+      const selectedParentName = `${newEnfant.parentId}`;
+      
+      
+      // if (!parent) {
+      //   throw new Error("Veuillez sélectionner un parent valide");
+      // }
+      
+      // Ajouter l'enfant via l'API
+      const response = await enfantApi.ajouterEnfant(
+        {
+          nom: newEnfant.nom || '',
+          prenom: newEnfant.prenom || '',
+          age: newEnfant.age || 3,
+          classe: newEnfant.classe || 'Petite Section'
+        },
+        newEnfant.parentId,
+        imageFile
+        // Note: Vous devez ajouter la gestion de l'image ici
+      );
+      // const parent = parents.find(p => p.id === newEnfant.parentId);
+      // Créer le nouvel enfant pour l'affichage
 
-    console.log("Nouvel enfant ajouté:", nouvelEnfant);
-    alert(`Enfant "${nouvelEnfant.prenom} ${nouvelEnfant.nom}" ajouté avec succès`);
-    
-    // Réinitialiser le formulaire
-    setNewEnfant({
-      nom: "",
-      prenom: "",
-      age: 3,
-      classe: "Petite Section",
-      image: "/images/default-child.jpg",
-      statut: 'en_attente',
-      dateInscription: new Date().toISOString().split('T')[0],
-      dernierAcces: new Date().toISOString().split('T')[0],
-      parent: {
+      const parent = parents.find(p => p.id === newEnfant.parentId);
+      if (!parent) {
+        throw new Error("Veuillez sélectionner un parent valide");
+      }
+      const nouvelEnfant: Enfant = {
+        id: response.idEnfant,
+        nom: response.nom,
+        prenom: response.prenom,
+        age: response.age,
+        classe: response.classe,
+        imageUrl: response.imageUrl || '/images/default-child.jpg',
+        parentId: response.parentId,
+        statut: StatutClient.ACTIF,
+        dateInscription: new Date().toISOString().split('T')[0],
+        dernierAcces: new Date().toISOString().split('T')[0]
+      };
+      
+      // Ajouter à la liste
+      setEnfants(prev => [...prev, nouvelEnfant]);
+      
+      alert(`Enfant "${nouvelEnfant.prenom} ${nouvelEnfant.nom}" ajouté avec succès`);
+      
+      // Réinitialiser le formulaire
+      setNewEnfant({
         nom: "",
         prenom: "",
-        image: "/images/default-parent.jpg"
-      }
-    });
-    
-    setIsAddModalOpen(false);
+        age: 3,
+        classe: "Petite Section",
+        image: "/images/default-child.jpg",
+        statut: StatutClient.EN_ATTENTE,
+        parentId: ""
+      });
+      
+      setIsAddModalOpen(false);
+      
+    } catch (error: any) {
+      console.error("Erreur lors de l'ajout:", error);
+      alert(`Erreur: ${error.message}`);
+    }
   };
 
   const closeAddModal = () => {
@@ -215,29 +391,64 @@ export default function GestionEnfants() {
       age: 3,
       classe: "Petite Section",
       image: "/images/default-child.jpg",
-      statut: 'en_attente',
-      dateInscription: new Date().toISOString().split('T')[0],
-      dernierAcces: new Date().toISOString().split('T')[0],
-      parent: {
-        nom: "",
-        prenom: "",
-        image: "/images/default-parent.jpg"
-      }
+      statut: StatutClient.EN_ATTENTE,
+      parentId: ""
     });
+     setImageFile(null);
   };
+   const getParentInfo = (parentId: string) => {
+    const parent = parents.find(p => p.id === parentId);
+    return parent || {
+      nom: 'Non',
+      prenom: 'Parent',
+      image: '/images/default-parent.jpg',
+      email: '',
+      telephone: ''
+    } as Parent;
+  };
+   if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Chargement des enfants...</p>
+        </div>
+      </div>
+    );
+  }
 
+  if (error) {
+    return (
+      <div className="p-6">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="flex items-center">
+            <svg className="w-5 h-5 text-red-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            </svg>
+            <span className="text-red-700 font-medium">{error}</span>
+          </div>
+          <button 
+            onClick={fetchData}
+            className="mt-3 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+          >
+            Réessayer
+          </button>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
       {/* En-tête principal avec titre et bouton d'ajout */}
       <div className="p-6 border-b border-gray-100 dark:border-white/[0.05] bg-white dark:bg-gray-900/50">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h2 className="text-xl font-semibold text-gray-800 dark:text-white">
+            {/* <h2 className="text-xl font-semibold text-gray-800 dark:text-white">
               Liste des Enfants
             </h2>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
               Gérez les enfants et leurs informations
-            </p>
+            </p> */}
           </div>
           
           <button
@@ -372,7 +583,7 @@ export default function GestionEnfants() {
 
       {/* Header de sélection */}
       {showSelectionHeader && (
-        <div className="bg-indigo-500 dark:from-blue-900/20 dark:to-indigo-900/20 border-b border-blue-100 dark:border-blue-800/30 p-3">
+        <div className="bg-gradient-to-br from-emerald-500 to-emerald-600  border-b border-blue-100 dark:border-blue-800/30 p-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
@@ -423,6 +634,7 @@ export default function GestionEnfants() {
         onView={handleView}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        parents={parents}
       />
 
       {/* Message si aucun enfant trouvé */}
@@ -449,6 +661,7 @@ export default function GestionEnfants() {
           onClose={closeModal}
           enfant={selectedEnfant}
           onEdit={() => handleEdit(selectedEnfant)}
+          parent={getParentInfo(selectedEnfant.parentId)}
         />
       )}
 
@@ -457,11 +670,14 @@ export default function GestionEnfants() {
           isOpen={true}
           onClose={closeModal}
           enfant={selectedEnfant}
-          formData={editForm}
+          formData={editForm as EnfantFormData & { parentId: string }}
+          // formData={editForm}
           onFormChange={(field, value) => setEditForm(prev => ({ ...prev, [field]: value }))}
           onSave={handleSaveEdit}
-          parentOptions={parentOptions.filter(opt => opt !== "Tous")}
+          parentOptions={parents}
+          // parentOptions={parentOptions.filter(opt => opt !== "Tous")}
           isEditing={true}
+          onImageChange={(file) => setImageFile(file)}
         />
       )}
 
@@ -482,7 +698,9 @@ export default function GestionEnfants() {
           formData={newEnfant}
           onFormChange={(field, value) => setNewEnfant(prev => ({ ...prev, [field]: value }))}
           onSave={handleSaveNew}
-          parentOptions={parentOptions.filter(opt => opt !== "Tous")}
+          parentOptions={parents}
+          // parentOptions={parentOptions.filter(opt => opt !== "Tous")}
+          onImageChange={(file) => setImageFile(file)}
           isEditing={false}
         />
       )}

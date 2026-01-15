@@ -1,248 +1,243 @@
 import { useState, useMemo, useEffect } from "react";
-import ParentForm from "./ParentForm";
-import ParentDetails from "./ParentDetails";
-import DeleteConfirmation from "./DeleteConfirmation";
-import ParentsTable from "./ParentsTable";
-import { convertBackendToFrontend, CreateParentDto, Parent, UpdateParentDto } from "./types";
-import { tableData } from "./types";
-import { parentApi } from "../../../services/api/parentApi";
-import { StatutClient } from "../../../types/auth.types";
-import { enfantApi } from "../../../services/api/enfantApi";
+import EducateurForm from "../Educateurs/EducateurForm";
+import EducateurDetails from "../Educateurs/EducateurDetails";
+import DeleteConfirmation from "../Educateurs/DeleteConfirmation";
+import EducateursTable from "./EducateursTable";
+import { convertBackendToEducateur, CreateEducateurDto, Educateur, UpdateEducateurDto } from "../Educateurs/Types";
+import { educateurApi } from "../../../services/api/educateurApi";
 
-
-export default function GestionParents() {
+export default function GestionEducateurs() {
   // États pour les filtres
-  const [statutFilter, setStatutFilter] = useState<string>("");
-  const [relationFilter, setRelationFilter] = useState<string>("");
+  const [disponibiliteFilter, setDisponibiliteFilter] = useState<string>("");
+  const [specialiteFilter, setSpecialiteFilter] = useState<string>("");
   
   // États pour les modals
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [selectedParent, setSelectedParent] = useState<Parent | null>(null);
+  const [selectedEducateur, setSelectedEducateur] = useState<Educateur | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   
-  // États pour les données
-  const [parents, setParents] = useState<Parent[]>(tableData);
+  // États pour les données (DÉCOMMENTER)
+  const [educateurs, setEducateurs] = useState<Educateur[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   
   // États pour la sélection multiple
-  const [selectedParents, setSelectedParents] = useState<string[]>([]);
+  const [selectedEducateurs, setSelectedEducateurs] = useState<string[]>([]);
   const [isAllSelected, setIsAllSelected] = useState(false);
 
   useEffect(() => {
-    fetchParents();
+    fetchEducateurs();
   }, []);
 
-  const fetchParents = async () => {
+  const fetchEducateurs = async () => {
     try {
       setLoading(true);
       setError(null);
-      const parentsData = await parentApi.getAllParents();
-      const enfantsData = await enfantApi.getAllEnfants();
-      parentsData.forEach(parent => {
-        const enfantFiltered = enfantsData.filter(enfant => enfant.parentId === parent.id);
-        parent.enfants.images = enfantFiltered.map(enfant => enfant.imageUrl);
-      });
-      console.log("parentsData", parentsData);
-      setParents(parentsData);
+      const users = await educateurApi.getAllEducateurs();
+      const educateursData = users.map(convertBackendToEducateur);
+      setEducateurs(educateursData);
     } catch (error: any) {
       setError(`Erreur de chargement: ${error.message}`);
-      console.error("Erreur lors du chargement des parents:", error);
+      console.error("Erreur lors du chargement des éducateurs:", error);
     } finally {
       setLoading(false);
     }
   };
 
   // Options uniques pour les filtres
-  const statutOptions = useMemo(() => {
-    const statuts = Array.from(new Set(parents.map(parent => parent.statut)));
-    return ["Tous", ...statuts];
-  }, [parents]);
+  const disponibiliteOptions = useMemo(() => {
+    const disponibilites = Array.from(new Set(educateurs.map(educateur => {
+      switch(educateur.disponibilite.toLowerCase()) {
+        case 'disponible': return "Disponible";
+        case 'occupe': return "Occupé";
+        case 'absence': return "Absence";
+        default: return educateur.disponibilite;
+      }
+    })));
+    return ["Toutes", ...disponibilites];
+  }, [educateurs]);
 
-  const relationOptions = useMemo(() => {
-    const relations = Array.from(new Set(parents.map(parent => parent.relation)));
-    return ["Toutes", ...relations];
-  }, [parents]);
+  const specialiteOptions = useMemo(() => {
+    const specialites = Array.from(new Set(educateurs.map(educateur => educateur.specialite)));
+    return ["Toutes", ...specialites];
+  }, [educateurs]);
 
   // Filtrer les données
   const filteredData = useMemo(() => {
-    return parents.filter(parent => {
-      const matchesStatut = !statutFilter || statutFilter === "Tous" || parent.statut === statutFilter;
-      const matchesRelation = !relationFilter || relationFilter === "Toutes" || parent.relation === relationFilter;
-      return matchesStatut && matchesRelation;
+    return educateurs.filter(educateur => {
+      const matchesDisponibilite = !disponibiliteFilter || 
+        disponibiliteFilter === "Toutes" || 
+        (disponibiliteFilter === "Disponible" && educateur.disponibilite.toLowerCase() === 'disponible') ||
+        (disponibiliteFilter === "Occupé" && educateur.disponibilite.toLowerCase() === 'occupe') ||
+        (disponibiliteFilter === "Absence" && educateur.disponibilite.toLowerCase() === 'absence');
+      
+      const matchesSpecialite = !specialiteFilter || 
+        specialiteFilter === "Toutes" || 
+        educateur.specialite === specialiteFilter;
+      
+      return matchesDisponibilite && matchesSpecialite;
     });
-  }, [parents, statutFilter, relationFilter]);
+  }, [educateurs, disponibiliteFilter, specialiteFilter]);
 
   // Gestion de la sélection
   useEffect(() => {
-    if (selectedParents.length === filteredData.length && filteredData.length > 0) {
+    if (selectedEducateurs.length === filteredData.length && filteredData.length > 0) {
       setIsAllSelected(true);
     } else {
       setIsAllSelected(false);
     }
-  }, [selectedParents, filteredData]);
+  }, [selectedEducateurs, filteredData]);
 
   // Gestion des sélections
   const handleSelectAll = () => {
     if (isAllSelected) {
-      setSelectedParents([]);
+      setSelectedEducateurs([]);
     } else {
-      const allIds = filteredData.map(parent => parent.id);
-      setSelectedParents(allIds);
+      const allIds = filteredData.map(educateur => educateur.id);
+      setSelectedEducateurs(allIds);
     }
     setIsAllSelected(!isAllSelected);
   };
 
-  const handleSelectParent = (id: string) => {
-    if (selectedParents.includes(id)) {
-      setSelectedParents(selectedParents.filter(parentId => parentId !== id));
+  const handleSelectEducateur = (id: string) => {
+    if (selectedEducateurs.includes(id)) {
+      setSelectedEducateurs(selectedEducateurs.filter(educateurId => educateurId !== id));
     } else {
-      setSelectedParents([...selectedParents, id]);
+      setSelectedEducateurs([...selectedEducateurs, id]);
     }
   };
 
   // Actions multiples
   const handleActivateSelected = async () => {
     try {
-       const promises = selectedParents.map(id => 
-        parentApi.updateParent(id, { statutClient: StatutClient.ACTIF })
-      );
-      await Promise.all(promises);
-
-      setParents(prev => prev.map(parent => 
-        selectedParents.includes(parent.id) 
-          ? { ...parent, statut: "Actif" } 
-          : parent
+      // Implémentez l'activation des éducateurs sélectionnés
+      setEducateurs(prev => prev.map(educateur => 
+        selectedEducateurs.includes(educateur.id) 
+          ? { ...educateur, statut: "actif" } 
+          : educateur
       ));
-       setSelectedParents([]);
-       alert(`${selectedParents.length} parent(s) activé(s) avec succès`);
+      setSelectedEducateurs([]);
+      alert(`${selectedEducateurs.length} éducateur(s) activé(s) avec succès`);
     } catch (error: any) {
       console.error('Erreur lors de l\'activation multiple:', error);
       alert(`Erreur: ${error.message}`);
     }
-    
-   
   };
 
-  const handleDeactivateSelected = async() => {
+  const handleDeactivateSelected = async () => {
     try {
-        const promises = selectedParents.map(id => 
-        parentApi.updateParent(id, { statutClient: StatutClient.INACTIF })
-        );
-        await Promise.all(promises);
-         setParents(prev => prev.map(parent => 
-          selectedParents.includes(parent.id) ? { ...parent, statut: "Inactif" } : parent
-       ));
-       alert(`${selectedParents.length} parent(s) désactivé(s) avec succès`);
-    setSelectedParents([]);
+      // Implémentez la désactivation des éducateurs sélectionnés
+      setEducateurs(prev => prev.map(educateur => 
+        selectedEducateurs.includes(educateur.id) 
+          ? { ...educateur, statut: "inactif" } 
+          : educateur
+      ));
+      alert(`${selectedEducateurs.length} éducateur(s) désactivé(s) avec succès`);
+      setSelectedEducateurs([]);
     } catch (error: any) {
       console.error('Erreur lors de la désactivation multiple:', error);
       alert(`Erreur: ${error.message}`);
     }
-   
   };
 
-  const handleDeleteSelected =  async() => {
-    if (window.confirm(`Êtes-vous sûr de vouloir supprimer ${selectedParents.length} parent(s) ?`)) {
-       return;
+  const handleDeleteSelected = async () => {
+    if (window.confirm(`Êtes-vous sûr de vouloir supprimer ${selectedEducateurs.length} éducateur(s) ?`)) {
+      try {
+        // Implémentez la suppression multiple
+        // Note: Vous devriez aussi appeler l'API pour supprimer plusieurs éducateurs
+        setEducateurs(prev => prev.filter(educateur => !selectedEducateurs.includes(educateur.id)));
+        setSelectedEducateurs([]);
+        alert(`${selectedEducateurs.length} éducateur(s) supprimé(s) avec succès`);
+      } catch (error: any) {
+        console.error('Erreur lors de la suppression multiple:', error);
+        alert(`Erreur: ${error.message}`);
+      }
     }
-     try {
-       const promises = selectedParents.map(id => 
-        parentApi.deleteParent(id)
-      );
-      await Promise.all(promises);
-       setParents(prev => prev.filter(parent => !selectedParents.includes(parent.id)));
-       setSelectedParents([]);
-       alert(`${selectedParents.length} parent(s) supprimé(s) avec succès`);
-     } catch (error:any) {
-      console.error('Erreur lors de la suppression multiple:', error);
-      alert(`Erreur: ${error.message}`);
-     }
   };
 
   const handleCancelSelection = () => {
-    setSelectedParents([]);
+    setSelectedEducateurs([]);
   };
 
   // CRUD operations
-  const handleCreateParent = async (parentData: CreateParentDto | UpdateParentDto , imageFile?: File) : Promise<boolean>=> {
+  const handleCreateEducateur = async (educateurData: CreateEducateurDto | UpdateEducateurDto, imageFile?: File): Promise<boolean> => {
     try {
-       if ('email' in parentData && 'password' in parentData) {
-         const newUser = await parentApi.createParent(parentData as CreateParentDto, imageFile);
-       const newParent = convertBackendToFrontend(newUser);
-       setParents(prev => [...prev, newParent]);
-       await fetchParents();
-      
-      alert('Parent créé avec succès');
-       return true;
-       }
-       return false;
-      
-    }
-    catch (error: any) {
-      console.error('Erreur lors de la création du parent:', error);
+      if ('email' in educateurData && 'password' in educateurData) {
+        const newUser = await educateurApi.createEducateur(educateurData as CreateEducateurDto, imageFile);
+        const newEducateur = convertBackendToEducateur(newUser);
+        // Option 1: Ajouter localement et rafraîchir
+        setEducateurs(prev => [...prev, newEducateur]);
+        // Option 2: Rafraîchir depuis l'API
+        await fetchEducateurs();
+        alert('Éducateur créé avec succès');
+        return true;
+      }
+      return false;
+    } catch (error: any) {
+      console.error('Erreur lors de la création de l\'éducateur:', error);
       alert(`Erreur : ${error.message}`);
       return false;
     }
-    
   };
 
-  const handleEditParent = async (parentData: UpdateParentDto, imageFile?: File): Promise<boolean> => {
-     if (!selectedParent) return false;
-     try {
-       const updatedUser = await parentApi.updateParent(selectedParent.id, parentData, imageFile);
-        const updatedParent = convertBackendToFrontend(updatedUser);
-         setParents(prev => prev.map(parent => 
-              parent.id === updatedParent.id ? updatedParent : parent
-          ));
-          await fetchParents();
-          setShowEditModal(false);
-          return true;
-     } catch (error: any) {
+  const handleEditEducateur = async (educateurData: UpdateEducateurDto | CreateEducateurDto, imageFile?: File): Promise<boolean> => {
+    if (!selectedEducateur) return false;
+    try {
+      const updatedUser = await educateurApi.updateEducateur(selectedEducateur.id, educateurData as UpdateEducateurDto, imageFile);
+      const updatedEducateur = convertBackendToEducateur(updatedUser);
+      // Mise à jour locale
+      setEducateurs(prev => prev.map(educateur => 
+        educateur.id === updatedEducateur.id ? updatedEducateur : educateur
+      ));
+      // Rafraîchir depuis l'API si nécessaire
+      await fetchEducateurs();
+      setShowEditModal(false);
+      return true;
+    } catch (error: any) {
       console.error('Erreur lors de la mise à jour:', error);
       alert(`Erreur: ${error.message}`);
       return false;
-      
-     }
+    }
+  };
 
-};
-
-  const handleDeleteParent = async(id: string) => {
+  const handleDeleteEducateur = async (id: string) => {
     try {
-      await parentApi.deleteParent(id);
-      setParents(prev => prev.filter(parent => parent.id !== id));
+      await educateurApi.deleteEducateur(id);
+      // Mise à jour locale
+      setEducateurs(prev => prev.filter(educateur => educateur.id !== id));
       setShowDeleteModal(false);
-      alert('Parent supprimé avec succès');
+      alert('Éducateur supprimé avec succès');
     } catch (error: any) {
       console.error('Erreur lors de la suppression:', error);
       alert(`Erreur: ${error.message}`);
     }
-    
   };
 
   // Handlers pour les actions
-  const handleViewDetails = (parent: Parent) => {
-    setSelectedParent(parent);
+  const handleViewDetails = (educateur: Educateur) => {
+    console.log("Éducateur sélectionné pour détails:", educateur); 
+    setSelectedEducateur(educateur);
     setShowViewModal(true);
   };
 
-  const handleEdit = (parent: Parent) => {
-    setSelectedParent(parent);
-     setShowEditModal(true)
+  const handleEdit = (educateur: Educateur) => {
+    setSelectedEducateur(educateur);
+    setShowEditModal(true);
   };
 
-  const handleDelete = (parent: Parent) => {
-    setSelectedParent(parent);
+  const handleDelete = (educateur: Educateur) => {
+    setSelectedEducateur(educateur);
     setShowDeleteModal(true);
   };
-if (loading) {
+
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Chargement des parents...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Chargement des éducateurs...</p>
         </div>
       </div>
     );
@@ -259,7 +254,7 @@ if (loading) {
             <span className="text-red-700 font-medium">{error}</span>
           </div>
           <button 
-            onClick={fetchParents}
+            onClick={fetchEducateurs}
             className="mt-3 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
           >
             Réessayer
@@ -268,6 +263,7 @@ if (loading) {
       </div>
     );
   }
+
   return (
     <>
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
@@ -276,16 +272,16 @@ if (loading) {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               {/* <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
-                Toutes les Parents
+                Tous les Éducateurs
               </h2> */}
               <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                {parents.length} parent(s) au total
+                {educateurs.length} éducateur(s) au total
               </p>
             </div>
             <div className="flex items-center gap-3">
               {/* Bouton rafraîchir */}
               <button
-                onClick={fetchParents}
+                onClick={fetchEducateurs}
                 className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
                 title="Rafraîchir"
               >
@@ -303,7 +299,7 @@ if (loading) {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
                 </svg>
-                Nouveau Parent
+                Nouvel Éducateur
               </button>
             </div>
           </div>
@@ -313,32 +309,32 @@ if (loading) {
         <div className="p-4 border-b border-gray-100 dark:border-white/[0.05] bg-gray-50 dark:bg-gray-900/50">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="w-full sm:w-auto">
-              <label htmlFor="relationFilter" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Relation
+              <label htmlFor="disponibiliteFilter" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Disponibilité
               </label>
               <select
-                id="relationFilter"
-                value={relationFilter}
-                onChange={(e) => setRelationFilter(e.target.value)}
+                id="disponibiliteFilter"
+                value={disponibiliteFilter}
+                onChange={(e) => setDisponibiliteFilter(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
               >
-                {relationOptions.map((option) => (
+                {disponibiliteOptions.map((option) => (
                   <option key={option} value={option}>{option}</option>
                 ))}
               </select>
             </div>
 
             <div className="w-full sm:w-auto">
-              <label htmlFor="statutFilter" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Statut
+              <label htmlFor="specialiteFilter" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Spécialité
               </label>
               <select
-                id="statutFilter"
-                value={statutFilter}
-                onChange={(e) => setStatutFilter(e.target.value)}
+                id="specialiteFilter"
+                value={specialiteFilter}
+                onChange={(e) => setSpecialiteFilter(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
               >
-                {statutOptions.map((option) => (
+                {specialiteOptions.map((option) => (
                   <option key={option} value={option}>{option}</option>
                 ))}
               </select>
@@ -346,7 +342,7 @@ if (loading) {
 
             <div className="w-full sm:w-auto flex items-end">
               <button
-                onClick={() => { setStatutFilter(""); setRelationFilter(""); }}
+                onClick={() => { setDisponibiliteFilter(""); setSpecialiteFilter(""); }}
                 className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700"
               >
                 Réinitialiser
@@ -355,28 +351,28 @@ if (loading) {
           </div>
           
           <div className="mt-3 text-sm text-gray-600 dark:text-gray-400">
-            {filteredData.length} parent(s) trouvé(s)
-            {selectedParents.length > 0 && (
+            {filteredData.length} éducateur(s) trouvé(s)
+            {selectedEducateurs.length > 0 && (
               <span className="ml-2 font-medium text-blue-600 dark:text-blue-400">
-                • {selectedParents.length} sélectionné(s)
+                • {selectedEducateurs.length} sélectionné(s)
               </span>
             )}
           </div>
         </div>
 
         {/* Header d'actions multiples */}
-        {selectedParents.length > 0 && (
-          <div className="bg-gradient-to-br from-emerald-500 to-emerald-600  dark:from-blue-900/20 dark:to-indigo-900/20 border-b border-blue-100 dark:border-blue-800/30 p-3">
+        {selectedEducateurs.length > 0 && (
+          <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 border-b border-blue-100 dark:border-blue-800/30 p-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2">
                   <div className="w-6 h-6 flex items-center justify-center bg-blue-100 dark:bg-blue-800 rounded-full">
                     <span className="text-sm font-semibold text-blue-600 dark:text-blue-300">
-                      {selectedParents.length}
+                      {selectedEducateurs.length}
                     </span>
                   </div>
                   <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    parent(s) sélectionné(s)
+                    éducateur(s) sélectionné(s)
                   </span>
                 </div>
               </div>
@@ -424,7 +420,7 @@ if (loading) {
         )}
 
         {/* Message si pas de données */}
-        {parents.length === 0 ? (
+        {educateurs.length === 0 ? (
           <div className="p-8 text-center">
             <div className="mx-auto w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
               <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -432,10 +428,10 @@ if (loading) {
               </svg>
             </div>
             <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-white">
-              Aucun parent trouvé
+              Aucun éducateur trouvé
             </h3>
             <p className="mt-2 text-gray-600 dark:text-gray-400">
-              Commencez par ajouter votre premier parent.
+              Commencez par ajouter votre premier éducateur.
             </p>
             <button
               onClick={() => setShowCreateModal(true)}
@@ -444,17 +440,17 @@ if (loading) {
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
               </svg>
-              Ajouter un parent
+              Ajouter un éducateur
             </button>
           </div>
         ) : (
           /* Tableau */
-          <ParentsTable
-            parents={filteredData}
-            selectedParents={selectedParents}
+          <EducateursTable
+            educateurs={filteredData} // RÉACTIVER cette ligne
+            selectedEducateurs={selectedEducateurs}
             isAllSelected={isAllSelected}
             onSelectAll={handleSelectAll}
-            onSelectParent={handleSelectParent}
+            onSelectEducateur={handleSelectEducateur}
             onViewDetails={handleViewDetails}
             onEdit={handleEdit}
             onDelete={handleDelete}
@@ -463,36 +459,37 @@ if (loading) {
       </div>
 
       {/* Modals */}
-      <ParentForm
+      <EducateurForm
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
-        onSave={handleCreateParent}
-        title="Nouveau Parent"
-        subtitle="Remplissez les informations du parent"
+        onSave={handleCreateEducateur}
+        title="Nouvel Éducateur"
+        subtitle="Remplissez les informations de l'éducateur"
         isEdit={false}
       />
       
-      <ParentForm
+      <EducateurForm
         isOpen={showEditModal}
         onClose={() => setShowEditModal(false)}
-        parent={selectedParent}
-        onSave={handleEditParent}
-        title="Modifier le Parent"
-        subtitle={`Modifiez les informations de ${selectedParent?.nom} ${selectedParent?.prenom}`}
+        educateur={selectedEducateur}
+        onSave={handleEditEducateur}
+        title="Modifier l'Éducateur"
+        subtitle={`Modifiez les informations de ${selectedEducateur?.prenom} ${selectedEducateur?.nom}`}
         isEdit={true}
       />
 
-      <ParentDetails
+      <EducateurDetails
         isOpen={showViewModal}
         onClose={() => setShowViewModal(false)}
-        parent={selectedParent}
+        educateur={selectedEducateur}
+        onEdit={() => selectedEducateur && handleEdit(selectedEducateur)}
       />
 
       <DeleteConfirmation
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
-        parent={selectedParent}
-        onConfirm={() => selectedParent && handleDeleteParent(selectedParent.id)}
+        educateur={selectedEducateur}
+        onConfirm={() => selectedEducateur && handleDeleteEducateur(selectedEducateur.id)}
       />
     </>
   );

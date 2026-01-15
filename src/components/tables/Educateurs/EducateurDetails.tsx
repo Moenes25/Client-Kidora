@@ -1,11 +1,13 @@
+import { useEffect, useState } from "react";
 import Badge from "../../ui/badge/Badge";
 import { Educateur } from "./Types";
+import imageApi from "../../../services/api/imageService";
 
 interface EducateurDetailsProps {
   isOpen: boolean;
   onClose: () => void;
-  educateur: Educateur;
-  onEdit: () => void;
+  educateur: Educateur | null;
+  onEdit?: () => void;
 }
 
 export default function EducateurDetails({
@@ -14,7 +16,32 @@ export default function EducateurDetails({
   educateur,
   onEdit
 }: EducateurDetailsProps) {
-    if (!isOpen) return null;
+  const [imageUrl, setImageUrl] = useState<string>('/default-avatar.png');
+  const [loadingImage, setLoadingImage] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (isOpen && educateur && educateur.image) {
+      loadEducateurImage();
+    } else {
+      setImageUrl('/default-avatar.png');
+    }
+  }, [isOpen, educateur]);
+
+  const loadEducateurImage = async () => {
+    if (!educateur?.image) return;
+    
+    setLoadingImage(true);
+    try {
+      const url = await imageApi.getImage(educateur.image);
+      setImageUrl(url);
+    } catch (error) {
+      console.error('Erreur de chargement de l\'image:', error);
+      setImageUrl('/default-avatar.png');
+    } finally {
+      setLoadingImage(false);
+    }
+  };
+   
 
     const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -43,6 +70,18 @@ export default function EducateurDetails({
     }
   };
 
+   const handleImageError = () => {
+    setImageUrl('/default-avatar.png');
+  };
+
+  useEffect(() => {
+    return () => {
+      if (imageUrl && imageUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(imageUrl);
+      }
+    };
+  }, [imageUrl]);
+   if (!isOpen || !educateur) return null;
   return (
 
     <div className="fixed inset-0 z-[100000] overflow-y-auto">
@@ -70,11 +109,16 @@ export default function EducateurDetails({
                 {/* Photo et infos de base */}
                 <div className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
                   <div className="w-20 h-20 overflow-hidden rounded-full">
+                    {loadingImage ? (
+                  <div className="w-full h-full bg-gray-200 animate-pulse rounded-full"></div>
+                ) : (
                     <img
-                      src={educateur.image}
-                      alt={`${educateur.prenom} ${educateur.nom}`}
+                      src={imageUrl}
+                      // alt={`${educateur.prenom} ${educateur.nom}`}
                       className="w-full h-full object-cover"
+                       onError={handleImageError}
                     />
+                    )}
                   </div>
                   <div className="flex-1">
                     <h4 className="text-xl font-bold text-gray-900 dark:text-white">
@@ -114,7 +158,7 @@ export default function EducateurDetails({
                         <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                         </svg>
-                        <span className="text-gray-800 dark:text-gray-300">{educateur.telephone}</span>
+                        <span className="text-gray-800 dark:text-gray-300">{educateur.numTel}</span>
                       </div>
                     </div>
                   </div>

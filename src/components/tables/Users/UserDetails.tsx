@@ -1,14 +1,87 @@
+import { useState, useEffect } from "react";
+import { RoleUsers, StatutClient } from '../../../types/auth.types';
 import { Utilisateur } from './types';
+import { imageApi } from "../../../services/api/imageService";
 
 interface UserDetailsProps {
   user: Utilisateur | null;
   isOpen: boolean;
   onClose: () => void;
-  onEdit: (user: Utilisateur) => void;
 }
 
-export default function UserDetails({ user, isOpen, onClose, onEdit }: UserDetailsProps) {
-  
+export default function UserDetails({ user, isOpen, onClose }: UserDetailsProps) {
+  const [userImageUrl, setUserImageUrl] = useState<string>('/default-avatar.png');
+  const [childrenImageUrls, setChildrenImageUrls] = useState<string[]>([]);
+  const [loadingImages, setLoadingImages] = useState<boolean>(false);
+
+  // Charger les images quand le modal s'ouvre ou quand l'utilisateur change
+  useEffect(() => {
+    if (isOpen && user) {
+      loadAllImages();
+    } else {
+      // Réinitialiser les URLs quand le modal se ferme
+      setUserImageUrl('/default-avatar.png');
+      setChildrenImageUrls([]);
+    }
+  }, [isOpen, user]);
+
+  const loadAllImages = async () => {
+    if (!user) return;
+    
+    setLoadingImages(true);
+    try {
+      // Charger l'image de l'utilisateur
+      if (user.image) {
+        try {
+          const imageUrl = await imageApi.getImage(user.image);
+          setUserImageUrl(imageUrl);
+        } catch (error) {
+          console.error('Erreur de chargement de l\'image utilisateur:', error);
+          setUserImageUrl('/default-avatar.png');
+        }
+      }
+
+      // Charger les images des enfants (si parent)
+      // if (user.role === RoleUsers.PARENT && user.enfants?.images?.length > 0) {
+      //   const childPromises = user.enfants.images.map(async (imagePath, index) => {
+      //     try {
+      //       if (!imagePath || imagePath.trim() === '') {
+      //         return '/default-child-avatar.png';
+      //       }
+      //       return await imageApi.getImage(imagePath);
+      //     } catch (error) {
+      //       console.error(`Erreur de chargement de l'image enfant ${index + 1}:`, error);
+      //       return '/default-child-avatar.png';
+      //     }
+      //   });
+
+      //   const childUrls = await Promise.all(childPromises);
+      //   setChildrenImageUrls(childUrls);
+      // }
+    } catch (error) {
+      console.error('Erreur générale de chargement des images:', error);
+    } finally {
+      setLoadingImages(false);
+    }
+  };
+
+  // Nettoyage des URLs blob
+  useEffect(() => {
+    return () => {
+      // Nettoyer l'URL de l'utilisateur
+      if (userImageUrl && userImageUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(userImageUrl);
+      }
+      
+      // Nettoyer les URLs des enfants
+      childrenImageUrls.forEach(url => {
+        if (url && url.startsWith('blob:')) {
+          URL.revokeObjectURL(url);
+        }
+      });
+    };
+  }, [userImageUrl, childrenImageUrls]);
+
   if (!isOpen || !user) return null;
 
   const formatDate = (dateString: string) => {
@@ -35,6 +108,15 @@ export default function UserDetails({ user, isOpen, onClose, onEdit }: UserDetai
 
   const countEnfants = () => {
     return user.enfants?.images?.length || 0;
+  };
+
+  // Gestionnaire d'erreur pour les images
+  const handleUserImageError = () => {
+    setUserImageUrl('/default-avatar.png');
+  };
+
+  const handleChildImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    e.currentTarget.src = '/default-child-avatar.png';
   };
 
   return (
@@ -66,14 +148,19 @@ export default function UserDetails({ user, isOpen, onClose, onEdit }: UserDetai
             <div className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
               <div className="relative">
                 <div className="w-20 h-20 overflow-hidden rounded-full">
-                  <img
-                    src={user.image}
-                    alt={user.nomPrenom}
-                    className="w-full h-full object-cover"
-                  />
+                  {loadingImages ? (
+                    <div className="w-full h-full bg-gray-200 animate-pulse rounded-full"></div>
+                  ) : (
+                    <img
+                      src={userImageUrl}
+                      alt={user.nomPrenom}
+                      className="w-full h-full object-cover"
+                      onError={handleUserImageError}
+                    />
+                  )}
                 </div>
                 <div className={`absolute -bottom-1 -right-1 px-2 py-0.5 text-xs rounded-full border-2 border-white dark:border-gray-800 ${
-                  user.role === 'parent' 
+                  user.role === RoleUsers.PARENT
                     ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' 
                     : 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400'
                 }`}>
@@ -87,8 +174,8 @@ export default function UserDetails({ user, isOpen, onClose, onEdit }: UserDetai
                 </p>
                 <div className="flex items-center gap-2 mt-2">
                   <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(user.statut)}`}>
-                    {user.statut === 'actif' ? 'Actif' : 
-                    user.statut === 'inactif' ? 'Inactif' : 
+                    {user.statut === StatutClient.ACTIF ? 'Actif' : 
+                    user.statut === StatutClient.INACTIF ? 'Inactif' :
                     'En attente'}
                   </span>
                   {user.classe && (
@@ -144,7 +231,7 @@ export default function UserDetails({ user, isOpen, onClose, onEdit }: UserDetai
             </div>
 
             {/* Section Enfants (pour les parents) */}
-            {user.role === 'parent' && user.enfants && (
+            {user.role === RoleUsers.PARENT && user.enfants && (
               <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
                 <div className="flex items-center justify-between mb-3">
                   <h5 className="font-medium text-gray-900 dark:text-white">Enfants inscrits</h5>
@@ -152,28 +239,40 @@ export default function UserDetails({ user, isOpen, onClose, onEdit }: UserDetai
                     {countEnfants()} enfant{countEnfants() > 1 ? 's' : ''}
                   </span>
                 </div>
-                {user.enfants.images.length > 0 ? (
+                {user.enfants.images.length === 0 ? (
+                  <p className="text-gray-500 dark:text-gray-400 text-sm">
+                    Aucun enfant inscrit
+                  </p>
+                ) : loadingImages ? (
+                  // Placeholders pendant le chargement
                   <div className="flex gap-2">
-                    {user.enfants.images.map((image, index) => (
+                    {Array.from({ length: user.enfants.images.length }).map((_, index) => (
                       <div key={index} className="w-12 h-12 overflow-hidden rounded-full">
-                        <img
-                          src={image}
-                          alt={`Enfant ${index + 1}`}
-                          className="w-full h-full object-cover"
-                        />
+                        <div className="w-full h-full bg-gray-200 animate-pulse rounded-full"></div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-gray-500 dark:text-gray-400 text-sm">
-                    Aucun enfant inscrit
-                  </p>
+                  // Images chargées
+                  <div className="flex gap-2">
+                    {childrenImageUrls.map((imageUrl, index) => (
+                      <div key={index} className="w-12 h-12 overflow-hidden rounded-full">
+                        <img
+                          src={imageUrl}
+                          alt={`Enfant ${index + 1}`}
+                          className="w-full h-full object-cover"
+                          onError={handleChildImageError}
+                          loading="lazy"
+                        />
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
             )}
 
             {/* Section Classe (pour les éducateurs) */}
-            {user.role === 'educateur' && user.classe && (
+            {user.role === RoleUsers.EDUCATEUR && user.classe && (
               <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
                 <h5 className="font-medium text-gray-900 dark:text-white mb-3">Classe assignée</h5>
                 <div className="flex items-center gap-3">
@@ -201,7 +300,7 @@ export default function UserDetails({ user, isOpen, onClose, onEdit }: UserDetai
               type="button"
               onClick={() => {
                 onClose();
-                onEdit(user);
+                // onEdit(user);
               }}
               className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
             >

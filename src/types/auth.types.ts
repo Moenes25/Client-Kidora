@@ -37,6 +37,7 @@ export interface User {
   imageUrl?: string;
   createdAt?: string;
   updatedAt?: string;
+  enfants: any[];
 }
 
 export interface AuthState {

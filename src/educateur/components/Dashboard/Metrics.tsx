@@ -77,28 +77,28 @@ export default function Metrics() {
       </div>
 
       {/* Carte 3 : Absents */}
-      <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-amber-400 to-amber-500 p-5 shadow-md transition-all duration-200 hover:shadow-lg dark:from-amber-500 dark:to-amber-600">
+      <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-600 to-slate-700 p-5 shadow-md transition-all duration-200 hover:shadow-lg dark:from-slate-700 dark:to-slate-800">
         <div className="relative z-10">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-amber-900 dark:text-amber-950">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-200 dark:text-slate-300">
                 Absents
               </p>
-              <h3 className="mt-2 text-2xl font-bold text-gray-900 dark:text-gray-900">
+              <h3 className="mt-2 text-2xl font-bold text-white">
                 423
               </h3>
-              <p className="mt-1 text-xs text-amber-900/80 dark:text-amber-950/80">
+              <p className="mt-1 text-xs text-slate-200/90 dark:text-slate-300/90">
                 Justifiés: 312
               </p>
             </div>
-            <div className="flex items-center justify-center rounded-lg bg-white/30 p-2.5 backdrop-blur-sm">
-              <CloseIcon className="h-6 w-6 text-gray-900" />
+            <div className="flex items-center justify-center rounded-lg bg-white/20 p-2.5 backdrop-blur-sm">
+              <CloseIcon className="h-6 w-6 text-white" />
             </div>
           </div>
-          <div className="mt-4 pt-3 border-t border-amber-900/20 dark:border-amber-950/20">
-            <div className="inline-flex items-center gap-1.5 rounded-full bg-white/30 px-2 py-1 backdrop-blur-sm">
-              <ArrowDownIcon className="h-2.5 w-2.5 text-gray-900" />
-              <span className="text-xs font-semibold text-gray-900 dark:text-gray-900">
+          <div className="mt-4 pt-3 border-t border-white/20">
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-2 py-1 backdrop-blur-sm">
+              <ArrowDownIcon className="h-2.5 w-2.5 text-white" />
+              <span className="text-xs font-semibold text-white">
                 -9.05%
               </span>
             </div>

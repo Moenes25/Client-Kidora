@@ -1,6 +1,7 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Badge from "../../ui/badge/Badge";
 import { Parent } from "./types";
+import { imageApi } from "../../../services/api/imageService";
 
 interface ParentDetailsProps {
   isOpen: boolean;
@@ -9,6 +10,10 @@ interface ParentDetailsProps {
 }
 
 export default function ParentDetails({ isOpen, onClose, parent }: ParentDetailsProps) {
+  const [parentImageUrl, setParentImageUrl] = useState<string>('/default-avatar.png');
+  const [childrenImageUrls, setChildrenImageUrls] = useState<string[]>([]);
+  const [loadingImages, setLoadingImages] = useState<boolean>(false);
+
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -20,6 +25,74 @@ export default function ParentDetails({ isOpen, onClose, parent }: ParentDetails
     };
   }, [isOpen]);
 
+  // Charger les images quand le modal s'ouvre ou quand le parent change
+  useEffect(() => {
+    if (isOpen && parent) {
+      loadAllImages();
+    } else {
+      // Réinitialiser les URLs quand le modal se ferme
+      setParentImageUrl('/default-avatar.png');
+      setChildrenImageUrls([]);
+    }
+  }, [isOpen, parent]);
+
+  const loadAllImages = async () => {
+    if (!parent) return;
+    
+    setLoadingImages(true);
+    try {
+      // Charger l'image du parent
+      if (parent.image) {
+        try {
+          const parentUrl = await imageApi.getImage(parent.image);
+          setParentImageUrl(parentUrl);
+        } catch (error) {
+          console.error('Erreur de chargement de l\'image du parent:', error);
+          setParentImageUrl('/default-avatar.png');
+        }
+      }
+
+      // Charger les images des enfants
+      if (parent.enfants?.images?.length > 0) {
+        const childPromises = parent.enfants.images.map(async (imagePath, index) => {
+          try {
+            if (!imagePath || imagePath.trim() === '') {
+              return '/default-child-avatar.png';
+            }
+            return await imageApi.getImage(imagePath);
+          } catch (error) {
+            console.error(`Erreur de chargement de l'image enfant ${index + 1}:`, error);
+            return '/default-child-avatar.png';
+          }
+        });
+
+        const childUrls = await Promise.all(childPromises);
+        setChildrenImageUrls(childUrls);
+      }
+    } catch (error) {
+      console.error('Erreur générale de chargement des images:', error);
+    } finally {
+      setLoadingImages(false);
+    }
+  };
+
+  // Nettoyage des URLs blob
+  useEffect(() => {
+    return () => {
+      // Nettoyer l'URL du parent
+      if (parentImageUrl && parentImageUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(parentImageUrl);
+      }
+      
+      // Nettoyer les URLs des enfants
+      childrenImageUrls.forEach(url => {
+        if (url && url.startsWith('blob:')) {
+          URL.revokeObjectURL(url);
+        }
+      });
+    };
+  }, [parentImageUrl, childrenImageUrls]);
+
   if (!isOpen || !parent) return null;
 
   const getBadgeColor = (statut: string) => {
@@ -29,6 +102,15 @@ export default function ParentDetails({ isOpen, onClose, parent }: ParentDetails
       case "Inactif": return "error";
       default: return "primary";
     }
+  };
+
+  // Gestionnaire d'erreur pour les images
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    e.currentTarget.src = '/default-avatar.png';
+  };
+
+  const handleChildImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>, index: number) => {
+    e.currentTarget.src = '/default-child-avatar.png';
   };
 
   return (
@@ -56,17 +138,23 @@ export default function ParentDetails({ isOpen, onClose, parent }: ParentDetails
           </div>
 
           <div className="px-6 py-6 space-y-6 max-h-[60vh] overflow-y-auto">
+            {/* Section Photo et infos du parent */}
             <div className="flex items-center gap-4">
               <div className="w-20 h-20 overflow-hidden rounded-full">
-                <img
-                  src={parent.image}
-                  alt={parent.nomPrenom}
-                  className="w-full h-full object-cover"
-                />
+                {loadingImages ? (
+                  <div className="w-full h-full bg-gray-200 animate-pulse rounded-full"></div>
+                ) : (
+                  <img
+                    src={parentImageUrl}
+                    alt={`${parent.prenom} ${parent.nom}`}
+                    className="w-full h-full object-cover"
+                    onError={handleImageError}
+                  />
+                )}
               </div>
               <div>
                 <h4 className="text-xl font-bold text-gray-900 dark:text-white">
-                  {parent.nomPrenom}
+                  {parent.nom} {parent.prenom}
                 </h4>
                 <div className="flex items-center gap-2 mt-2">
                   <Badge
@@ -75,19 +163,23 @@ export default function ParentDetails({ isOpen, onClose, parent }: ParentDetails
                   >
                     {parent.statut}
                   </Badge>
-                  <span className="px-2 py-1 text-xs bg-blue-50 text-blue-600 dark:bg-blue-100 dark:text-blue-700 rounded-full">
+                  <span className="px-2 py-1 text-xs bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-300 rounded-full">
                     {parent.relation}
                   </span>
                 </div>
               </div>
             </div>
 
+            {/* Informations de contact */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-3">
                 <div>
                   <h5 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Email</h5>
                   <p className="text-gray-900 dark:text-white">
-                    <a href={`mailto:${parent.email}`} className="hover:text-blue-600 hover:underline">
+                    <a 
+                      href={`mailto:${parent.email}`} 
+                      className="text-blue-600 hover:text-blue-800 hover:underline dark:text-blue-400 dark:hover:text-blue-300"
+                    >
                       {parent.email}
                     </a>
                   </p>
@@ -95,7 +187,10 @@ export default function ParentDetails({ isOpen, onClose, parent }: ParentDetails
                 <div>
                   <h5 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Téléphone</h5>
                   <p className="text-gray-900 dark:text-white">
-                    <a href={`tel:${parent.telephone}`} className="hover:text-blue-600 hover:underline">
+                    <a 
+                      href={`tel:${parent.telephone}`} 
+                      className="text-blue-600 hover:text-blue-800 hover:underline dark:text-blue-400 dark:hover:text-blue-300"
+                    >
                       {parent.telephone}
                     </a>
                   </p>
@@ -104,31 +199,53 @@ export default function ParentDetails({ isOpen, onClose, parent }: ParentDetails
               <div className="space-y-3">
                 <div>
                   <h5 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Profession</h5>
-                  <p className="text-gray-900 dark:text-white">{parent.profession}</p>
+                  <p className="text-gray-900 dark:text-white">{parent.profession || 'Non spécifié'}</p>
                 </div>
                 <div>
                   <h5 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Nombre d'enfants</h5>
-                  <p className="text-gray-900 dark:text-white">{parent.enfants.images.length}</p>
+                  <p className="text-gray-900 dark:text-white">
+                    {parent.enfants?.images?.length || 0}
+                  </p>
                 </div>
               </div>
             </div>
 
+            {/* Section Enfants */}
             <div>
               <h5 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">Enfants</h5>
-              <div className="flex flex-wrap gap-3">
-                {parent.enfants.images.map((image, index) => (
-                  <div key={index} className="text-center">
-                    <div className="w-16 h-16 overflow-hidden rounded-full border-2 border-gray-200 dark:border-gray-700">
-                      <img
-                        src={image}
-                        alt={`Enfant ${index + 1}`}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">Enfant {index + 1}</p>
-                  </div>
-                ))}
-              </div>
+              {parent.enfants?.images?.length === 0 ? (
+                <p className="text-gray-600 dark:text-gray-400 italic">Aucun enfant associé</p>
+              ) : (
+                <div className="flex flex-wrap gap-3">
+                  {loadingImages ? (
+                    // Placeholders pendant le chargement
+                    Array.from({ length: parent.enfants?.images?.length || 0 }).map((_, index) => (
+                      <div key={index} className="text-center">
+                        <div className="w-16 h-16 overflow-hidden rounded-full border-2 border-gray-200 dark:border-gray-700">
+                          <div className="w-full h-full bg-gray-200 animate-pulse rounded-full"></div>
+                        </div>
+                        <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">Chargement...</p>
+                      </div>
+                    ))
+                  ) : (
+                    // Images chargées
+                    childrenImageUrls.map((imageUrl, index) => (
+                      <div key={index} className="text-center">
+                        <div className="w-16 h-16 overflow-hidden rounded-full border-2 border-gray-200 dark:border-gray-700">
+                          <img
+                            src={imageUrl}
+                            alt={`Enfant ${index + 1}`}
+                            className="w-full h-full object-cover"
+                            onError={(e) => handleChildImageError(e, index)}
+                            loading="lazy"
+                          />
+                        </div>
+                        <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">Enfant {index + 1}</p>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
             </div>
           </div>
 

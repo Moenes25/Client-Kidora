@@ -1,8 +1,11 @@
+import { RoleUsers, StatutClient, User } from "../../../types/auth.types";
+
 export interface Parent {
-  id: number;
-  nomPrenom: string;
+  id: string;
+  nom: string;
+  prenom: string;
   email: string;
-  telephone: string;
+  telephone?: string;
   relation: string;
   enfants: {
     images: string[];
@@ -11,11 +14,74 @@ export interface Parent {
   profession: string;
   image: string;
 }
+export enum Relation {
+  MERE = "Mère",
+  PERE = "Père",
+}
+export interface CreateParentDto {
+  nom: string;
+  prenom: string;
+  email: string;
+  password: string;
+  profession?: string;
+  relation?: string;
+  numTel?: string;
+  adresse?: string;
+  role: RoleUsers.PARENT;
+  statutClient?: StatutClient;
+  imageUrl?: string;
+}
 
+
+export interface UpdateParentDto {
+  nom?: string;
+  prenom?: string;
+  profession?: string;
+  relation?: string;
+  numTel?: string;
+  adresse?: string;
+  statutClient?: StatutClient;
+}
+
+export interface BackendParent {
+  id: number;
+  nom: string;
+  prenom: string;
+  email: string;
+  profession: string;
+  relation: string;
+  numTel : string;
+  adresse?: string;
+  role: RoleUsers.PARENT;
+  statutClient:StatutClient;
+  imageUrl?: string;
+  enfants: any[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+
+export const convertBackendToFrontend = (user: User) : Parent => {
+ return {
+    id: user.id, 
+    nom: user.nom,
+    prenom: user.prenom,
+    email: user.email,
+    telephone: user.numTel,
+    relation: user.relation || 'Non spécifié',
+    statut: user.statutClient,
+    profession: user.profession || 'Non spécifié',
+    image: user.imageUrl || '/images/user/default-avatar.jpg',
+    enfants: {
+      images: user.enfants?.map((enfant: any) => enfant.imageUrl) || []
+    }
+  };
+}
 export const tableData: Parent[] = [
   {
-    id: 1,
-    nomPrenom: "Sophie Martin",
+    id: "parent1",
+    nom : "Sophie",
+    prenom: "Martin",
     email: "sophie.martin@email.com",
     telephone: "+33 6 12 34 56 78",
     relation: "Mère",
@@ -31,8 +97,10 @@ export const tableData: Parent[] = [
     image: "/images/user/user-09.jpg"
   },
   {
-    id: 2,
-    nomPrenom: "Thomas Dubois",
+    id: "parent2",
+    // nomPrenom: "Thomas Dubois",
+    nom: "Thomas",
+    prenom: "Dubois",
     email: "thomas.dubois@email.com",
     telephone: "+33 6 23 45 67 89",
     relation: "Père",
@@ -50,8 +118,10 @@ export const tableData: Parent[] = [
     image: "/images/user/user-17.jpg"
   },
   {
-    id: 3,
-    nomPrenom: "Marie Lambert",
+    id: "parent3",
+    // nomPrenom: "Marie Lambert",
+    nom: "Marie",
+    prenom: "Lambert",
     email: "marie.lambert@email.com",
     telephone: "+33 6 34 56 78 90",
     relation: "Mère",
@@ -67,8 +137,10 @@ export const tableData: Parent[] = [
     image: "/images/user/user-12.jpg"
   },
   {
-    id: 4,
-    nomPrenom: "Jean Petit",
+    id: "parent4",
+    // nomPrenom: "Jean Petit",
+    nom: "Jean",
+    prenom: "Petit",
     email: "jean.petit@email.com",
     telephone: "+33 6 45 67 89 01",
     relation: "Père",
@@ -85,8 +157,10 @@ export const tableData: Parent[] = [
     image: "/images/user/user-10.jpg"
   },
   {
-    id: 5,
-    nomPrenom: "Laura Bernard",
+    id: "parent5",
+    // nomPrenom: "Laura Bernard",
+    nom: "Laura",
+    prenom: "Bernard",
     email: "laura.bernard@email.com",
     telephone: "+33 6 56 78 90 12",
     relation: "Mère",
@@ -102,8 +176,10 @@ export const tableData: Parent[] = [
     image: "/images/user/user-21.jpg"
   },
   {
-    id: 6,
-    nomPrenom: "Pierre Moreau",
+    id: "parent6",
+    // nomPrenom: "Pierre Moreau",
+    nom: "Pierre",
+    prenom: "Moreau",
     email: "pierre.moreau@email.com",
     telephone: "+33 6 67 89 01 23",
     relation: "Père",
@@ -118,8 +194,10 @@ export const tableData: Parent[] = [
     image: "/images/user/user-25.jpg"
   },
   {
-    id: 7,
-    nomPrenom: "Julie Leroy",
+    id: "parent7",
+    // nomPrenom: "Julie Leroy",
+    nom: "Julie",
+    prenom: "Leroy",
     email: "julie.leroy@email.com",
     telephone: "+33 6 78 90 12 34",
     relation: "Mère",
@@ -135,8 +213,10 @@ export const tableData: Parent[] = [
     image: "/images/user/user-33.jpg"
   },
   {
-    id: 8,
-    nomPrenom: "Marc Blanc",
+    id: "parent8",
+    // nomPrenom: "Marc Blanc",
+    nom: "Marc",
+    prenom: "Blanc",
     email: "marc.blanc@email.com",
     telephone: "+33 6 89 01 23 45",
     relation: "Père",

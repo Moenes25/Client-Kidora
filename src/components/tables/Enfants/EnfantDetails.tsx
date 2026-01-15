@@ -1,16 +1,58 @@
 import { Enfant } from './types';
 import Badge from "../../ui/badge/Badge";
+import { StatutClient } from '../../../types/auth.types';
+import { Parent } from '../Parents/types';
+import { useEffect, useState } from 'react';
+import imageApi from '../../../services/api/imageService';
 
 interface EnfantDetailsProps {
   isOpen: boolean;
   onClose: () => void;
   enfant: Enfant;
   onEdit: () => void;
+  parent : Parent;
 }
 
-export default function EnfantDetails({ isOpen, onClose, enfant, onEdit }: EnfantDetailsProps) {
+
+export default function EnfantDetails({ isOpen, onClose, enfant, onEdit , parent }: EnfantDetailsProps) {
+ 
+  
+
+  const [enfantImageUrl, setEnfantImageUrl] = useState<string>('/default-avatar.png');
+  const [parentImageUrl, setParentImageUrl] = useState<string>('/default-avatar.png');
+  const [loadingImages, setLoadingImages] = useState<boolean>(true);
+
+    useEffect(() => {
+    if (isOpen && enfant) {
+      loadImages();
+    }
+  }, [isOpen, enfant, parent]);
+
+  
+  const loadImages = async () => {
+    setLoadingImages(true);
+    try {
+      // Charger l'image de l'enfant
+      if (enfant.imageUrl) {
+        const enfantUrl = await imageApi.getImage(enfant.imageUrl);
+        setEnfantImageUrl(enfantUrl);
+      }
+
+      // Charger l'image du parent
+      if (parent.image) {
+        const parentUrl = await imageApi.getImage(parent.image);
+        setParentImageUrl(parentUrl);
+      }
+    } catch (error) {
+      console.error('Erreur de chargement des images:', error);
+      // Garder les images par défaut
+    } finally {
+      setLoadingImages(false);
+    }
+  };
   
   if (!isOpen) return null;
+   console.log("enfant", enfant);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -21,12 +63,14 @@ export default function EnfantDetails({ isOpen, onClose, enfant, onEdit }: Enfan
     });
   };
 
+
   const getStatutText = (statut: string) => {
     return statut === 'actif' ? 'Actif' : 
            statut === 'inactif' ? 'Inactif' : 
            'En attente';
   };
-
+  
+  
   return (
     <div className="fixed inset-0 z-[100000] overflow-y-auto">
       <div className="fixed inset-0 bg-black/50 z-[100000]" onClick={onClose} />
@@ -54,19 +98,26 @@ export default function EnfantDetails({ isOpen, onClose, enfant, onEdit }: Enfan
             <div className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
               <div className="relative">
                 <div className="w-24 h-24 overflow-hidden rounded-full">
+                  {loadingImages ? (
+                    <div className="w-full h-full bg-gray-200 animate-pulse rounded-full"></div>
+                  ) : (
                   <img
-                    src={enfant.image}
-                    alt={`${enfant.prenom} ${enfant.nom}`}
+                    src={enfantImageUrl}
+                    // alt={`${enfant.prenom} ${enfant.nom}`}
                     className="w-full h-full object-cover"
+                     onError={(e) => {
+                        e.currentTarget.src = '/default-avatar.png';
+                      }}
                   />
+                  )}
                 </div>
                 <div className="absolute -bottom-2 -right-2">
                   <Badge
                     size="sm"
                     color={
-                      enfant.statut === 'actif'
+                      enfant.statut === StatutClient.ACTIF
                         ? "success"
-                        : enfant.statut === 'inactif'
+                        : enfant.statut === StatutClient.INACTIF
                           ? "error"
                           : "warning"
                     }
@@ -97,15 +148,22 @@ export default function EnfantDetails({ isOpen, onClose, enfant, onEdit }: Enfan
               <h5 className="font-medium text-gray-900 dark:text-white mb-3">Parent Référent</h5>
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 overflow-hidden rounded-full">
+                  {loadingImages ? (
+                    <div className="w-full h-full bg-gray-200 animate-pulse rounded-full"></div>
+                  ) : (
                   <img
-                    src={enfant.parent.image}
-                    alt={`${enfant.parent.prenom} ${enfant.parent.nom}`}
+                    src={parentImageUrl}
+                    // alt={`${parent.prenom} ${parent.nom}`}
                     className="w-full h-full object-cover"
+                     onError={(e) => {
+                        e.currentTarget.src = '/default-avatar.png';
+                      }}
                   />
+                    )}
                 </div>
                 <div className="flex-1">
                   <p className="font-medium text-gray-900 dark:text-white">
-                    {enfant.parent.prenom} {enfant.parent.nom}
+                    {parent.prenom} {parent.nom}
                   </p>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
                     Responsable légal
@@ -145,9 +203,9 @@ export default function EnfantDetails({ isOpen, onClose, enfant, onEdit }: Enfan
                     <Badge
                       size="sm"
                       color={
-                        enfant.statut === 'actif'
+                        enfant.statut === StatutClient.ACTIF
                           ? "success"
-                          : enfant.statut === 'inactif'
+                          : enfant.statut === StatutClient.INACTIF
                             ? "error"
                             : "warning"
                       }

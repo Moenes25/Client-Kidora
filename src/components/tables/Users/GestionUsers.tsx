@@ -1,28 +1,28 @@
-import { useState, useMemo } from "react";
+// GestionUsers.tsx - Version corrigée
+import { useState, useMemo, useEffect } from "react";
 import UsersTable from "./UsersTable";
-import UserForm from "./UserForm";
 import UserDetails from "./UserDetails";
 import DeleteConfirmation from "./DeleteConfirmation";
-import { Utilisateur, UserFormData, UserFormErrors } from "./types";
-import { tableData } from "./types";
-
+import { Utilisateur, converUserToUtilisateur } from "./types";
+import { RoleUsers, StatutClient, User } from "../../../types/auth.types";
+import { authApi } from "../../../services/api/authApi";
 
 export default function GestionUsers() {
   // États pour les filtres
-  const [roleFilter, setRoleFilter] = useState<string>("");
-  const [statutFilter, setStatutFilter] = useState<string>("");
+  const [roleFilter, setRoleFilter] = useState<string>("Tous");
+  const [statutFilter, setStatutFilter] = useState<string>("Tous");
+
+  // États pour les données
+  const [utilisateurs, setUtilisateurs] = useState<Utilisateur[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<Utilisateur[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
   
   // États pour la sélection multiple
-  const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [isSelectAll, setIsSelectAll] = useState(false);
   const [showSelectionHeader, setShowSelectionHeader] = useState(false);
   
-  // États pour la modification d'utilisateur
-  const [editingUser, setEditingUser] = useState<Utilisateur | null>(null);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [formData, setFormData] = useState<UserFormData>({});
-  const [errors, setErrors] = useState<UserFormErrors>({});
-
   // États pour la visualisation d'utilisateur
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [viewingUser, setViewingUser] = useState<Utilisateur | null>(null);
@@ -32,41 +32,99 @@ export default function GestionUsers() {
   const [deletingUser, setDeletingUser] = useState<Utilisateur | null>(null);
 
   // États pour le changement de statut
-  const [updatingStatus, setUpdatingStatus] = useState<number | null>(null);
-  
-  // Options uniques pour les filtres
-  const roleOptions = useMemo(() => {
-    const roles = Array.from(new Set(tableData.map(user => user.role)));
-    return ["Tous", ...roles.map(r => r === 'parent' ? 'Parent' : 'Éducateur')];
+  const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
+
+  // ÉTAPE 1: Charger les utilisateurs au montage du composant
+  useEffect(() => {
+    fetchUsers();
   }, []);
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      // Appel API pour récupérer tous les utilisateurs
+      const usersData = await authApi.getAllUsers();
+      // Conversion des données API -> format frontend
+      const usersDataConverted = usersData.map(converUserToUtilisateur);
+      setUtilisateurs(usersDataConverted);
+      setFilteredUsers(usersDataConverted);
+    } catch (error: any) {
+      setError(`Erreur de chargement: ${error.message}`);
+      console.error("Erreur lors du chargement des utilisateurs:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ÉTAPE 2: Préparer les options de filtres basées sur les données réelles
+  const roleOptions = useMemo(() => {
+    // Extraire les rôles uniques des utilisateurs
+    const roles = Array.from(new Set(utilisateurs.map(user => user.role)));
+    // Convertir en format lisible pour l'affichage
+    const readableRoles = roles.map(role => {
+      switch(role) {
+        case RoleUsers.PARENT: return 'Parent';
+        case RoleUsers.EDUCATEUR: return 'Éducateur';
+        case RoleUsers.ADMIN: return 'Administrateur';
+        default: return role;
+      }
+    });
+    return ["Tous", ...readableRoles];
+  }, [utilisateurs]); // Se recalcule quand `utilisateurs` change
 
   const statutOptions = useMemo(() => {
-    const statuts = Array.from(new Set(tableData.map(user => user.statut)));
-    return ["Tous", ...statuts.map(s => 
-      s === 'actif' ? 'Actif' : 
-      s === 'inactif' ? 'Inactif' : 
-      'En attente'
-    )];
-  }, []);
-
-  // Filtrer les données
-  const filteredData = useMemo(() => {
-    return tableData.filter(user => {
-      const matchesRole = !roleFilter || roleFilter === "Tous" || 
-        (roleFilter === "Parent" && user.role === 'parent') ||
-        (roleFilter === "Éducateur" && user.role === 'educateur');
-      
-      const matchesStatut = !statutFilter || statutFilter === "Tous" || 
-        (statutFilter === "Actif" && user.statut === 'actif') ||
-        (statutFilter === "Inactif" && user.statut === 'inactif') ||
-        (statutFilter === "En attente" && user.statut === 'en_attente');
-      
-      return matchesRole && matchesStatut;
+    // Extraire les statuts uniques des utilisateurs
+    const statuts = Array.from(new Set(utilisateurs.map(user => user.statut)));
+    // Convertir en format lisible pour l'affichage
+    const readableStatuts = statuts.map(statut => {
+      switch(statut) {
+        case StatutClient.ACTIF: return 'Actif';
+        case StatutClient.INACTIF: return 'Inactif';
+        case StatutClient.EN_ATTENTE: return 'En attente';
+        default: return statut;
+      }
     });
-  }, [roleFilter, statutFilter]);
+    return ["Tous", ...readableStatuts];
+  }, [utilisateurs]);
 
-  // Gestion de la sélection
-  const handleSelectUser = (userId: number) => {
+  // ÉTAPE 3: Filtrer les utilisateurs quand les filtres ou données changent
+  useEffect(() => {
+    let filtered = utilisateurs;
+    
+    // Filtre par rôle
+    if (roleFilter && roleFilter !== "Tous") {
+      // Mapping des options d'affichage vers les valeurs internes
+      const roleMap: Record<string, string> = {
+        'Parent': RoleUsers.PARENT,
+        'Éducateur': RoleUsers.EDUCATEUR,
+        'Administrateur': RoleUsers.ADMIN
+      };
+      const roleKey = roleMap[roleFilter];
+      filtered = filtered.filter(user => user.role === roleKey);
+    }
+    
+    // Filtre par statut
+    if (statutFilter && statutFilter !== "Tous") {
+      // Mapping des options d'affichage vers les valeurs d'enum
+      const statutMap: Record<string, string> = {
+        'Actif': StatutClient.ACTIF,
+        'Inactif': StatutClient.INACTIF,
+        'En attente': StatutClient.EN_ATTENTE
+      };
+      const statutKey = statutMap[statutFilter] || statutFilter;
+      filtered = filtered.filter(user => user.statut === statutKey);
+    }
+    
+    setFilteredUsers(filtered);
+    // Réinitialiser la sélection quand les filtres changent
+    setSelectedUsers([]);
+    setIsSelectAll(false);
+    setShowSelectionHeader(false);
+  }, [utilisateurs, roleFilter, statutFilter]);
+
+  // ÉTAPE 4: Gestion de la sélection des utilisateurs
+  const handleSelectUser = (userId: string) => {
     setSelectedUsers(prev => {
       const newSelected = prev.includes(userId)
         ? prev.filter(id => id !== userId)
@@ -80,7 +138,7 @@ export default function GestionUsers() {
       }
       
       // Mettre à jour l'état "sélectionner tout"
-      setIsSelectAll(newSelected.length === filteredData.length);
+      setIsSelectAll(newSelected.length === filteredUsers.length && filteredUsers.length > 0);
       
       return newSelected;
     });
@@ -93,8 +151,8 @@ export default function GestionUsers() {
       setIsSelectAll(false);
       setShowSelectionHeader(false);
     } else {
-      // Sélectionner tout
-      const allIds = filteredData.map(user => user.id);
+      // Sélectionner tout (utiliser filteredUsers, pas filteredData)
+      const allIds = filteredUsers.map(user => user.id);
       setSelectedUsers(allIds);
       setIsSelectAll(true);
       setShowSelectionHeader(true);
@@ -107,10 +165,12 @@ export default function GestionUsers() {
     setShowSelectionHeader(false);
   };
 
-  const handleActivateSelected = () => {
+  // ÉTAPE 5: Actions multiples avec appels API
+  const handleActivateSelected = async () => {
     if (selectedUsers.length === 0) return;
+     
     
-    const usersNames = filteredData
+    const usersNames = filteredUsers
       .filter(user => selectedUsers.includes(user.id))
       .map(user => user.nomPrenom)
       .join(', ');
@@ -120,12 +180,42 @@ export default function GestionUsers() {
     
     // Réinitialiser la sélection
     handleCancelSelection();
+    // if (selectedUsers.length === 0) return;
+    
+    // try {
+    //   // Appeler l'API pour chaque utilisateur sélectionné
+    //   const promises = selectedUsers.map(userId => 
+    //     authApi.updateUserStatus(userId, StatutClient.ACTIF)
+    //   );
+    //   await Promise.all(promises);
+      
+    //   // Mettre à jour localement
+    //   setUtilisateurs(prev => prev.map(user => 
+    //     selectedUsers.includes(user.id) 
+    //       ? { ...user, statut: StatutClient.ACTIF }
+    //       : user
+    //   ));
+      
+    //   const usersNames = filteredUsers
+    //     .filter(user => selectedUsers.includes(user.id))
+    //     .map(user => user.nomPrenom)
+    //     .join(', ');
+      
+    //   alert(`${selectedUsers.length} utilisateur(s) activé(s) : ${usersNames}`);
+      
+    //   // Réinitialiser la sélection
+    //   handleCancelSelection();
+      
+    // } catch (error: any) {
+    //   console.error('Erreur lors de l\'activation multiple:', error);
+    //   alert(`Erreur: ${error.message}`);
+    // }
   };
 
-  const handleDeactivateSelected = () => {
-    if (selectedUsers.length === 0) return;
+  const handleDeactivateSelected = async () => {
+     if (selectedUsers.length === 0) return;
     
-    const usersNames = filteredData
+    const usersNames = filteredUsers
       .filter(user => selectedUsers.includes(user.id))
       .map(user => user.nomPrenom)
       .join(', ');
@@ -135,73 +225,72 @@ export default function GestionUsers() {
     
     // Réinitialiser la sélection
     handleCancelSelection();
+    // if (selectedUsers.length === 0) return;
+    
+    // try {
+    //   // Appeler l'API pour chaque utilisateur sélectionné
+    //   const promises = selectedUsers.map(userId => 
+    //     authApi.updateUserStatus(userId, StatutClient.INACTIF)
+    //   );
+    //   await Promise.all(promises);
+      
+    //   // Mettre à jour localement
+    //   setUtilisateurs(prev => prev.map(user => 
+    //     selectedUsers.includes(user.id) 
+    //       ? { ...user, statut: StatutClient.INACTIF }
+    //       : user
+    //   ));
+      
+    //   const usersNames = filteredUsers
+    //     .filter(user => selectedUsers.includes(user.id))
+    //     .map(user => user.nomPrenom)
+    //     .join(', ');
+      
+    //   alert(`${selectedUsers.length} utilisateur(s) désactivé(s) : ${usersNames}`);
+      
+    //   // Réinitialiser la sélection
+    //   handleCancelSelection();
+      
+    // } catch (error: any) {
+    //   console.error('Erreur lors de la désactivation multiple:', error);
+    //   alert(`Erreur: ${error.message}`);
+    // }
   };
 
-  const handleDeleteSelected = () => {
+  const handleDeleteSelected = async () => {
     if (selectedUsers.length === 0) return;
     
-    const usersNames = filteredData
-      .filter(user => selectedUsers.includes(user.id))
-      .map(user => user.nomPrenom)
-      .join(', ');
+    if (!window.confirm(`Êtes-vous sûr de vouloir supprimer ${selectedUsers.length} utilisateur(s) ?`)) {
+      return;
+    }
     
-    console.log(`Suppression des utilisateurs sélectionnés: ${usersNames}`);
-    alert(`${selectedUsers.length} utilisateur(s) supprimé(s) : ${usersNames}`);
-    
-    // Réinitialiser la sélection
-    handleCancelSelection();
-  };
-
-  // Gérer les actions sur les utilisateurs
-  const handleEdit = (utilisateur: Utilisateur) => {
-    setEditingUser(utilisateur);
-    setFormData({
-      nomPrenom: utilisateur.nomPrenom,
-      email: utilisateur.email,
-      telephone: utilisateur.telephone,
-      role: utilisateur.role,
-      statut: utilisateur.statut,
-      image: utilisateur.image,
-      classe: utilisateur.classe
-    });
-    setIsEditModalOpen(true);
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev!, [name]: value }));
-    if (errors[name as keyof UserFormErrors]) {
-      setErrors(prev => ({ ...prev, [name]: "" }));
+    try {
+      // Appeler l'API pour chaque utilisateur sélectionné
+      const promises = selectedUsers.map(userId => 
+        authApi.deleteUser(userId)
+      );
+      await Promise.all(promises);
+      
+      // Mettre à jour localement
+      setUtilisateurs(prev => prev.filter(user => !selectedUsers.includes(user.id)));
+      
+      const usersNames = filteredUsers
+        .filter(user => selectedUsers.includes(user.id))
+        .map(user => user.nomPrenom)
+        .join(', ');
+      
+      alert(`${selectedUsers.length} utilisateur(s) supprimé(s) : ${usersNames}`);
+      
+      // Réinitialiser la sélection
+      handleCancelSelection();
+      
+    } catch (error: any) {
+      console.error('Erreur lors de la suppression multiple:', error);
+      alert(`Erreur: ${error.message}`);
     }
   };
 
-  const validateForm = () => {
-    const newErrors: UserFormErrors = {};
-    if (!formData.nomPrenom?.trim()) newErrors.nomPrenom = "Le nom et prénom sont requis";
-    if (!formData.email?.trim()) newErrors.email = "L'email est requis";
-    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = "L'email n'est pas valide";
-    if (!formData.telephone?.trim()) newErrors.telephone = "Le téléphone est requis";
-    return newErrors;
-  };
-
-  const handleSaveEdit = (formData: UserFormData) => {
-    const formErrors = validateForm();
-    if (Object.keys(formErrors).length === 0) {
-      console.log("Sauvegarder les modifications:", formData);
-      alert(`Modifications sauvegardées pour ${formData.nomPrenom}`);
-      handleCloseEdit();
-    } else {
-      setErrors(formErrors);
-    }
-  };
-
-  const handleCloseEdit = () => {
-    setIsEditModalOpen(false);
-    setEditingUser(null);
-    setFormData({});
-    setErrors({});
-  };
-
+  // ÉTAPE 6: Actions individuelles sur les utilisateurs
   const handleView = (utilisateur: Utilisateur) => {
     setViewingUser(utilisateur);
     setIsViewModalOpen(true);
@@ -217,12 +306,22 @@ export default function GestionUsers() {
     setIsDeleteModalOpen(true);
   };
 
-  const handleConfirmDelete = () => {
-    if (deletingUser) {
-      console.log("Confirmation de suppression pour:", deletingUser);
+  const handleConfirmDelete = async () => {
+    if (!deletingUser) return;
+    
+    try {
+      await authApi.deleteUser(deletingUser.id);
+      
+      // Mettre à jour localement
+      setUtilisateurs(prev => prev.filter(u => u.id !== deletingUser.id));
+      setSelectedUsers(prev => prev.filter(id => id !== deletingUser.id));
+      
       alert(`Utilisateur "${deletingUser.nomPrenom}" supprimé avec succès !`);
       setIsDeleteModalOpen(false);
       setDeletingUser(null);
+      
+    } catch (error: any) {
+      alert(`Erreur: ${error.message}`);
     }
   };
 
@@ -231,29 +330,112 @@ export default function GestionUsers() {
     setDeletingUser(null);
   };
 
-  const handleToggleStatus = (utilisateur: Utilisateur) => {
-    console.log("Changer le statut de l'utilisateur:", utilisateur);
+  const handleToggleStatus = async (utilisateur: Utilisateur) => {
+     console.log("Changer le statut de l'utilisateur:", utilisateur);
     
     // Simulation de chargement
     setUpdatingStatus(utilisateur.id);
     
     // Simuler une requête API avec setTimeout
     setTimeout(() => {
-      const statutDisplay = utilisateur.statut === 'actif' ? 'Inactif' : 
-                          utilisateur.statut === 'inactif' ? 'En attente' : 
+      const statutDisplay = utilisateur.statut === StatutClient.ACTIF ? 'Inactif' :
+                          utilisateur.statut === StatutClient.INACTIF ? 'En attente' :
                           'Actif';
       
       alert(`Statut de "${utilisateur.nomPrenom}" changé à "${statutDisplay}"`);
       
       setUpdatingStatus(null);
     }, 500);
+    // try {
+    //   setUpdatingStatus(utilisateur.id);
+      
+    //   // Déterminer le nouveau statut
+    //   const newStatus = utilisateur.statut === StatutClient.ACTIF 
+    //     ? StatutClient.INACTIF 
+    //     : StatutClient.ACTIF;
+      
+    //   // Appeler l'API pour changer le statut
+    //   await authApi.updateUserStatus(utilisateur.id, newStatus);
+      
+    //   // Mettre à jour localement
+    //   setUtilisateurs(prev => prev.map(u => 
+    //     u.id === utilisateur.id ? { ...u, statut: newStatus } : u
+    //   ));
+      
+    //   const statutDisplay = newStatus === StatutClient.ACTIF ? 'Actif' : 'Inactif';
+    //   alert(`Statut de "${utilisateur.nomPrenom}" changé à "${statutDisplay}"`);
+      
+    // } catch (error: any) {
+    //   alert(`Erreur: ${error.message}`);
+    // } finally {
+    //   setUpdatingStatus(null);
+    // }
   };
+
+  // ÉTAPE 7: Affichage des états de chargement et d'erreur
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Chargement des utilisateurs...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="flex items-center">
+            <svg className="w-5 h-5 text-red-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            </svg>
+            <span className="text-red-700 font-medium">{error}</span>
+          </div>
+          <button 
+            onClick={fetchUsers}
+            className="mt-3 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+          >
+            Réessayer
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
+      {/* En-tête avec titre et rafraîchissement */}
+      <div className="p-4 border-b border-gray-100 dark:border-white/[0.05] bg-gray-50 dark:bg-gray-900/50">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            {/* <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
+              Gestion des Utilisateurs
+            </h2> */}
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+              {utilisateurs.length} utilisateur(s) au total
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={fetchUsers}
+              className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+              title="Rafraîchir"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Rafraîchir
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* Header de sélection */}
       {showSelectionHeader && (
-        <div className="bg-indigo-500 dark:from-blue-900/20 dark:to-indigo-900/20 border-b border-blue-100 dark:border-blue-800/30 p-3">
+        <div className="bg-gradient-to-br from-emerald-500 to-emerald-600  border-b border-blue-100 dark:border-blue-800/30 p-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
@@ -313,7 +495,7 @@ export default function GestionUsers() {
         </div>
       )}
 
-      {/* En-tête avec filtres */}
+      {/* Barre de filtres */}
       <div className="p-4 border-b border-gray-100 dark:border-white/[0.05] bg-gray-50 dark:bg-gray-900/50">
         <div className="flex flex-col sm:flex-row gap-4">
           {/* Filtre par rôle */}
@@ -358,8 +540,8 @@ export default function GestionUsers() {
           <div className="w-full sm:w-auto flex items-end">
             <button
               onClick={() => {
-                setRoleFilter("");
-                setStatutFilter("");
+                setRoleFilter("Tous");
+                setStatutFilter("Tous");
               }}
               className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700"
             >
@@ -370,26 +552,29 @@ export default function GestionUsers() {
         
         {/* Compteur de résultats */}
         <div className="mt-3 text-sm text-gray-600 dark:text-gray-400">
-          {filteredData.length} utilisateur(s) trouvé(s)
+          {filteredUsers.length} utilisateur(s) trouvé(s)
+          {selectedUsers.length > 0 && (
+            <span className="ml-2 font-medium text-blue-600 dark:text-blue-400">
+              • {selectedUsers.length} sélectionné(s)
+            </span>
+          )}
         </div>
       </div>
 
       {/* Table des utilisateurs */}
-      <UsersTable
-        users={filteredData}
-        selectedUsers={selectedUsers}
-        onSelectUser={handleSelectUser}
-        onSelectAll={handleSelectAll}
-        isSelectAll={isSelectAll}
-        onView={handleView}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        onToggleStatus={handleToggleStatus}
-        updatingStatus={updatingStatus}
-      />
-      
-      {/* Message si aucun utilisateur trouvé */}
-      {filteredData.length === 0 && (
+      {filteredUsers.length > 0 ? (
+        <UsersTable
+          users={filteredUsers} // Utiliser filteredUsers, pas filteredData
+          selectedUsers={selectedUsers}
+          onSelectUser={handleSelectUser}
+          onSelectAll={handleSelectAll}
+          isSelectAll={isSelectAll}
+          onView={handleView}
+          onDelete={handleDelete}
+          onToggleStatus={handleToggleStatus}
+          updatingStatus={updatingStatus}
+        />
+      ) : (
         <div className="p-8 text-center">
           <div className="text-gray-400 dark:text-gray-500">
             <svg className="w-12 h-12 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -399,28 +584,19 @@ export default function GestionUsers() {
               Aucun utilisateur trouvé
             </p>
             <p className="text-sm text-gray-500 dark:text-gray-500">
-              Essayez de modifier vos critères de filtrage
+              {utilisateurs.length === 0 
+                ? "Aucun utilisateur dans le système" 
+                : "Essayez de modifier vos critères de filtrage"}
             </p>
           </div>
         </div>
       )}
       
       {/* Modals */}
-      <UserForm
-        user={editingUser}
-        isOpen={isEditModalOpen}
-        onClose={handleCloseEdit}
-        onSave={handleSaveEdit}
-        formData={formData}
-        onChange={handleChange}
-        errors={errors}
-      />
-      
       <UserDetails
         user={viewingUser}
         isOpen={isViewModalOpen}
         onClose={handleCloseView}
-        onEdit={handleEdit}
       />
       
       <DeleteConfirmation

@@ -87,12 +87,12 @@ const navItems: NavItem[] = [
       </svg>
     ),
     name: "Rapports",
-    path: "/reports",
+    path: "/admin/reports",
   },
   {
     icon: <SettingsIcon />,
     name: "Paramètres",
-    path: "/parametres",
+    path: "/admin/parametres",
   },
 ];
 

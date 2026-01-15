@@ -154,46 +154,49 @@ export default function AttendanceChart() {
 
   // components/nursery/AttendanceChart.tsx (seulement la partie du retour JSX)
 return (
-  <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700 h-full">
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4">
-      <div>
-        <h3 className="text-base font-semibold text-gray-800 dark:text-white">
-          {timeRange === 'week' ? 'Présence Hebdomadaire' : 'Présence Mensuelle'}
-        </h3>
-        <p className="text-gray-600 dark:text-gray-400 text-xs">
-          {timeRange === 'week' 
-            ? 'Suivi des présences des enfants cette semaine' 
-            : 'Analyse des présences sur le mois en cours'}
-        </p>
+   <div className="bg-white dark:bg-gray-800 rounded-xl p-0 border border-gray-200 dark:border-gray-700 h-full overflow-hidden ">
+    {/* Header avec bg-indigo-500 */}
+    <div >
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 bg-indigo-500 text-white p-4">
+        <div>
+          <h3 className="text-base font-semibold">
+            {timeRange === 'week' ? 'Présence Hebdomadaire' : 'Présence Mensuelle'}
+          </h3>
+          <p className="text-indigo-100 text-xs opacity-90">
+            {timeRange === 'week' 
+              ? 'Suivi des présences des enfants cette semaine' 
+              : 'Analyse des présences sur le mois en cours'}
+          </p>
+        </div>
+        
+        <div className="flex gap-1.5 mt-2 sm:mt-0">
+          <button 
+            onClick={() => setTimeRange('week')}
+            className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+              timeRange === 'week'
+                ? 'bg-white text-indigo-600 hover:bg-indigo-100'
+                : 'text-indigo-100 bg-indigo-600/30 hover:bg-indigo-600/50'
+            }`}
+          >
+            Cette semaine
+          </button>
+          <button 
+            onClick={() => setTimeRange('month')}
+            className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+              timeRange === 'month'
+                ? 'bg-white text-indigo-600 hover:bg-indigo-100'
+                : 'text-indigo-100 bg-indigo-600/30 hover:bg-indigo-600/50'
+            }`}
+          >
+            Ce mois
+          </button>
+        </div>
       </div>
-      
-      <div className="flex gap-1.5 mt-2 sm:mt-0">
-        <button 
-          onClick={() => setTimeRange('week')}
-          className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
-            timeRange === 'week'
-              ? 'bg-blue-600 text-white hover:bg-blue-700'
-              : 'text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
-          }`}
-        >
-          Cette semaine
-        </button>
-        <button 
-          onClick={() => setTimeRange('month')}
-          className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
-            timeRange === 'month'
-              ? 'bg-blue-600 text-white hover:bg-blue-700'
-              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-          }`}
-        >
-          Ce mois
-        </button>
-      </div>
-    </div>
 
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+      {/* Les 3 cartes de stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4 px-4">
       {currentData.stats.map((stat, index) => (
-        <div key={index} className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg">
+        <div key={index} className="bg-indigo-50/30 border border-indigo-100 p-3 rounded-lg">
           <div className="flex items-center justify-between">
             <div className={`p-1.5 rounded ${stat.color}`}>
               {React.cloneElement(stat.icon, { className: "w-4 h-4" })}
@@ -221,52 +224,59 @@ return (
       ))}
     </div>
 
-    <div className="mb-3 p-2.5 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-      <div className="flex items-center gap-1.5 text-blue-700 dark:text-blue-300 text-xs">
-        <span>
-          {timeRange === 'week' 
+      {/* Note informative */}
+     
+      <div className="mb-3 p-2.5 bg-orange-500/100  rounded-lg mx-4 border-t border-orange-200">
+       <div className="flex items-center gap-1.5 text-white text-xs">
+         <span>
+           {timeRange === 'week' 
             ? '📊 Cette semaine : Tendance positive de présence (+5% vs semaine dernière)'
             : '📈 Ce mois-ci : Meilleure performance le lundi avec 95% de présence'}
         </span>
       </div>
     </div>
-
-    <div className="min-w-0" style={{ height: '250px' }}>
-      <Chart 
-        options={{
-          ...options,
-          chart: {
-            ...options.chart,
-            height: 250
-          }
-        }} 
-        series={currentData.series} 
-        type="area" 
-        height={250}
-      />
     </div>
 
-    <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between text-xs">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1">
-            <div className="w-2 h-2 bg-blue-500 rounded"></div>
-            <span className="text-gray-600 dark:text-gray-400">Présents</span>
+    {/* Le reste du contenu (graphique) */}
+    <div className="p-5">
+      <div className="min-w-0" style={{ height: '250px' }}>
+        <Chart 
+          options={{
+            ...options,
+            chart: {
+              ...options.chart,
+              height: 250
+            }
+          }} 
+          series={currentData.series} 
+          type="area" 
+          height={250}
+        />
+      </div>
+
+      <div className="mt-3 pt-3 border-t border-orange-200">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between text-xs bg-orange-500/100 text-white p-3 rounded-lg">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1">
+              <div className="w-2 h-2 bg-white rounded"></div>
+              <span className="text-orange-100">Présents</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-2 h-2 bg-purple-300 rounded"></div>
+              <span className="text-orange-100">Total inscrits</span>
+            </div>
           </div>
-          <div className="flex items-center gap-1">
-            <div className="w-2 h-2 bg-purple-500 rounded"></div>
-            <span className="text-gray-600 dark:text-gray-400">Total inscrits</span>
+          <div className="mt-1 sm:mt-0">
+            <span className="text-orange-100">
+              {timeRange === 'week' 
+                ? 'Données mises à jour aujourd\'hui à 18:00'
+                : 'Données du mois en cours'}
+            </span>
           </div>
-        </div>
-        <div className="mt-1 sm:mt-0">
-          <span className="text-gray-500 dark:text-gray-400">
-            {timeRange === 'week' 
-              ? 'Données mises à jour aujourd\'hui à 18:00'
-              : 'Données du mois en cours'}
-          </span>
         </div>
       </div>
     </div>
   </div>
+  
 );
 }

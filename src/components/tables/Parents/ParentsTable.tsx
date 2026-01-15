@@ -1,16 +1,23 @@
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "../../ui/table";
 import Badge from "../../ui/badge/Badge";
 import { Parent } from "./types";
+import { useEffect, useState } from "react";
+// import imageApi from "../../../services/api/imageService";
+import { imageApi } from "../../../services/api/imageService";
 
 interface ParentsTableProps {
   parents: Parent[];
-  selectedParents: number[];
+  selectedParents: string[];
   isAllSelected: boolean;
   onSelectAll: () => void;
-  onSelectParent: (id: number) => void;
+  onSelectParent: (id: string) => void;
   onViewDetails: (parent: Parent) => void;
   onEdit: (parent: Parent) => void;
   onDelete: (parent: Parent) => void;
+}
+
+interface ImageCache {
+  [parentId: string]: string;
 }
 
 export default function ParentsTable({
@@ -23,6 +30,9 @@ export default function ParentsTable({
   onEdit,
   onDelete
 }: ParentsTableProps) {
+
+   const [imageCache, setImageCache] = useState<ImageCache>({});
+   const [loadingImages, setLoadingImages] = useState<boolean>(false);
   const getBadgeColor = (statut: string) => {
     switch(statut) {
       case "Actif": return "success";
@@ -31,11 +41,106 @@ export default function ParentsTable({
       default: return "primary";
     }
   };
+  useEffect(() => {
+      if (parents.length > 0) {
+        loadParentsImages();
+      };
+    }, [parents]);
+  
+  const loadParentsImages = async () => {
+  setLoadingImages(true);
+  const newCache: ImageCache = { ...imageCache };
+  const parentsToLoad = parents.slice(0, 20); // Limite à 20 parents
 
+  const loadPromises = parentsToLoad.map(async (parent) => {
+    // Ne charger que si l'image n'est pas déjà en cache
+    if (parent.image && !newCache[parent.id]) {
+      try {
+        console.log(`Chargement de l'image pour: ${parent.prenom} ${parent.nom}`, parent.image);
+        const imageUrl = await imageApi.getImage(parent.image);
+        newCache[parent.id] = imageUrl;
+      } catch (error) {
+        console.error(`Erreur de chargement de l'image pour ${parent.prenom} ${parent.nom}:`, error);
+        newCache[parent.id] = '/default-avatar.png';
+      }
+    }
+  });
+
+  await Promise.all(loadPromises);
+  setImageCache(newCache);
+  setLoadingImages(false);
+};
+
+    const getParentImage  = (parent: Parent): string => {
+        if (!parent.image) {
+          return '/default-avatar.png';
+        }
+        
+        // Si l'image est déjà en cache
+        if (imageCache[parent.id]) {
+          return imageCache[parent.id];
+        }
+        
+        // Sinon, charger l'image à la volée (lazy loading)
+        if (parent.image && !loadingImages) {
+          loadSingleImage(parent);
+        }
+        
+        // Retourner une image de placeholder pendant le chargement
+        return '/placeholder-avatar.png';
+      };
+      const loadSingleImage = async (parent: Parent) => {
+          if (!parent.image || imageCache[parent.id]) return;
+          
+          try {
+            const imageUrl = await imageApi.getImage(parent.image);
+            setImageCache(prev => ({
+              ...prev,
+              [parent.id]: imageUrl
+            }));
+          } catch (error) {
+            console.error(`Erreur de chargement de l'image pour ${parent.id}:`, error);
+            setImageCache(prev => ({
+              ...prev,
+              [parent.id]: '/default-avatar.png'
+            }));
+          }
+        };
+        useEffect(() => {
+    return () => {
+      Object.values(imageCache).forEach(url => {
+        if (url && url.startsWith('blob:')) {
+          URL.revokeObjectURL(url);
+        }
+      });
+    };
+  }, [imageCache]);
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>, educateurId: string) => {
+    e.currentTarget.src = '/default-avatar.png';
+    // Mettre à jour le cache avec l'image par défaut
+    setImageCache(prev => ({
+      ...prev,
+      [educateurId]: '/default-avatar.png'
+    }));
+  };
+
+   const getChildImageUrl = (imagePath: string): string => {
+    if (!imagePath || imagePath === '') {
+      return '/default-child-avatar.png';
+    }
+    
+    // Si c'est déjà une URL complète
+    if (imagePath.startsWith('http')) {
+      return imagePath;
+    }
+    
+    // Sinon, construire l'URL complète (option simple sans blob)
+    return imageApi.getImageUrl ? imageApi.getImageUrl(imagePath) : `http://localhost:8086/${encodeURI(imagePath.startsWith('/') ? imagePath.substring(1) : imagePath)}`;
+  };
   return (
     <div className="max-w-full overflow-x-auto">
       <Table>
-        <TableHeader className="border-b border-gray-100 dark:border-white/[0.05] bg-gray-700">
+        <TableHeader className="border-b  bg-indigo-500 ">
           <TableRow>
             <TableCell isHeader className="px-5 py-3 font-medium text-white text-start text-theme-xs">
               <div className="flex items-center">
@@ -75,6 +180,7 @@ export default function ParentsTable({
         <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
           {parents.map((parent) => {
             const isSelected = selectedParents.includes(parent.id);
+            const parentImageUrl = getParentImage(parent);
             return (
               <TableRow key={parent.id} className={isSelected ? "bg-blue-50 dark:bg-blue-900/10" : ""}>
                 <TableCell className="px-5 py-4 sm:px-6 text-start">
@@ -90,12 +196,15 @@ export default function ParentsTable({
                         <img
                           width={40}
                           height={40}
-                          src={parent.image}
-                          alt={parent.nomPrenom}
+                          src={parentImageUrl}
+                          // alt={`${parent.prenom} ${parent.nom}`}
+                          onError={(e) => handleImageError(e, parent.id)}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
                         />
                       </div>
                       <span className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
-                        {parent.nomPrenom}
+                        {parent.nom + " " + parent.prenom}
                       </span>
                     </div>
                   </div>
@@ -125,9 +234,11 @@ export default function ParentsTable({
                         <img
                           width={32}
                           height={32}
-                          src={image}
-                          alt={`Enfant ${index + 1}`}
+                          src={getChildImageUrl(image)}
+                          // alt={`Enfant ${index + 1}`}
+                          onError={(e) => e.currentTarget.src = '/default-child-avatar.png'}
                           className="w-full h-full object-cover"
+                          loading="lazy"
                         />
                       </div>
                     ))}

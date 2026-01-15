@@ -1,10 +1,12 @@
+import { RoleUsers, StatutClient, User } from "../../../types/auth.types";
+
 export interface Utilisateur {
-  id: number;
+  id: string;
   nomPrenom: string;
   email: string;
-  telephone: string;
-  role: 'parent' | 'educateur';
-  statut: 'actif' | 'inactif' | 'en_attente';
+  telephone: string | undefined;
+  role: RoleUsers;
+  statut: StatutClient;
   dateCreation: string;
   derniereConnexion: string;
   image: string;
@@ -18,8 +20,8 @@ export interface UserFormData {
   nomPrenom?: string;
   email?: string;
   telephone?: string;
-  role?: 'parent' | 'educateur';
-  statut?: 'actif' | 'inactif' | 'en_attente';
+  role?: RoleUsers;
+  statut?: StatutClient;
   image?: string;
   classe?: string;
 }
@@ -29,15 +31,28 @@ export interface UserFormErrors {
   email?: string;
   telephone?: string;
 }
-
+export const converUserToUtilisateur = (user: User):Utilisateur => {
+  return {
+    id: user.id,
+    nomPrenom: user.nom + " " + user.prenom,
+    email: user.email,
+    telephone: user.numTel,
+    role: user.role ,
+    statut: user.statutClient,
+    image: user.imageUrl || '/images/user/default-avatar.jpg',
+    classe: user.classe || '',
+    dateCreation: new Date().toISOString().split('T')[0], 
+    derniereConnexion: new Date().toISOString().split('T')[0], 
+  };
+}
 export const tableData: Utilisateur[] = [
   {
-    id: 1,
+    id: "user1",
     nomPrenom: "Sophie Martin",
     email: "sophie.martin@email.com",
     telephone: "+33 6 12 34 56 78",
-    role: 'parent',
-    statut: 'actif',
+    role: RoleUsers.PARENT,
+    statut: StatutClient.ACTIF,
     dateCreation: "2024-01-15",
     derniereConnexion: "2024-03-20",
     image: "/images/user/user-09.jpg",
@@ -49,12 +64,12 @@ export const tableData: Utilisateur[] = [
     }
   },
   {
-    id: 2,
+    id: "user2",
     nomPrenom: "Thomas Dubois",
     email: "thomas.dubois@email.com",
     telephone: "+33 6 23 45 67 89",
-    role: 'parent',
-    statut: 'actif',
+    role: RoleUsers.PARENT,
+    statut: StatutClient.ACTIF,
     dateCreation: "2024-01-20",
     derniereConnexion: "2024-03-19",
     image: "/images/user/user-17.jpg",
@@ -65,12 +80,12 @@ export const tableData: Utilisateur[] = [
     }
   },
   {
-    id: 3,
+    id: "user3",
     nomPrenom: "Marie Lambert",
     email: "marie.lambert@email.com",
     telephone: "+33 6 34 56 78 90",
-    role: 'parent',
-    statut: 'en_attente',
+    role: RoleUsers.PARENT,
+    statut: StatutClient.EN_ATTENTE,
     dateCreation: "2024-02-05",
     derniereConnexion: "2024-02-05",
     image: "/images/user/user-12.jpg",
@@ -79,12 +94,12 @@ export const tableData: Utilisateur[] = [
     }
   },
   {
-    id: 4,
+    id: "user4",
     nomPrenom: "Jean Petit",
     email: "jean.petit@email.com",
     telephone: "+33 6 45 67 89 01",
-    role: 'parent',
-    statut: 'inactif',
+    role: RoleUsers.PARENT,
+    statut: StatutClient.INACTIF,
     dateCreation: "2023-12-10",
     derniereConnexion: "2024-01-15",
     image: "/images/user/user-10.jpg",
@@ -97,48 +112,48 @@ export const tableData: Utilisateur[] = [
     }
   },
   {
-    id: 5,
+    id: "user5",
     nomPrenom: "Laura Bernard",
     email: "laura.bernard@email.com",
     telephone: "+33 6 56 78 90 12",
-    role: 'educateur',
-    statut: 'actif',
+    role: RoleUsers.EDUCATEUR,
+    statut: StatutClient.ACTIF,
     dateCreation: "2024-01-10",
     derniereConnexion: "2024-03-21",
     image: "/images/user/user-21.jpg",
     classe: "(3-4) ans"
   },
   {
-    id: 6,
+    id: "user6",
     nomPrenom: "Pierre Moreau",
     email: "pierre.moreau@email.com",
     telephone: "+33 6 67 89 01 23",
-    role: 'educateur',
-    statut: 'actif',
+    role: RoleUsers.EDUCATEUR,
+    statut: StatutClient.ACTIF,
     dateCreation: "2024-01-25",
     derniereConnexion: "2024-03-20",
     image: "/images/user/user-25.jpg",
     classe: "(6-7) ans"
   },
   {
-    id: 7,
+    id: "user7",
     nomPrenom: "Julie Leroy",
     email: "julie.leroy@email.com",
     telephone: "+33 6 78 90 12 34",
-    role: 'educateur',
-    statut: 'en_attente',
+    role: RoleUsers.EDUCATEUR,
+    statut: StatutClient.EN_ATTENTE,
     dateCreation: "2024-02-15",
     derniereConnexion: "2024-02-15",
     image: "/images/user/user-33.jpg",
     classe: "(4-5) ans"
   },
   {
-    id: 8,
+    id: "user8",
     nomPrenom: "Marc Blanc",
     email: "marc.blanc@email.com",
     telephone: "+33 6 89 01 23 45",
-    role: 'educateur',
-    statut: 'inactif',
+    role: RoleUsers.EDUCATEUR,
+    statut: StatutClient.INACTIF,
     dateCreation: "2023-11-30",
     derniereConnexion: "2024-01-10",
     image: "/images/user/user-27.jpg",

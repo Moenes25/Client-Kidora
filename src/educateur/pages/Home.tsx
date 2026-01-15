@@ -422,34 +422,41 @@ const intensitesOptions = [
           <RecentActivities onAjouterObservation={() => setShowAjouterObservation(true)} />
           
           {/* 2. Actions rapides */}
-          <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5 shadow-sm">
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
-              Actions Rapides
-            </h3>
-            <div className="space-y-3">
-              <button 
-                onClick={() => setShowGestionPresence(true)}
-                className="w-full flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
-              >
-                <span className="font-medium">Gérer présence</span>
-                <span className="text-xs bg-blue-100 dark:bg-blue-800 px-2 py-1 rounded">+</span>
-              </button>
-              <button 
-                onClick={() => setShowAjouterActivite(true)}
-                className="w-full flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/50 transition-colors">
-                <span className="font-medium">Ajouter activité</span>
-                <span className="text-xs bg-green-100 dark:bg-green-800 px-2 py-1 rounded">+</span>
-              </button>
-              <button className="w-full flex items-center justify-between p-3 bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-lg hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-colors">
-                <span className="font-medium">Créer rapport</span>
-                <span className="text-xs bg-purple-100 dark:bg-purple-800 px-2 py-1 rounded">📊</span>
-              </button>
-              <button className="w-full flex items-center justify-between p-3 bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-lg hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-colors">
-                <span className="font-medium">Partager avec parents</span>
-                <span className="text-xs bg-amber-100 dark:bg-amber-800 px-2 py-1 rounded">📧</span>
-              </button>
-            </div>
-          </div>
+    <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 shadow-sm overflow-hidden">
+  {/* Header avec fond coloré */}
+  <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-5 pt-5 pb-4">
+    <h3 className="text-lg font-semibold">
+      Actions Rapides
+    </h3>
+  </div>
+
+  {/* Contenu des boutons */}
+  <div className="p-5">
+    <div className="space-y-3">
+      <button 
+        onClick={() => setShowGestionPresence(true)}
+        className="w-full flex items-center justify-between p-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg transition-all duration-200"
+      >
+        <span className="font-medium">Gérer présence</span>
+        <span className="text-xs bg-blue-400 px-2 py-1 rounded">+</span>
+      </button>
+      <button 
+        onClick={() => setShowAjouterActivite(true)}
+        className="w-full flex items-center justify-between p-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg transition-all duration-200">
+        <span className="font-medium">Ajouter activité</span>
+        <span className="text-xs bg-green-400 px-2 py-1 rounded">+</span>
+      </button>
+      <button className="w-full flex items-center justify-between p-3 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-lg transition-all duration-200">
+        <span className="font-medium">Créer rapport</span>
+        <span className="text-xs bg-purple-400 px-2 py-1 rounded">📊</span>
+      </button>
+      <button className="w-full flex items-center justify-between p-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-lg transition-all duration-200">
+        <span className="font-medium">Partager avec parents</span>
+        <span className="text-xs bg-amber-400 px-2 py-1 rounded">📧</span>
+      </button>
+    </div>
+  </div>
+</div>
           
         </div>
         
@@ -459,38 +466,45 @@ const intensitesOptions = [
         </div>
         
         <div className="col-span-12 lg:col-span-4">
-          <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5 shadow-sm h-full">
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
-              Aujourd'hui
-            </h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <span className="text-gray-600 dark:text-gray-400">Heures d'activités</span>
-                <span className="font-semibold text-gray-900 dark:text-white">4h 30m</span>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <span className="text-gray-600 dark:text-gray-400">Enfants présents</span>
-                <span className="font-semibold text-green-600 dark:text-green-400">
-                  {Math.round((enfants.filter(e => e.present).length / enfants.length) * 100)}%
-                </span>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <span className="text-gray-600 dark:text-gray-400">Tâches terminées</span>
-                <span className="font-semibold text-blue-600 dark:text-blue-400">12/15</span>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <span className="text-gray-600 dark:text-gray-400">Observations</span>
-                <span className="font-semibold text-purple-600 dark:text-purple-400">8</span>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <span className="text-gray-600 dark:text-gray-400">Absents</span>
-                <span className="font-semibold text-amber-600 dark:text-amber-400">
-                  {enfants.filter(e => !e.present).length}
-                </span>
-              </div>
-            </div>
-          </div>
+  <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 shadow-sm overflow-hidden h-full">
+    {/* Header avec fond coloré */}
+    <div className="bg-gradient-to-r from-indigo-500 to-indigo-600 text-white px-5 pt-5 pb-4">
+      <h3 className="text-lg font-semibold">
+        Aujourd'hui
+      </h3>
+    </div>
+    
+    {/* Contenu des statistiques */}
+    <div className="p-5">
+      <div className="space-y-3">
+        <div className="flex items-center justify-between p-3 bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 rounded-lg">
+          <span className="text-gray-700 dark:text-gray-300">Heures d'activités</span>
+          <span className="font-semibold text-gray-900 dark:text-white">4h 30m</span>
         </div>
+        <div className="flex items-center justify-between p-3 bg-gradient-to-r from-green-100 to-green-200 dark:from-green-900/30 dark:to-green-800/30 rounded-lg">
+          <span className="text-green-700 dark:text-green-300">Enfants présents</span>
+          <span className="font-semibold text-green-700 dark:text-green-400">
+            {Math.round((enfants.filter(e => e.present).length / enfants.length) * 100)}%
+          </span>
+        </div>
+        <div className="flex items-center justify-between p-3 bg-gradient-to-r from-blue-100 to-blue-200 dark:from-blue-900/30 dark:to-blue-800/30 rounded-lg">
+          <span className="text-blue-700 dark:text-blue-300">Tâches terminées</span>
+          <span className="font-semibold text-blue-700 dark:text-blue-400">12/15</span>
+        </div>
+        <div className="flex items-center justify-between p-3 bg-gradient-to-r from-purple-100 to-purple-200 dark:from-purple-900/30 dark:to-purple-800/30 rounded-lg">
+          <span className="text-purple-700 dark:text-purple-300">Observations</span>
+          <span className="font-semibold text-purple-700 dark:text-purple-400">8</span>
+        </div>
+        <div className="flex items-center justify-between p-3 bg-gradient-to-r from-amber-100 to-amber-200 dark:from-amber-900/30 dark:to-amber-800/30 rounded-lg">
+          <span className="text-amber-700 dark:text-amber-300">Absents</span>
+          <span className="font-semibold text-amber-700 dark:text-amber-400">
+            {enfants.filter(e => !e.present).length}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
         
       </div>
 
