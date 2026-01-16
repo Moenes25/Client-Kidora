@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Parent ,CreateParentDto, UpdateParentDto, Relation} from "./types";
 import { RoleUsers, StatutClient } from "../../../types/auth.types";
-
+import { imageApi } from "../../../services/api/imageService";
 interface ParentFormProps {
   isOpen: boolean;
   onClose: () => void;
@@ -11,8 +11,6 @@ interface ParentFormProps {
   subtitle: string;
   isEdit?: boolean;
 }
-
-
 
 
 interface FormData {
@@ -48,10 +46,30 @@ export default function ParentForm({
   });
   
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>('/images/user/default-avatar.jpg');
+  const [loadingImage, setLoadingImage] = useState<boolean>(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
+    const loadParentImage = async () => {
+      if (isOpen && parent && parent.image) {
+        setLoadingImage(true);
+        try {
+          // Utiliser getImage pour charger l'image avec authentification
+          const imageUrl = await imageApi.getImage(parent.image);
+          setPreviewUrl(imageUrl);
+          setFormData(prev => ({ ...prev, image: parent.image || '/images/user/default-avatar.jpg' }));
+        } catch (error) {
+          console.error('Erreur de chargement de l\'image:', error);
+          setPreviewUrl('/images/user/default-avatar.jpg');
+        } finally {
+          setLoadingImage(false);
+        }
+      } else {
+        setPreviewUrl('/images/user/default-avatar.jpg');
+      }
+    };
     if (isOpen) {
       document.body.style.overflow = 'hidden';
       if (parent && isEdit) {
@@ -67,6 +85,7 @@ export default function ParentForm({
           password : undefined
           
         });
+        loadParentImage();
       } else {
         setFormData({
           nom: "",
@@ -76,7 +95,7 @@ export default function ParentForm({
           relation: Relation.PERE,
           statut: StatutClient.ACTIF,
           profession: "",
-          image: "/images/user/default-avatar.jpg",
+          image: "/images/user/default-avatar-parent.png",
           password :"DefaultPassword123!"
         });
       }
@@ -87,6 +106,9 @@ export default function ParentForm({
     
     return () => {
       document.body.style.overflow = 'unset';
+      if (previewUrl && previewUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(previewUrl);
+      }
     };
   }, [isOpen, parent, isEdit]);
 
@@ -164,6 +186,9 @@ export default function ParentForm({
       setErrors(formErrors);
     }
   };
+  const handleImageError = () => {
+    setPreviewUrl('/images/user/default-avatar.jpg');
+  };
 
   if (!isOpen) return null;
 
@@ -196,28 +221,43 @@ export default function ParentForm({
               <div className="px-6 py-4 space-y-6 max-h-[60vh] overflow-y-auto">
                 {/* Section Photo */}
                 <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 overflow-hidden rounded-full">
+                <div className="w-16 h-16 overflow-hidden rounded-full relative">
+                  {loadingImage ? (
+                    <div className="w-full h-full bg-gray-200 animate-pulse rounded-full"></div>
+                  ) : (
                     <img
-                      src={formData.image}
+                      src={previewUrl}
                       alt="Photo de profil"
                       className="w-full h-full object-cover"
+                      onError={handleImageError}
                     />
-                  </div>
-                  <div className="flex-1">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Photo de profil
-                    </label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileChange}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">
-                      Formats acceptés: JPG, PNG, GIF. Max: 5MB
-                    </p>
-                  </div>
+                  )}
+                  {isEdit && parent?.image && !loadingImage && (
+                    <div className="absolute bottom-0 right-0 bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+                      Actuelle
+                    </div>
+                  )}
                 </div>
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Photo de profil
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Formats acceptés: JPG, PNG, GIF. Max: 5MB
+                  </p>
+                  {isEdit && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Laissez vide pour conserver l'image actuelle
+                    </p>
+                  )}
+                </div>
+              </div>
 
                 {/* Champs Nom et Prénom séparés */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

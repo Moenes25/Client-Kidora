@@ -116,17 +116,17 @@ export default function ParentsTable({
     };
   }, [imageCache]);
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>, educateurId: string) => {
-    e.currentTarget.src = '/default-avatar.png';
+    e.currentTarget.src = '/images/user/default-avatar-parent.png';
     // Mettre à jour le cache avec l'image par défaut
     setImageCache(prev => ({
       ...prev,
-      [educateurId]: '/default-avatar.png'
+      [educateurId]: '/images/user/default-avatar-parent.png'
     }));
   };
 
    const getChildImageUrl = (imagePath: string): string => {
     if (!imagePath || imagePath === '') {
-      return '/default-child-avatar.png';
+      return '/images/user/default-avatar-enfant.png';
     }
     
     // Si c'est déjà une URL complète
