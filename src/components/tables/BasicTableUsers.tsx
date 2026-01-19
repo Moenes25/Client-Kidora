@@ -987,18 +987,25 @@ export default function BasicTablesUsers() {
             <label htmlFor="roleFilter" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Rôle
             </label>
-            <select
-              id="roleFilter"
-              value={roleFilter}
-              onChange={(e) => setRoleFilter(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
-            >
-              {roleOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
+            <div className="relative group hover:scale-105 focus-within:animate-pulse transition-transform duration-800 ease-out">
+              <select
+                id="roleFilter"
+                value={roleFilter}
+                onChange={(e) => setRoleFilter(e.target.value)}
+                className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:shadow-lg hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:hover:border-blue-400 dark:hover:bg-gradient-to-r dark:from-blue-900/50 dark:to-purple-900/50 dark:focus:shadow-blue-500/50 dark:focus:ring-blue-400 appearance-none"
+              >
+                {roleOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+              <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                <svg className="w-4 h-4 text-gray-400 dark:text-gray-500 group-hover:text-blue-500 dark:group-hover:text-blue-400 group-focus-within:animate-bounce transition-all duration-300 group-focus-within:rotate-180 group-focus-within:scale-110 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
           </div>
 
           {/* Filtre par statut */}
@@ -1006,18 +1013,25 @@ export default function BasicTablesUsers() {
             <label htmlFor="statutFilter" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Statut
             </label>
-            <select
-              id="statutFilter"
-              value={statutFilter}
-              onChange={(e) => setStatutFilter(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
-            >
-              {statutOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
+            <div className="relative group hover:scale-105 focus-within:animate-pulse transition-transform duration-200 ease-out">
+              <select
+                id="statutFilter"
+                value={statutFilter}
+                onChange={(e) => setStatutFilter(e.target.value)}
+                className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:shadow-lg hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:hover:border-blue-400 dark:hover:bg-gradient-to-r dark:from-blue-900/50 dark:to-purple-900/50 dark:focus:shadow-blue-500/50 dark:focus:ring-blue-400 appearance-none"
+              >
+                {statutOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+              <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                <svg className="w-4 h-4 text-gray-400 dark:text-gray-500 group-hover:text-blue-500 dark:group-hover:text-blue-400 group-focus-within:animate-bounce transition-all duration-300 group-focus-within:rotate-180 group-focus-within:scale-110 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
           </div>
 
           {/* Bouton pour réinitialiser les filtres */}
