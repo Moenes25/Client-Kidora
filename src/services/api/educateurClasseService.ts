@@ -3,7 +3,7 @@ import apiClient from "./axiosConfig";
 export interface EducateurClasseRequestDto {
   educateurId: string;
   classeId: string;
-  dateAssignation?: string; // Format ISO: "2024-01-19T10:30:00"
+  dateAssignation?: string; 
 }
 
 export interface EducateurClasseResponseDTO {
