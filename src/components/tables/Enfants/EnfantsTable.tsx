@@ -3,7 +3,7 @@ import Badge from "../../ui/badge/Badge";
 import { Enfant } from './types';
 import { StatutClient } from "../../../types/auth.types";
 import { Parent } from "../Parents/types";
-import { useEffect, useState, useCallback } from "react";
+import {  useCallback } from "react";
 import { imageApi } from "../../../services/api/imageService";
 
 interface EnfantsTableProps {
@@ -19,9 +19,6 @@ interface EnfantsTableProps {
   parents: Parent[];
 }
 
-interface ImageCache {
-  [key: string]: string;
-}
 
 export default function EnfantsTable({ 
   enfants, 
@@ -35,9 +32,7 @@ export default function EnfantsTable({
   onDelete,
   parents
 }: EnfantsTableProps) {
-  const [imageCache, setImageCache] = useState<ImageCache>({});
-  const [loadingImages, setLoadingImages] = useState<Set<string>>(new Set());
-
+  
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('fr-FR', {
@@ -48,9 +43,9 @@ export default function EnfantsTable({
   };
   
   const getStatutText = (statut: string) => {
-    return statut === 'actif' ? 'Actif' : 
-           statut === 'inactif' ? 'Inactif' : 
-           'En attente';
+    return statut === StatutClient.ACTIF ? 'Actif' : 
+           statut === StatutClient.INACTIF ? 'Inactif' : 'En attente';
+          
   };
   
   const getParentInfo = (parentId: string) => {
@@ -65,107 +60,29 @@ export default function EnfantsTable({
     };
   };
 
-  // Fonction pour charger une image
-  const loadImage = useCallback(async (imagePath: string, cacheKey: string) => {
-    if (!imagePath || imageCache[cacheKey] || loadingImages.has(cacheKey)) return;
-    
-    setLoadingImages(prev => new Set([...prev, cacheKey]));
-    
-    try {
-      const imageUrl = await imageApi.getImage(imagePath);
-      setImageCache(prev => ({
-        ...prev,
-        [cacheKey]: imageUrl
-      }));
-    } catch (error) {
-      console.error(`Erreur de chargement de l'image ${imagePath}:`, error);
-        const defaultImage =  '/uploads/enfants/1766655013624_enfant.jpg' 
-        
-      // const defaultImage = cacheKey.startsWith('enfant-') 
-      //   ? '/uploads/enfants/1766655013624_enfant.jpg' 
-      //   : '/images/default-parent.jpg';
-      setImageCache(prev => ({
-        ...prev,
-        [cacheKey]: defaultImage
-      }));
-    } finally {
-      setLoadingImages(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(cacheKey);
-        return newSet;
-      });
-    }
-  }, [imageCache, loadingImages]);
-
-  // Charger les images initiales
-  useEffect(() => {
-    const loadInitialImages = async () => {
-      // Limiter à 10 images pour les performances
-      const enfantsToLoad = enfants.slice(0, 10);
-      const parentsToLoad = parents.slice(0, 10);
-      
-      const loadPromises: Promise<void>[] = [];
-      
-      // Charger les images des enfants
-      enfantsToLoad.forEach(enfant => {
-        if (enfant.imageUrl) {
-          loadPromises.push(loadImage(enfant.imageUrl, `enfant-${enfant.id}`));
-        }
-      });
-      
-      // Charger les images des parents correspondants
-      parentsToLoad.forEach(parent => {
-        if (parent.image) {
-          loadPromises.push(loadImage(parent.image, `parent-${parent.id}`));
-        }
-      });
-      
-      // Charger en parallèle
-      await Promise.allSettled(loadPromises);
-    };
-    
-    if (enfants.length > 0) {
-      loadInitialImages();
-    }
-  }, [enfants, parents, loadImage]);
-
-  // Nettoyer les URLs blob
-  useEffect(() => {
-    return () => {
-      Object.values(imageCache).forEach(url => {
-        if (url && url.startsWith('blob:')) {
-          URL.revokeObjectURL(url);
-        }
-      });
-    };
-  }, [imageCache]);
+  
 
   // Obtenir l'URL d'une image depuis le cache ou charger
   const getImageUrl = useCallback((imagePath: string, type: 'enfant' | 'parent', id: string): string => {
-    const cacheKey = `${type}-${id}`;
+   
     
     // Si pas d'image, retourner image par défaut
     if (!imagePath || imagePath.trim() === '') {
-      return type === 'enfant' ? '/uploads/enfants/1766655013624_enfant.jpg' : '/images/default-parent.jpg';
+      return type === 'enfant' 
+              ? imageApi.getImageUrl('/uploads/enfants/default-avatar-enfant.png') 
+              : imageApi.getImageUrl('/uploads/users/default-avatar-parent.png');
     }
     
-    // Si l'image est dans le cache
-    if (imageCache[cacheKey]) {
-      return imageCache[cacheKey];
-    }
-    
-    // Si l'image n'est pas encore en cours de chargement, la charger
-    if (!loadingImages.has(cacheKey)) {
-      loadImage(imagePath, cacheKey);
-    }
     
     // Retourner un placeholder pendant le chargement
-    return type === 'enfant' ? '/images/placeholder-child.jpg' : '/images/placeholder-parent.jpg';
-  }, [imageCache, loadingImages, loadImage]);
+    return imageApi.getImageUrl(imagePath)
+  },[])
 
   // Gestionnaire d'erreur pour les images
   const handleImageError = useCallback((e: React.SyntheticEvent<HTMLImageElement, Event>, type: 'enfant' | 'parent') => {
-    e.currentTarget.src = type === 'enfant' ? '/images/default-child.jpg' : '/images/default-parent.jpg';
+    e.currentTarget.src = type === 'enfant' 
+    ? imageApi.getImageUrl('/uploads/enfants/default-avatar-enfant.png')
+    : imageApi.getImageUrl('/uploads/users/default-avatar-parent.png');
   }, []);
 
   if (viewMode === 'grille') {
@@ -201,9 +118,6 @@ export default function EnfantsTable({
                           className="w-full h-full object-cover"
                           loading="lazy"
                         />
-                        {loadingImages.has(`enfant-${enfant.id}`) && (
-                          <div className="absolute inset-0 bg-gray-200 animate-pulse rounded-full"></div>
-                        )}
                       </div>
                       <div>
                         <h3 className="font-medium text-gray-900 dark:text-white">
@@ -241,9 +155,6 @@ export default function EnfantsTable({
                         onError={(e) => handleImageError(e, "parent")}
                         loading="lazy"
                       />
-                      {loadingImages.has(`parent-${parent.id}`) && (
-                        <div className="absolute inset-0 bg-gray-200 animate-pulse rounded-full"></div>
-                      )}
                     </div>
                     <div>
                       <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -385,9 +296,6 @@ export default function EnfantsTable({
                           onError={(e) => handleImageError(e, 'enfant')}
                           loading="lazy"
                         />
-                        {loadingImages.has(`enfant-${enfant.id}`) && (
-                          <div className="absolute inset-0 bg-gray-200 animate-pulse rounded-full"></div>
-                        )}
                       </div>
                       <div>
                         <span className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
@@ -411,9 +319,6 @@ export default function EnfantsTable({
                         onError={(e) => handleImageError(e, 'parent')}
                         loading="lazy"
                       />
-                      {loadingImages.has(`parent-${parent.id}`) && (
-                        <div className="absolute inset-0 bg-gray-200 animate-pulse rounded-full"></div>
-                      )}
                     </div>
                     <div>
                       <span className="block text-sm">{parent.prenom} {parent.nom}</span>
@@ -423,7 +328,7 @@ export default function EnfantsTable({
                 <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
                   <div className="space-y-1">
                     <span className="block text-sm">{enfant.age} ans</span>
-                    <span className="block text-xs text-gray-500 dark:text-gray-400">{enfant.classe}</span>
+                    <span className="block text-xs text-gray-500 dark:text-gray-400">{enfant.nomClasse}</span>
                   </div>
                 </TableCell>
                 <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">

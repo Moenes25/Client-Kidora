@@ -72,15 +72,22 @@ export const imageApi = {
   /**
    * Méthode simple si l'image est publique
    */
-  getImageUrl: (imagePath: string): string => {
-    if (!imagePath) return '/default-avatar.png';
+  getImageUrl: (imagePath: string | null | undefined): string => {
+    if (!imagePath || imagePath.trim() === '') return '/uploads/users/default-avatar-educateur.jpg';
     
     let cleanPath = imagePath.trim();
-    if (cleanPath.startsWith('/')) {
-      cleanPath = cleanPath.substring(1);
+    if (cleanPath.startsWith('http://') || cleanPath.startsWith('https://')) {
+      cleanPath = cleanPath;
+    }
+    if (cleanPath.startsWith('/uploads/')) {
+      return `http://localhost:8086${cleanPath}`;
     }
     
-    return `http://localhost:8086/${encodeURI(cleanPath)}`;
+    if (!cleanPath.startsWith('/')) {
+      cleanPath = '/' + cleanPath;
+    }
+    return `http://localhost:8086${cleanPath}`;
+
   }
 };
 

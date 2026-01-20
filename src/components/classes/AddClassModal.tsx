@@ -1,33 +1,24 @@
 import { useState, useEffect } from "react";
+import classService, { ClasseRequestDto } from '../../services/api/classService';
 
 interface AddClassModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave?: (formData: ClassFormData) => void;
-}
-
-interface ClassFormData {
-  className: string;
-  ageRange: string;
-  capacity: number;
-  educator: string;
-  room: string;
-  color: string;
-  description?: string;
+  onSave?: () => void; // Callback optionnelle pour rafraîchir la liste
 }
 
 export default function AddClassModal({ isOpen, onClose, onSave }: AddClassModalProps) {
-  const [formData, setFormData] = useState<ClassFormData>({
+  const [formData, setFormData] = useState({
     className: "",
-    ageRange: "2-3",
+    ageRange: "4-5 ans",
     capacity: 20,
-    educator: "",
     room: "",
     color: "blue",
     description: ""
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -56,57 +47,77 @@ export default function AddClassModal({ isOpen, onClose, onSave }: AddClassModal
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
     if (!formData.className.trim()) newErrors.className = "Le nom de la classe est requis";
-    if (!formData.educator.trim()) newErrors.educator = "Le nom de l'éducateur est requis";
     if (formData.capacity < 1) newErrors.capacity = "La capacité doit être supérieure à 0";
-    if (formData.capacity > 50) newErrors.capacity = "La capacité maximale est de 50 enfants";
+    if (formData.capacity > 50) newErrors.capacity = "La capacité maximale est de 50 élèves";
     return newErrors;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     const formErrors = validateForm();
-    if (Object.keys(formErrors).length === 0) {
-      console.log("Nouvelle classe créée:", formData);
-      
-      if (onSave) {
-        onSave(formData);
-      }
+    if (Object.keys(formErrors).length > 0) {
+      setErrors(formErrors);
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const classData: ClasseRequestDto = {
+        nom_classe: formData.className,
+        description_classe: formData.description || undefined,
+        trancheAge: formData.ageRange,
+        couleur_classe: formData.color,
+        capacite: formData.capacity,
+        salle: formData.room || undefined
+      };
+
+      await classService.createClass(classData);
       
       // Réinitialiser le formulaire
       setFormData({
         className: "",
-        ageRange: "2-3",
+        ageRange: "4-5 ans",
         capacity: 20,
-        educator: "",
         room: "",
         color: "blue",
         description: ""
       });
       
+      // Fermer la modal
       onClose();
-    } else {
-      setErrors(formErrors);
+      
+      // Appeler le callback pour rafraîchir la liste des classes
+      if (onSave) {
+        onSave();
+      }
+      
+    } catch (error: any) {
+      console.error("Erreur lors de la création de la classe:", error);
+      
+      if (error.response?.data?.errors) {
+        const backendErrors = error.response.data.errors;
+        const newErrors: Record<string, string> = {};
+        
+        backendErrors.forEach((err: any) => {
+          if (err.field === 'nom_classe') newErrors.className = err.message;
+          if (err.field === 'capacite') newErrors.capacity = err.message;
+          if (err.field === 'trancheAge') newErrors.ageRange = err.message;
+          if (err.field === 'couleur_classe') newErrors.color = err.message;
+        });
+        
+        setErrors(newErrors);
+      } else {
+        alert(`Erreur: ${error.response?.data?.message || "Une erreur est survenue"}`);
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const colorOptions = [
-    { value: "blue", label: "Bleu", bg: "bg-blue-100", text: "text-blue-600" },
-    { value: "green", label: "Vert", bg: "bg-green-100", text: "text-green-600" },
-    { value: "purple", label: "Violet", bg: "bg-purple-100", text: "text-purple-600" },
-    { value: "orange", label: "Orange", bg: "bg-orange-100", text: "text-orange-600" },
-    { value: "pink", label: "Rose", bg: "bg-pink-100", text: "text-pink-600" },
-    { value: "indigo", label: "Indigo", bg: "bg-indigo-100", text: "text-indigo-600" },
-  ];
-
-  const ageRangeOptions = [
-    { value: "2-3", label: "2-3 ans (Petits)" },
-    { value: "3-4", label: "3-4 ans (Moyens)" },
-    { value: "4-5", label: "4-5 ans (Grands)" },
-    { value: "5-6", label: "5-6 ans (Pré-scolaire)" },
-    { value: "6-7", label: "6-7 ans (CP)" },
-    { value: "7-8", label: "7-8 ans (CE1)" },
-  ];
+  const colorOptions = classService.getColorOptions();
+  const ageRangeOptions = classService.getAgeRangeOptions();
 
   if (!isOpen) return null;
 
@@ -121,12 +132,13 @@ export default function AddClassModal({ isOpen, onClose, onSave }: AddClassModal
                 Nouvelle Classe
               </h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Ajouter une nouvelle classe à la crèche
+                Ajouter une nouvelle classe
               </p>
             </div>
             <button
               onClick={onClose}
               className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
+              disabled={isLoading}
             >
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -155,7 +167,8 @@ export default function AddClassModal({ isOpen, onClose, onSave }: AddClassModal
                         ? 'border-red-500 focus:border-red-500' 
                         : 'border-gray-300 dark:border-gray-600 focus:border-blue-500'
                     } dark:bg-gray-700 dark:text-white`}
-                    placeholder="Ex: Petits, Moyens, Grands"
+                    placeholder="Ex: CM1 A, Grande Section, CE2"
+                    disabled={isLoading}
                   />
                   {errors.className && (
                     <p className="mt-1 text-sm text-red-600">{errors.className}</p>
@@ -175,6 +188,7 @@ export default function AddClassModal({ isOpen, onClose, onSave }: AddClassModal
                   rows={2}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                   placeholder="Brève description de la classe..."
+                  disabled={isLoading}
                 />
               </div>
 
@@ -189,11 +203,17 @@ export default function AddClassModal({ isOpen, onClose, onSave }: AddClassModal
                     value={formData.ageRange}
                     onChange={handleChange}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                    disabled={isLoading}
                   >
                     {ageRangeOptions.map(option => (
-                      <option key={option.value} value={option.value}>{option.label}</option>
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
                     ))}
                   </select>
+                  {errors.ageRange && (
+                    <p className="mt-1 text-sm text-red-600">{errors.ageRange}</p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -204,12 +224,13 @@ export default function AddClassModal({ isOpen, onClose, onSave }: AddClassModal
                       <button
                         key={color.value}
                         type="button"
-                        onClick={() => setFormData(prev => ({ ...prev, color: color.value }))}
+                        onClick={() => !isLoading && setFormData(prev => ({ ...prev, color: color.value }))}
                         className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg border ${
                           formData.color === color.value
                             ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
                             : 'border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
-                        }`}
+                        } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        disabled={isLoading}
                       >
                         <div className={`w-4 h-4 rounded-full ${color.bg} ${color.text}`}></div>
                         <span className="text-sm">{color.label}</span>
@@ -219,55 +240,34 @@ export default function AddClassModal({ isOpen, onClose, onSave }: AddClassModal
                 </div>
               </div>
 
-              {/* Capacité et Éducateur */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Capacité maximale *
-                  </label>
-                  <div className="space-y-2">
-                    <input
-                      type="range"
-                      name="capacity"
-                      min="5"
-                      max="50"
-                      step="5"
-                      value={formData.capacity}
-                      onChange={handleChange}
-                      className="w-full"
-                    />
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600 dark:text-gray-400">5</span>
-                      <span className="text-lg font-bold text-gray-900 dark:text-white">
-                        {formData.capacity} enfants
-                      </span>
-                      <span className="text-sm text-gray-600 dark:text-gray-400">50</span>
-                    </div>
-                  </div>
-                  {errors.capacity && (
-                    <p className="mt-1 text-sm text-red-600">{errors.capacity}</p>
-                  )}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Éducateur principal *
-                  </label>
+              {/* Capacité */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Capacité maximale *
+                </label>
+                <div className="space-y-2">
                   <input
-                    type="text"
-                    name="educator"
-                    value={formData.educator}
+                    type="range"
+                    name="capacity"
+                    min="5"
+                    max="50"
+                    step="5"
+                    value={formData.capacity}
                     onChange={handleChange}
-                    className={`w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.educator 
-                        ? 'border-red-500 focus:border-red-500' 
-                        : 'border-gray-300 dark:border-gray-600 focus:border-blue-500'
-                    } dark:bg-gray-700 dark:text-white`}
-                    placeholder="Nom de l'éducateur"
+                    className="w-full"
+                    disabled={isLoading}
                   />
-                  {errors.educator && (
-                    <p className="mt-1 text-sm text-red-600">{errors.educator}</p>
-                  )}
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600 dark:text-gray-400">5</span>
+                    <span className="text-lg font-bold text-gray-900 dark:text-white">
+                      {formData.capacity} élèves
+                    </span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">50</span>
+                  </div>
                 </div>
+                {errors.capacity && (
+                  <p className="mt-1 text-sm text-red-600">{errors.capacity}</p>
+                )}
               </div>
 
               {/* Salle */}
@@ -282,31 +282,8 @@ export default function AddClassModal({ isOpen, onClose, onSave }: AddClassModal
                   onChange={handleChange}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                   placeholder="Ex: Salle 1, Bâtiment A"
+                  disabled={isLoading}
                 />
-              </div>
-
-              {/* Aperçu */}
-              <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
-                <h4 className="font-medium text-gray-900 dark:text-white mb-3">Aperçu de la classe</h4>
-                <div className="flex items-center gap-3">
-                  <div className={`w-12 h-12 rounded-lg ${
-                    formData.color === 'blue' ? 'bg-blue-100' :
-                    formData.color === 'green' ? 'bg-green-100' :
-                    formData.color === 'purple' ? 'bg-purple-100' :
-                    formData.color === 'orange' ? 'bg-orange-100' :
-                    formData.color === 'pink' ? 'bg-pink-100' : 'bg-indigo-100'
-                  } flex items-center justify-center`}>
-                    <span className="text-xl">👶</span>
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-900 dark:text-white">
-                      {formData.className || "Nom de la classe"}
-                    </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {ageRangeOptions.find(a => a.value === formData.ageRange)?.label || "2-3 ans"} • {formData.capacity} places
-                    </p>
-                  </div>
-                </div>
               </div>
             </div>
 
@@ -315,14 +292,16 @@ export default function AddClassModal({ isOpen, onClose, onSave }: AddClassModal
                 type="button"
                 onClick={onClose}
                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600"
+                disabled={isLoading}
               >
                 Annuler
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+                className="px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={isLoading}
               >
-                Créer la classe
+                {isLoading ? "Création..." : "Créer la classe"}
               </button>
             </div>
           </form>

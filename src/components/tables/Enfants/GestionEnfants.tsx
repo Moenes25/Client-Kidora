@@ -9,9 +9,12 @@ import { parentApi } from "../../../services/api/parentApi";
 import { Parent } from "../Parents/types";
 import { StatutClient } from "../../../types/auth.types";
 
+interface GestionEnfantsProps {
+  onCountChange?: (count: number) => void;
+}
 
 
-export default function GestionEnfants() {
+export default function GestionEnfants({ onCountChange }: GestionEnfantsProps) {
   // États pour les filtres
   const [viewMode, setViewMode] = useState<'liste' | 'grille'>('liste');
   const [classeFilter, setClasseFilter] = useState<string>("");
@@ -47,7 +50,8 @@ export default function GestionEnfants() {
   });
 
   const [parents, setParents] = useState<Parent[]>([]);
-  const [parentOptions, setParentOptions] = useState<string[]>(["Tous"]);
+  // const [parentOptions, setParentOptions] = useState<string[]>(["Tous"]);
+  const [parentOptions, setParentOptions] = useState<Array<{id: string, label: string}>>([{id: "all", label: "Tous"}]);
 
   useEffect(() => {
     fetchData();
@@ -69,7 +73,7 @@ export default function GestionEnfants() {
       setParents(parentsData);
       
       // Créer les options de parent pour le filtre
-      const options = ["Tous", ...parentsData.map(p => `${p.prenom} ${p.nom}`)];
+      const options = [{id: "all", label: "Tous"}, ...parentsData.map(p => ({id: p.id, label: `${p.prenom} ${p.nom}`}))];
       setParentOptions(options);
       
       console.log("parentsData  ==> ", parentsData);
@@ -84,12 +88,8 @@ export default function GestionEnfants() {
           prenom: enfant.prenom,
           age: enfant.age,
           classe: enfant.classe,
+          nomClasse: enfant.classeNom,
           imageUrl: enfant.imageUrl || '/images/default-child.jpg',
-          // parent: {
-          //   nom: parent?.nom || 'Non',
-          //   prenom: parent?.prenom || 'Parent',
-          //   image: parent?.image || '/images/default-parent.jpg'
-          // },
           parentId: parent?.id || '',
           statut: StatutClient.ACTIF, // À adapter selon votre logique métier
           dateInscription: new Date().toISOString().split('T')[0], // À adapter
@@ -99,6 +99,9 @@ export default function GestionEnfants() {
       
       setEnfants(convertedEnfants);
       setFilteredEnfants(convertedEnfants);
+      if (onCountChange) {
+        onCountChange(convertedEnfants.length);
+      }
       
     } catch (error: any) {
       setError(`Erreur de chargement: ${error.message}`);
@@ -126,9 +129,9 @@ export default function GestionEnfants() {
       });
     }
     
-    if (parentFilter && parentFilter !== "Tous") {
+    if (parentFilter && parentFilter !== "all") {
       filtered = filtered.filter(enfant => 
-        `${enfant.parentId}` === parentFilter
+        enfant.parentId === parentFilter
       );
     }
     
@@ -140,22 +143,17 @@ export default function GestionEnfants() {
   }, [enfants, classeFilter, statutFilter, parentFilter]);
 
   // Options pour les filtres
-  const classeOptions = ["Toutes", "Toute Petite Section", "Petite Section", "Moyenne Section", "Grande Section", "CP", "CE1"];
+  const classeOptions = ["Toutes", 
+    // "Toute Petite Section", 
+    // "Petite Section", 
+    // "Moyenne Section", 
+    // "Grande Section", 
+    // "CP", 
+    // "CE1"
+  ];
   const statutOptions = ["Tous", "Actif", "Inactif", "En attente"];
   // const parentOptions = ["Tous", "Sophie Martin", "Thomas Dubois", "Marie Lambert", "Jean Petit", "Laura Bernard", "Pierre Moreau", "Julie Leroy", "Marc Blanc"]; 
 
-  // Filtrer les données
-  // const filteredEnfants = enfantsData.filter(enfant => {
-  //   const matchesClasse = !classeFilter || classeFilter === "Toutes" || enfant.classe === classeFilter;
-  //   const matchesStatut = !statutFilter || statutFilter === "Tous" || 
-  //     (statutFilter === "Actif" && enfant.statut === 'actif') ||
-  //     (statutFilter === "Inactif" && enfant.statut === 'inactif') ||
-  //     (statutFilter === "En attente" && enfant.statut === 'en_attente');
-  //   const matchesParent = !parentFilter || parentFilter === "Tous" || 
-  //     `${enfant.parent.prenom} ${enfant.parent.nom}` === parentFilter; 
-    
-  //   return matchesClasse && matchesStatut && matchesParent;
-  // });
 
   // Gestion de la sélection
   const handleSelectEnfant = (enfantId: string) => {
@@ -235,6 +233,7 @@ export default function GestionEnfants() {
 
   const handleEdit = (enfant: Enfant) => {
     setSelectedEnfant(enfant);
+    console.log("Enfant sélectionné pour édition:", enfant);
     setEditForm({
       nom: enfant.nom,
       prenom: enfant.prenom,
@@ -255,26 +254,39 @@ export default function GestionEnfants() {
 
   const handleSaveEdit = async () => { // Ajouté async
   if (!selectedEnfant) return;
-  
+   console.log("l'enfant à modifier est",selectedEnfant)
   try {
-    // Appel API
-    await enfantApi.updateEnfant(
-      selectedEnfant.id, // ID string
-      {
-        nom: editForm.nom || '',
-        prenom: editForm.prenom || '',
-        age: editForm.age || 3,
-        classe: editForm.classe || ''
-      }
-    );
+     // Préparation des données pour l'API
+    const updatedData = {
+      nom: editForm.nom ,
+      prenom: editForm.prenom ,
+      age: editForm.age || selectedEnfant.age,
+      classe: editForm.classe || selectedEnfant.classe,
+      // Inclure le parentId si modifié
+      parentId: editForm.parentId || selectedEnfant.parentId
+    };
+    console.log("la donnée à envoyer",updatedData)
+    const response = imageFile ? 
+    await enfantApi.updateEnfant(selectedEnfant.id, updatedData, imageFile) : 
+    await enfantApi.updateEnfant(selectedEnfant.id, updatedData);
+     
+    console.log("la reponse de l'API",response)
     
     // Mise à jour locale
     setEnfants(prev => prev.map(e => 
       e.id === selectedEnfant.id 
-        ? { ...e, ...editForm } 
+        ? {
+          ...e, 
+          nom : updatedData.nom || e.nom,
+          prenom : updatedData.prenom || e.prenom,
+          age : updatedData.age || e.age,
+          classe : updatedData.classe || e.classe,
+          parentId : updatedData.parentId || e.parentId,
+          imageUrl : response.imageUrl || '/uploads/enfants/default-avatar-enfant.png'
+        }
         : e
     ));
-    // ... reste du code
+    closeModal();
   } catch (error: any) {
     console.error("Erreur...", error);
     alert(`Erreur: ${error.message}`);
@@ -352,6 +364,7 @@ export default function GestionEnfants() {
         prenom: response.prenom,
         age: response.age,
         classe: response.classe,
+        nomClasse: response.classeNom,
         imageUrl: response.imageUrl || '/images/default-child.jpg',
         parentId: response.parentId,
         statut: StatutClient.ACTIF,
@@ -527,8 +540,8 @@ export default function GestionEnfants() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
               >
                 {parentOptions.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
+                  <option key={option.id} value={option.id}>
+                    {option.label}
                   </option>
                 ))}
               </select>

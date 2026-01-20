@@ -6,6 +6,7 @@ export interface EnfantRequest {
   prenom: string;
   age: number;
   classe: string;
+  parentId?: string;
   
 }
 
@@ -17,6 +18,7 @@ export interface EnfantResponse {
   classe: string;
   imageUrl: string;
   parentId: string;
+  classeNom: string;
 }
 
 // Type pour le frontend (à adapter selon vos besoins)
@@ -115,6 +117,7 @@ export const enfantApi = {
       if (data.prenom !== undefined) enfantData.prenom = data.prenom;
       if (data.age !== undefined) enfantData.age = data.age;
       if (data.classe !== undefined) enfantData.classe = data.classe;
+      if (data.parentId !== undefined) enfantData.parentId = data.parentId;
       
       formData.append('enfant', JSON.stringify(enfantData));
       

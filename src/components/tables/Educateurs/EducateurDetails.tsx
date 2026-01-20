@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import Badge from "../../ui/badge/Badge";
 import { Educateur } from "./Types";
 import imageApi from "../../../services/api/imageService";
+import { StatutClient } from "../../../types/auth.types";
+import {educateurClasseApi, EducateurClasseResponseDTO  } from "../../../services/api/educateurClasseService";
 
 interface EducateurDetailsProps {
   isOpen: boolean;
@@ -16,32 +18,49 @@ export default function EducateurDetails({
   educateur,
   onEdit
 }: EducateurDetailsProps) {
-  const [imageUrl, setImageUrl] = useState<string>('/default-avatar.png');
+  const [imageUrl, setImageUrl] = useState<string>('/images/user/default-avatar-educateur.jpg');
   const [loadingImage, setLoadingImage] = useState<boolean>(false);
+  const [classes, setClasses] = useState<EducateurClasseResponseDTO[]>([]);
 
   useEffect(() => {
-    if (isOpen && educateur && educateur.image) {
-      loadEducateurImage();
-    } else {
-      setImageUrl('/default-avatar.png');
-    }
+    if (isOpen && educateur) {
+      if (educateur.image) {
+        loadEducateurImage();
+      }
+      else {
+        const defaultImageUrl = imageApi.getImageUrl('/uploads/users/default-avatar-educateur.jpg');
+        setImageUrl(defaultImageUrl);
+      }
+     
+      getEducateurClasses(educateur.id);
+    } 
   }, [isOpen, educateur]);
 
-  const loadEducateurImage = async () => {
+  const loadEducateurImage =  () => {
     if (!educateur?.image) return;
     
     setLoadingImage(true);
     try {
-      const url = await imageApi.getImage(educateur.image);
+      const url =  imageApi.getImageUrl(educateur.image);
       setImageUrl(url);
     } catch (error) {
       console.error('Erreur de chargement de l\'image:', error);
-      setImageUrl('/default-avatar.png');
+      const defaultImageUrl = imageApi.getImageUrl('/uploads/users/default-avatar-educateur.jpg');
+      setImageUrl(defaultImageUrl);
     } finally {
       setLoadingImage(false);
     }
   };
    
+   const getEducateurClasses= async (educateurid: string) => {
+    try {
+      const assignations = await educateurClasseApi.getClassesByEducateur(educateurid);
+      setClasses(assignations);
+      console.log("les classes", assignations);
+    } catch (error) {
+      console.error("Erreur lors de la récupération des classes:", error);
+    }
+   }
 
     const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -71,7 +90,8 @@ export default function EducateurDetails({
   };
 
    const handleImageError = () => {
-    setImageUrl('/default-avatar.png');
+   const defaultImageUrl = imageApi.getImageUrl('/uploads/users/default-avatar-parent.png');
+    setImageUrl(defaultImageUrl);
   };
 
   useEffect(() => {
@@ -129,14 +149,15 @@ export default function EducateurDetails({
                         size="sm"
                         color={getDisponibiliteColor(educateur.disponibilite)}
                       >
-                        {getDisponibiliteText(educateur.disponibilite)}
+                        {educateur.disponibilite}
                       </Badge>
                       <Badge
                         size="sm"
-                        color={educateur.statut === 'actif' ? 'success' : 'error'}
+                        color={educateur.statut === StatutClient.ACTIF ? 'success' : educateur.statut === StatutClient.INACTIF ? 'error' : 'warning'}
                       >
-                        {educateur.statut === 'actif' ? 'Actif' : 'Inactif'}
+                        {educateur.statut === StatutClient.ACTIF ? 'Actif' :educateur.statut ===  StatutClient.INACTIF ? 'Inactif' : 'En attente'}
                       </Badge>
+                      
                     </div>
                   </div>
                 </div>
@@ -186,12 +207,12 @@ export default function EducateurDetails({
                 <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
                   <h5 className="font-medium text-gray-900 dark:text-white mb-3">Classes Assignées</h5>
                   <div className="flex flex-wrap gap-2">
-                    {educateur.classes.map((classe, index) => (
+                    {classes.map((classe, index) => (
                       <span 
                         key={index}
                         className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm dark:bg-blue-900/30 dark:text-blue-300"
                       >
-                        {classe}
+                        {classe.classeNom}
                       </span>
                     ))}
                   </div>

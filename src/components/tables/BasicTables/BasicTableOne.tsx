@@ -175,7 +175,7 @@ function CreateParentModal({ isOpen, onClose, onSave }: {
     relation: "Mère",
     statut: "Actif",
     profession: "",
-    image: "/images/user/default-avatar.jpg"
+    image: "/uploads/users/default-avatar-parent.png"
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -190,7 +190,7 @@ function CreateParentModal({ isOpen, onClose, onSave }: {
         relation: "Mère",
         statut: "Actif",
         profession: "",
-        image: "/images/user/default-avatar.jpg"
+        image: "/uploads/users/default-avatar-parent.png"
       });
       setErrors({});
     } else {
@@ -388,7 +388,7 @@ function CreateParentModal({ isOpen, onClose, onSave }: {
                   value={formData.image}
                   onChange={handleChange}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                  placeholder="/images/user/default-avatar.jpg"
+                  placeholder="/uploads/users/default-avatar-parent.png"
                 />
               </div>
             </div>
@@ -668,7 +668,7 @@ function EditParentModal({
                     value={formData.image}
                     onChange={handleChange}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                    placeholder="/images/user/default-avatar.jpg"
+                    placeholder="/uploads/users/default-avatar-parent.png"
                   />
                 </div>
               </div>

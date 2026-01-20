@@ -12,6 +12,7 @@ export interface Enfant {
   prenom: string;
   age: number;
   classe: string;
+  nomClasse: string;
   imageUrl: string;
   parentId: string;
   statut: StatutClient;

@@ -58,7 +58,7 @@ export default function DeleteConfirmation({
           </div>
 
           <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
-            <div className="flex items-center gap-3 p-3 bg-red-50 dark:bg-red-900/30 rounded-lg">
+            {/* <div className="flex items-center gap-3 p-3 bg-red-50 dark:bg-red-900/30 rounded-lg">
               <div className="w-10 h-10 overflow-hidden rounded-full">
                 <img
                   src={parent.image}
@@ -70,7 +70,7 @@ export default function DeleteConfirmation({
                 <p className="font-medium text-gray-900 dark:text-white">{parent.nom + " " + parent.prenom}</p>
                 <p className="text-sm text-gray-600 dark:text-gray-400">{parent.email}</p>
               </div>
-            </div>
+            </div> */}
             <div className="mt-4">
               <p className="text-sm text-gray-600 dark:text-gray-400">
                 Cette action est irréversible. Toutes les informations concernant 

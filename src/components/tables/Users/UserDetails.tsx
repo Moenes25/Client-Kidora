@@ -11,76 +11,33 @@ interface UserDetailsProps {
 
 export default function UserDetails({ user, isOpen, onClose }: UserDetailsProps) {
   const [userImageUrl, setUserImageUrl] = useState<string>('/default-avatar.png');
-  const [childrenImageUrls, setChildrenImageUrls] = useState<string[]>([]);
-  const [loadingImages, setLoadingImages] = useState<boolean>(false);
+
 
   // Charger les images quand le modal s'ouvre ou quand l'utilisateur change
   useEffect(() => {
     if (isOpen && user) {
       loadAllImages();
     } else {
-      // Réinitialiser les URLs quand le modal se ferme
-      setUserImageUrl('/default-avatar.png');
-      setChildrenImageUrls([]);
+      const defaultImage = imageApi.getImageUrl('/uploads/users/default-avatar-user.jpg');
+      setUserImageUrl(defaultImage);
     }
   }, [isOpen, user]);
 
-  const loadAllImages = async () => {
+  const loadAllImages =  () => {
     if (!user) return;
-    
-    setLoadingImages(true);
-    try {
-      // Charger l'image de l'utilisateur
       if (user.image) {
-        try {
-          const imageUrl = await imageApi.getImage(user.image);
+          const imageUrl =  imageApi.getImageUrl(user.image);
           setUserImageUrl(imageUrl);
-        } catch (error) {
-          console.error('Erreur de chargement de l\'image utilisateur:', error);
-          setUserImageUrl('/default-avatar.png');
+        } else {
+          const defaultImageUrl =  imageApi.getImageUrl('/uploads/users/default-avatar-user.jpg');
+          setUserImageUrl(defaultImageUrl);
         }
-      }
+      
 
-      // Charger les images des enfants (si parent)
-      // if (user.role === RoleUsers.PARENT && user.enfants?.images?.length > 0) {
-      //   const childPromises = user.enfants.images.map(async (imagePath, index) => {
-      //     try {
-      //       if (!imagePath || imagePath.trim() === '') {
-      //         return '/default-child-avatar.png';
-      //       }
-      //       return await imageApi.getImage(imagePath);
-      //     } catch (error) {
-      //       console.error(`Erreur de chargement de l'image enfant ${index + 1}:`, error);
-      //       return '/default-child-avatar.png';
-      //     }
-      //   });
-
-      //   const childUrls = await Promise.all(childPromises);
-      //   setChildrenImageUrls(childUrls);
-      // }
-    } catch (error) {
-      console.error('Erreur générale de chargement des images:', error);
-    } finally {
-      setLoadingImages(false);
-    }
+   
   };
 
-  // Nettoyage des URLs blob
-  useEffect(() => {
-    return () => {
-      // Nettoyer l'URL de l'utilisateur
-      if (userImageUrl && userImageUrl.startsWith('blob:')) {
-        URL.revokeObjectURL(userImageUrl);
-      }
-      
-      // Nettoyer les URLs des enfants
-      childrenImageUrls.forEach(url => {
-        if (url && url.startsWith('blob:')) {
-          URL.revokeObjectURL(url);
-        }
-      });
-    };
-  }, [userImageUrl, childrenImageUrls]);
+
 
   if (!isOpen || !user) return null;
 
@@ -95,15 +52,15 @@ export default function UserDetails({ user, isOpen, onClose }: UserDetailsProps)
 
   const getStatusColor = (statut: string) => {
     switch(statut) {
-      case 'actif': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
-      case 'inactif': return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
-      case 'en_attente': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400';
+      case StatutClient.ACTIF: return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
+      case StatutClient.INACTIF: return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
+      case StatutClient.EN_ATTENTE: return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400';
       default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400';
     }
   };
 
   const getRoleDisplay = (role: string) => {
-    return role === 'parent' ? 'Parent' : 'Éducateur';
+    return role === RoleUsers.PARENT  ? 'Parent' : role === RoleUsers.EDUCATEUR ? 'Éducateur' : 'Adminstrateur';
   };
 
   const countEnfants = () => {
@@ -112,11 +69,12 @@ export default function UserDetails({ user, isOpen, onClose }: UserDetailsProps)
 
   // Gestionnaire d'erreur pour les images
   const handleUserImageError = () => {
-    setUserImageUrl('/default-avatar.png');
+   const defaultImage = imageApi.getImageUrl('/uploads/users/default-avatar-user.png');
+  setUserImageUrl(defaultImage);
   };
 
   const handleChildImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-    e.currentTarget.src = '/default-child-avatar.png';
+     e.currentTarget.src = imageApi.getImageUrl('/uploads/enfants/default-avatar-enfant.png');
   };
 
   return (
@@ -148,21 +106,22 @@ export default function UserDetails({ user, isOpen, onClose }: UserDetailsProps)
             <div className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
               <div className="relative">
                 <div className="w-20 h-20 overflow-hidden rounded-full">
-                  {loadingImages ? (
-                    <div className="w-full h-full bg-gray-200 animate-pulse rounded-full"></div>
-                  ) : (
+                 
                     <img
                       src={userImageUrl}
                       alt={user.nomPrenom}
                       className="w-full h-full object-cover"
                       onError={handleUserImageError}
+                      loading="lazy"
                     />
-                  )}
+                  
                 </div>
                 <div className={`absolute -bottom-1 -right-1 px-2 py-0.5 text-xs rounded-full border-2 border-white dark:border-gray-800 ${
                   user.role === RoleUsers.PARENT
                     ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' 
-                    : 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400'
+                    : user.role === RoleUsers.EDUCATEUR
+                      ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400'
+                      : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
                 }`}>
                   {getRoleDisplay(user.role)}
                 </div>
@@ -243,22 +202,13 @@ export default function UserDetails({ user, isOpen, onClose }: UserDetailsProps)
                   <p className="text-gray-500 dark:text-gray-400 text-sm">
                     Aucun enfant inscrit
                   </p>
-                ) : loadingImages ? (
-                  // Placeholders pendant le chargement
-                  <div className="flex gap-2">
-                    {Array.from({ length: user.enfants.images.length }).map((_, index) => (
-                      <div key={index} className="w-12 h-12 overflow-hidden rounded-full">
-                        <div className="w-full h-full bg-gray-200 animate-pulse rounded-full"></div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
+                ) :  (
                   // Images chargées
                   <div className="flex gap-2">
-                    {childrenImageUrls.map((imageUrl, index) => (
+                    {user.enfants.images.map((imagePath, index) => (
                       <div key={index} className="w-12 h-12 overflow-hidden rounded-full">
                         <img
-                          src={imageUrl}
+                          src={imageApi.getImageUrl(imagePath)}
                           alt={`Enfant ${index + 1}`}
                           className="w-full h-full object-cover"
                           onError={handleChildImageError}

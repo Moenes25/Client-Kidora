@@ -5,8 +5,14 @@ import DeleteConfirmation from "../Educateurs/DeleteConfirmation";
 import EducateursTable from "./EducateursTable";
 import { convertBackendToEducateur, CreateEducateurDto, Educateur, UpdateEducateurDto } from "../Educateurs/Types";
 import { educateurApi } from "../../../services/api/educateurApi";
+import { User } from "../../../types/auth.types";
+import EducateurClassesManager from "./EducateurClassesManager";
 
-export default function GestionEducateurs() {
+interface GestionEducateursProps {
+  onCountChange?: (count: number) => void;
+}
+
+export default function GestionEducateurs({ onCountChange }: GestionEducateursProps) {
   // États pour les filtres
   const [disponibiliteFilter, setDisponibiliteFilter] = useState<string>("");
   const [specialiteFilter, setSpecialiteFilter] = useState<string>("");
@@ -27,6 +33,9 @@ export default function GestionEducateurs() {
   const [selectedEducateurs, setSelectedEducateurs] = useState<string[]>([]);
   const [isAllSelected, setIsAllSelected] = useState(false);
 
+  const [showClassesManager, setShowClassesManager] = useState(false);
+  const [educateurForClasses, setEducateurForClasses] = useState<Educateur | null>(null);
+
   useEffect(() => {
     fetchEducateurs();
   }, []);
@@ -38,6 +47,9 @@ export default function GestionEducateurs() {
       const users = await educateurApi.getAllEducateurs();
       const educateursData = users.map(convertBackendToEducateur);
       setEducateurs(educateursData);
+      if (onCountChange) {
+        onCountChange(educateursData.length);
+      }
     } catch (error: any) {
       setError(`Erreur de chargement: ${error.message}`);
       console.error("Erreur lors du chargement des éducateurs:", error);
@@ -45,7 +57,18 @@ export default function GestionEducateurs() {
       setLoading(false);
     }
   };
+  
 
+  const handleManageClasses = (educateur: Educateur) => {
+    console.log("Gérer les classes pour:", educateur);
+    setEducateurForClasses(educateur);
+    setShowClassesManager(true);
+  }
+  const handleClassesUpdateSuccess = () => {
+    
+    fetchEducateurs();
+    console.log("Classes mises à jour avec succès");
+  };
   // Options uniques pour les filtres
   const disponibiliteOptions = useMemo(() => {
     const disponibilites = Array.from(new Set(educateurs.map(educateur => {
@@ -69,9 +92,8 @@ export default function GestionEducateurs() {
     return educateurs.filter(educateur => {
       const matchesDisponibilite = !disponibiliteFilter || 
         disponibiliteFilter === "Toutes" || 
-        (disponibiliteFilter === "Disponible" && educateur.disponibilite.toLowerCase() === 'disponible') ||
-        (disponibiliteFilter === "Occupé" && educateur.disponibilite.toLowerCase() === 'occupe') ||
-        (disponibiliteFilter === "Absence" && educateur.disponibilite.toLowerCase() === 'absence');
+       
+        educateur.disponibilite === disponibiliteFilter;
       
       const matchesSpecialite = !specialiteFilter || 
         specialiteFilter === "Toutes" || 
@@ -162,7 +184,7 @@ export default function GestionEducateurs() {
   };
 
   // CRUD operations
-  const handleCreateEducateur = async (educateurData: CreateEducateurDto | UpdateEducateurDto, imageFile?: File): Promise<boolean> => {
+  const handleCreateEducateur = async (educateurData: CreateEducateurDto | UpdateEducateurDto, imageFile?: File): Promise<User | boolean> => {
     try {
       if ('email' in educateurData && 'password' in educateurData) {
         const newUser = await educateurApi.createEducateur(educateurData as CreateEducateurDto, imageFile);
@@ -172,7 +194,7 @@ export default function GestionEducateurs() {
         // Option 2: Rafraîchir depuis l'API
         await fetchEducateurs();
         alert('Éducateur créé avec succès');
-        return true;
+        return newUser;
       }
       return false;
     } catch (error: any) {
@@ -223,6 +245,7 @@ export default function GestionEducateurs() {
   };
 
   const handleEdit = (educateur: Educateur) => {
+    console.log("Éducateur sélectionné pour édition:", educateur);
     setSelectedEducateur(educateur);
     setShowEditModal(true);
   };
@@ -274,9 +297,9 @@ export default function GestionEducateurs() {
               {/* <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
                 Tous les Éducateurs
               </h2> */}
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+              {/* <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
                 {educateurs.length} éducateur(s) au total
-              </p>
+              </p> */}
             </div>
             <div className="flex items-center gap-3">
               {/* Bouton rafraîchir */}
@@ -454,6 +477,7 @@ export default function GestionEducateurs() {
             onViewDetails={handleViewDetails}
             onEdit={handleEdit}
             onDelete={handleDelete}
+            onManageClasses={handleManageClasses} 
           />
         )}
       </div>
@@ -491,6 +515,17 @@ export default function GestionEducateurs() {
         educateur={selectedEducateur}
         onConfirm={() => selectedEducateur && handleDeleteEducateur(selectedEducateur.id)}
       />
+      {educateurForClasses && (
+        <EducateurClassesManager
+          educateur={educateurForClasses}
+          isOpen={showClassesManager}
+          onClose={() => {
+            setShowClassesManager(false);
+            setEducateurForClasses(null);
+          }}
+          onSuccess={handleClassesUpdateSuccess}
+        />
+      )}
     </>
   );
 }
