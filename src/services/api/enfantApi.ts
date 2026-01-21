@@ -187,5 +187,13 @@ export const enfantApi = {
     } catch (error: any) {
       throw new Error(error.response?.data?.message || error.message || "Erreur lors du téléchargement de l'image");
     }
-  }
+  },
+   getEnfantsByClasse: async (classeId: string): Promise<EnfantResponse[]> => {
+    try {
+      const response = await apiClient.get<EnfantResponse[]>(`/enfants/enfants-by-classe/${classeId}`);
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || error.message || 'Erreur lors de la récupération des enfants par classe');
+    }
+  },
 };

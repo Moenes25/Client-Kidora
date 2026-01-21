@@ -113,7 +113,7 @@ export default function EducateurClassesManager({
       // Exécuter toutes les opérations
       await Promise.all([...addPromises, ...removePromises]);
       
-      alert("Classes assignées mises à jour avec succès");
+      // alert("Classes assignées mises à jour avec succès");
       
       if (onSuccess) {
         onSuccess();
@@ -142,7 +142,7 @@ export default function EducateurClassesManager({
         setSelectedClasseIds(prev => prev.filter(id => id !== classeId));
         setCurrentAssignations(prev => prev.filter(a => a.classeId !== classeId));
         
-        alert("Éducateur retiré de la classe avec succès");
+        // alert("Éducateur retiré de la classe avec succès");
         
         if (onSuccess) {
           onSuccess();

@@ -1,7 +1,7 @@
-import { Users, Calendar, Filter } from "lucide-react";
+import { Users, Calendar, Filter, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
 import classService, { ClasseResponseDto } from "../../services/api/classService"; // Ajustez le chemin
-
+import { dashboardService, ClasseWithChildren } from "../../services/api/dashboardService"; 
 // Interface pour les props du composant ClassList
 interface ClassListProps {
   selectedClass: string;
@@ -13,6 +13,32 @@ export default function ClassList({ selectedClass, onSelectClass }: ClassListPro
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<string>("name");
+  const [classesWithChildren, setClassesWithChildren] = useState<ClasseWithChildren[]>([]);
+  const [totalEnfants, setTotalEnfants] = useState(0);
+
+  const loadClassesWithChildren = async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const data = await dashboardService.getAllClassesWithChildren();
+      setClassesWithChildren(data);
+      
+      // Calculer le total des enfants
+      const total = data.reduce((sum, item) => sum + item.childrenCount, 0);
+      setTotalEnfants(total);
+    } catch (err) {
+      console.error("Erreur lors du chargement des classes:", err);
+      setError("Impossible de charger les classes. Veuillez réessayer.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+
+   useEffect(() => {
+    loadClassesWithChildren();
+  }, []);
 
   // Fonction pour charger les classes
   const loadClasses = async () => {
@@ -37,19 +63,21 @@ export default function ClassList({ selectedClass, onSelectClass }: ClassListPro
 
   // Fonction pour trier les classes
   const getSortedClasses = () => {
-    const sorted = [...classes];
+    const sorted = [...classesWithChildren];
     
     switch (sortBy) {
       case "name":
-        return sorted.sort((a, b) => a.nom_classe.localeCompare(b.nom_classe));
+        return sorted.sort((a, b) => 
+          a.classe.nom_classe.localeCompare(b.classe.nom_classe)
+      );
       case "childrenCount":
         // Note: childrenCount n'est pas dans ClasseResponseDto, on utilise capacité
-        return sorted.sort((a, b) => b.capacite - a.capacite);
+        return sorted.sort((a, b) => b.childrenCount  - a.childrenCount);
       case "occupancy":
         // Tri par capacité (pourcentage fictif)
-        return sorted.sort((a, b) => b.capacite - a.capacite);
+        return sorted.sort((a, b) => b.occupancyRate  - a.occupancyRate);
       case "capacity":
-        return sorted.sort((a, b) => b.capacite - a.capacite);
+        return sorted.sort((a, b) => b.classe.capacite  - a.classe.capacite );
       default:
         return sorted;
     }
@@ -73,17 +101,15 @@ export default function ClassList({ selectedClass, onSelectClass }: ClassListPro
   };
 
   // Calculer le taux d'occupation (fictif pour l'exemple)
-  const calculateOccupancyRate = (capacity: number) => {
-    // Pour l'exemple, on génère un nombre aléatoire entre 30% et 95%
-    const randomRate = Math.floor(Math.random() * 65) + 30;
-    return randomRate;
+  const calculateOccupancyRate = (current: number,capacity: number) => {
+   return capacity > 0 ? (current / capacity) * 100 : 0;
   };
 
   // Obtenir le nombre d'enfants fictif basé sur la capacité
-  const getChildrenCount = (capacity: number) => {
-    const occupancyRate = calculateOccupancyRate(capacity);
-    return Math.floor((capacity * occupancyRate) / 100);
-  };
+  // const getChildrenCount = (capacity: number) => {
+  //   const occupancyRate = calculateOccupancyRate(capacity);
+  //   return Math.floor((capacity * occupancyRate) / 100);
+  // };
 
   // Formater la date de création (si disponible)
   const formatDate = (dateString?: string) => {
@@ -112,17 +138,20 @@ export default function ClassList({ selectedClass, onSelectClass }: ClassListPro
             Liste des classes
           </h2>
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            {isLoading ? "Chargement..." : `${classes.length} classe(s) active(s)`}
+            {isLoading   
+              ? "Chargement..." 
+              : `${classesWithChildren.length} classe(s) - ${totalEnfants} enfant(s)`}
           </p>
         </div>
         
         {/* Filtres et bouton de rafraîchissement */}
         <div className="flex items-center gap-3">
           <button
-            onClick={loadClasses}
+            onClick={loadClassesWithChildren}
             disabled={isLoading}
             className="px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors disabled:opacity-50"
           >
+            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
             {isLoading ? "Chargement..." : "Rafraîchir"}
           </button>
           
@@ -135,7 +164,8 @@ export default function ClassList({ selectedClass, onSelectClass }: ClassListPro
             >
               <option value="name">Trier par nom</option>
               <option value="capacity">Trier par capacité</option>
-              <option value="childrenCount">Trier par occupation</option>
+               <option value="childrenCount">Trier par nombre d'enfants</option>
+              <option value="occupancy">Trier par taux d'occupation</option>
             </select>
           </div>
         </div>
@@ -153,7 +183,7 @@ export default function ClassList({ selectedClass, onSelectClass }: ClassListPro
         <div className="p-4 mb-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
           <p className="text-red-600 dark:text-red-400">{error}</p>
           <button
-            onClick={loadClasses}
+            onClick={loadClassesWithChildren}
             className="mt-2 px-4 py-2 text-sm bg-red-100 dark:bg-red-800 hover:bg-red-200 dark:hover:bg-red-700 text-red-700 dark:text-red-300 rounded-lg transition-colors"
           >
             Réessayer
@@ -179,10 +209,8 @@ export default function ClassList({ selectedClass, onSelectClass }: ClassListPro
       {/* Liste des classes */}
       {!isLoading && !error && classes.length > 0 && (
         <div className="space-y-4">
-          {sortedClasses.map((classItem) => {
-            const colorClass = getColorClass(classItem.couleur_classe);
-            const childrenCount = getChildrenCount(classItem.capacite);
-            const occupancyRate = (childrenCount / classItem.capacite) * 100;
+          {sortedClasses.map(({ classe, enfants, childrenCount, occupancyRate }) => {
+            const colorClass = getColorClass(classe.couleur_classe);
             
             const occupancyColor = occupancyRate >= 90 ? "bg-red-500" : 
                                  occupancyRate >= 75 ? "bg-yellow-500" : 
@@ -198,13 +226,13 @@ export default function ClassList({ selectedClass, onSelectClass }: ClassListPro
 
             return (
               <div
-                key={classItem.id}
+                key={classe.id}
                 className={`p-5 rounded-xl cursor-pointer transition-all duration-200 border ${
-                  selectedClass === classItem.id
+                  selectedClass === classe.id
                     ? 'border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20 shadow-sm'
                     : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-sm'
                 }`}
-                onClick={() => onSelectClass(classItem.id)}
+                onClick={() => onSelectClass(classe.id)}
               >
                 <div className="flex justify-between items-start">
                   <div className="flex items-start gap-4">
@@ -216,7 +244,7 @@ export default function ClassList({ selectedClass, onSelectClass }: ClassListPro
                     <div>
                       <div className="flex items-center gap-2">
                         <h3 className="text-lg font-semibold text-gray-800 dark:text-white">
-                          {classItem.nom_classe}
+                          {classe.nom_classe}
                         </h3>
                         <span className={`px-2 py-1 text-xs font-medium rounded-full ${occupancyBgColor} ${occupancyTextColor}`}>
                           {Math.round(occupancyRate)}% rempli
@@ -224,9 +252,9 @@ export default function ClassList({ selectedClass, onSelectClass }: ClassListPro
                       </div>
                       
                       {/* Description si disponible */}
-                      {classItem.description_classe && (
+                      {classe.description_classe && (
                         <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                          {classItem.description_classe}
+                          {classe.description_classe}
                         </p>
                       )}
                       
@@ -239,11 +267,11 @@ export default function ClassList({ selectedClass, onSelectClass }: ClassListPro
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                           </svg>
-                          <span>{classItem.created_by_nom || "Créateur"}</span>
+                          <span>{classe.created_by_nom || "Créateur"}</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <Calendar className="w-4 h-4" />
-                          <span>Capacité: {classItem.capacite}</span>
+                          <span>Capacité: {classe.capacite}</span>
                         </div>
                       </div>
                     </div>
@@ -251,7 +279,7 @@ export default function ClassList({ selectedClass, onSelectClass }: ClassListPro
                   
                   {/* Indicateur de sélection */}
                   <div className={`w-2 h-2 rounded-full transition-all ${
-                    selectedClass === classItem.id ? 'bg-blue-500 scale-150' : 'bg-gray-300 dark:bg-gray-600'
+                    selectedClass === classe.id ? 'bg-blue-500 scale-150' : 'bg-gray-300 dark:bg-gray-600'
                   }`} />
                 </div>
                 
@@ -259,12 +287,12 @@ export default function ClassList({ selectedClass, onSelectClass }: ClassListPro
                 <div className="grid grid-cols-2 gap-4 mt-4">
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Tranche d'âge</p>
-                    <p className="font-medium text-gray-800 dark:text-white">{classItem.trancheAge}</p>
+                    <p className="font-medium text-gray-800 dark:text-white">{classe.trancheAge}</p>
                   </div>
-                  {classItem.salle && (
+                  {classe.salle && (
                     <div>
                       <p className="text-sm text-gray-500 dark:text-gray-400">Salle</p>
-                      <p className="font-medium text-gray-800 dark:text-white">{classItem.salle}</p>
+                      <p className="font-medium text-gray-800 dark:text-white">{classe.salle}</p>
                     </div>
                   )}
                 </div>
@@ -274,7 +302,7 @@ export default function ClassList({ selectedClass, onSelectClass }: ClassListPro
                   <div className="flex justify-between text-sm mb-2">
                     <span className="text-gray-600 dark:text-gray-400">Progression d'occupation</span>
                     <span className="font-medium text-gray-800 dark:text-white">
-                      {childrenCount}/{classItem.capacite} places
+                      {childrenCount}/{classe.capacite} places
                     </span>
                   </div>
                   <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
@@ -285,8 +313,8 @@ export default function ClassList({ selectedClass, onSelectClass }: ClassListPro
                   </div>
                   <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
                     <span>0</span>
-                    <span>{Math.floor(classItem.capacite / 2)}</span>
-                    <span>{classItem.capacite}</span>
+                    <span>{Math.floor(classe.capacite / 2)}</span>
+                    <span>{classe.capacite}</span>
                   </div>
                 </div>
                 
@@ -294,9 +322,42 @@ export default function ClassList({ selectedClass, onSelectClass }: ClassListPro
                 <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-700">
                   <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-2">
                     <span className="text-lg">📝</span>
-                    Créée le {formatDate()} par {classItem.created_by_nom || "Utilisateur"}
+                    Créée le {formatDate()} par {classe.created_by_nom || "Utilisateur"}
                   </p>
                 </div>
+                {enfants.length > 0 && (
+                  <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Enfants inscrits ({enfants.length}):
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {enfants.slice(0, 5).map((enfant, index) => (
+                        <div 
+                          key={enfant.idEnfant} 
+                          className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-gray-700 rounded-full"
+                          title={`${enfant.prenom} ${enfant.nom} - ${enfant.age} ans`}
+                        >
+                          <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                            <span className="text-xs font-medium text-blue-600 dark:text-blue-300">
+                              {enfant.prenom.charAt(0)}
+                            </span>
+                          </div>
+                          <span className="text-xs text-gray-700 dark:text-gray-300">
+                            {enfant.prenom}
+                          </span>
+                        </div>
+                      ))}
+                      {enfants.length > 5 && (
+                        <div className="px-3 py-1.5 bg-gray-100 dark:bg-gray-700 rounded-full">
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                            +{enfants.length - 5} autres
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
               </div>
             );
           })}

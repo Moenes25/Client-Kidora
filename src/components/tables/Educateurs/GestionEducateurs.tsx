@@ -36,6 +36,9 @@ export default function GestionEducateurs({ onCountChange }: GestionEducateursPr
   const [showClassesManager, setShowClassesManager] = useState(false);
   const [educateurForClasses, setEducateurForClasses] = useState<Educateur | null>(null);
 
+  const [filteredEducateurs, setFilteredEducateurs] = useState<Educateur[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+
   useEffect(() => {
     fetchEducateurs();
   }, []);
@@ -47,6 +50,7 @@ export default function GestionEducateurs({ onCountChange }: GestionEducateursPr
       const users = await educateurApi.getAllEducateurs();
       const educateursData = users.map(convertBackendToEducateur);
       setEducateurs(educateursData);
+      setFilteredEducateurs(educateursData);
       if (onCountChange) {
         onCountChange(educateursData.length);
       }
@@ -87,6 +91,24 @@ export default function GestionEducateurs({ onCountChange }: GestionEducateursPr
     return ["Toutes", ...specialites];
   }, [educateurs]);
 
+   const handleSearch = (term: string) => {
+    setSearchTerm(term);
+    
+    if (!term.trim()) {
+      setFilteredEducateurs(educateurs);
+      return;
+    }
+
+    const filtered = educateurs.filter(educateur =>
+      educateur.nom.toLowerCase().includes(term.toLowerCase()) ||
+      educateur.prenom.toLowerCase().includes(term.toLowerCase()) ||
+      educateur.email.toLowerCase().includes(term.toLowerCase()) ||
+      educateur.specialite?.toLowerCase().includes(term.toLowerCase()) ||
+      educateur.numTel?.includes(term)
+    );
+    
+    setFilteredEducateurs(filtered);
+  };
   // Filtrer les données
   const filteredData = useMemo(() => {
     return educateurs.filter(educateur => {

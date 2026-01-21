@@ -5,8 +5,20 @@ import { ThemeToggleButton } from "../components/common/ThemeToggleButton";
 import NotificationDropdown from "../components/header/NotificationDropdown";
 import UserDropdown from "../components/header/UserDropdown";
 
-const AppHeader: React.FC = () => {
+interface AppHeaderProps {
+  onSearch?: (searchTerm: string) => void;
+  initialSearchTerm?: string;
+}
+
+const AppHeader: React.FC<AppHeaderProps> = ({
+  onSearch,
+  initialSearchTerm
+}) => {
   const [isApplicationMenuOpen, setApplicationMenuOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState(() => {
+    return initialSearchTerm || "";
+  }); 
+  const [isSearchFocused, setIsSearchFocused] = useState(false); 
   const { isMobileOpen, toggleSidebar, toggleMobileSidebar } = useSidebar();
 
   const handleToggle = () => {
@@ -21,6 +33,24 @@ const AppHeader: React.FC = () => {
     setApplicationMenuOpen(!isApplicationMenuOpen);
   };
 
+   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+  };
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (onSearch) {
+      onSearch(searchTerm);
+    }
+  };
+
+  const handleClearSearch = () => {
+    setSearchTerm('');
+    if (onSearch) {
+      onSearch('');
+    }
+    inputRef.current?.focus();
+  };
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -29,6 +59,10 @@ const AppHeader: React.FC = () => {
         event.preventDefault();
         inputRef.current?.focus();
       }
+      if (event.key === "Escape" && searchTerm) {
+        event.preventDefault();
+        handleClearSearch();
+      }
     };
 
     document.addEventListener("keydown", handleKeyDown);
@@ -36,7 +70,11 @@ const AppHeader: React.FC = () => {
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, []);
+  }, [searchTerm]);
+
+    useEffect(() => {
+    setSearchTerm(initialSearchTerm || "");
+  }, [initialSearchTerm]);
 
   return (
     <header className="sticky top-0 flex w-full bg-gradient-to-br from-indigo-500 to-purple-600 border-white/20 z-99999 lg:border-b">
@@ -108,11 +146,18 @@ const AppHeader: React.FC = () => {
           </button>
 
           <div className="hidden lg:block">
-            <form>
+            <form onSubmit={handleSearchSubmit}>
               <div className="relative">
-                <span className="absolute -translate-y-1/2 pointer-events-none left-4 top-1/2">
+                <button 
+                  type="submit"
+                  className="absolute -translate-y-1/2 left-4 top-1/2 text-white/70 hover:text-white"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (onSearch) onSearch(searchTerm);
+                  }}
+                >
                   <svg
-                    className="fill-white/70"
+                    className="fill-current"
                     width="20"
                     height="20"
                     viewBox="0 0 20 20"
@@ -126,15 +171,48 @@ const AppHeader: React.FC = () => {
                       fill=""
                     />
                   </svg>
-                </span>
+                </button>
                 <input
                   ref={inputRef}
                   type="text"
-                  placeholder="Search or type command..."
-                  className="bg-white/10 h-11 w-full rounded-lg border border-white/30 bg-transparent py-2.5 pl-12 pr-14 text-sm text-white/90 shadow-theme-xs placeholder:text-white/60 focus:border-white/50 focus:outline-hidden focus:ring-3 focus:ring-white/20 xl:w-[430px]"
+                  value={searchTerm}
+                  onChange={handleSearchChange}
+                  onFocus={() => setIsSearchFocused(true)}
+                  onBlur={() => setIsSearchFocused(false)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      if (onSearch) onSearch(searchTerm);
+                    }
+                  }}
+                  placeholder="Taper pour rechercher"
+                  className={`bg-white/10 h-11 w-full rounded-lg border bg-transparent py-2.5 pl-12 pr-14 text-sm text-white/90 shadow-theme-xs placeholder:text-white/60 focus:outline-hidden focus:ring-3 focus:ring-white/20 xl:w-[430px] ${
+                    isSearchFocused 
+                      ? 'border-white/50 ring-2 ring-white/20' 
+                      : 'border-white/30'
+                  } ${searchTerm ? 'pr-20' : 'pr-14'}`}
                 />
 
-                <button className="absolute right-2.5 top-1/2 inline-flex -translate-y-1/2 items-center gap-0.5 rounded-lg border border-white/30 bg-white/10 px-[7px] py-[4.5px] text-xs -tracking-[0.2px] text-white/80">
+                {/* Bouton de nettoyage */}
+                {searchTerm && (
+                  <button
+                    type="button"
+                    onClick={handleClearSearch}
+                    className="absolute right-10 top-1/2 -translate-y-1/2 text-white/60 hover:text-white"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
+
+                <button 
+                  type="button"
+                  onClick={() => {
+                    inputRef.current?.focus();
+                  }}
+                  className="absolute right-2.5 top-1/2 inline-flex -translate-y-1/2 items-center gap-0.5 rounded-lg border border-white/30 bg-white/10 px-[7px] py-[4.5px] text-xs -tracking-[0.2px] text-white/80 hover:bg-white/20"
+                >
                   <span> ⌘ </span>
                   <span> K </span>
                 </button>
