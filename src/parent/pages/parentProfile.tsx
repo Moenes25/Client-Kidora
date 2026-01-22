@@ -1,6 +1,7 @@
 // pages/Profil.tsx
-import { useState } from "react";
+import { useEffect, useState } from "react"
 import { Link } from "react-router";
+
 
 const ParentProfil = () => {
   const [parentInfo, setParentInfo] = useState({
@@ -31,6 +32,38 @@ const ParentProfil = () => {
     devices: 2,
     twoFactor: false
   });
+   // 👉 applique le thème au chargement et à chaque changement
+  useEffect(() => {
+    const root = document.documentElement;
+
+    const apply = (mode: "auto"|"light"|"dark") => {
+      if (mode === "dark") {
+        root.classList.add("dark");
+        localStorage.setItem("theme", "dark");
+      } else if (mode === "light") {
+        root.classList.remove("dark");
+        localStorage.setItem("theme", "light");
+      } else {
+        // auto: suit le système
+        const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        root.classList.toggle("dark", prefersDark);
+        localStorage.setItem("theme", "auto");
+      }
+    };
+
+    apply(settings.theme);
+
+    // si "auto", on suit les changements système en live
+    let mql: MediaQueryList | null = null;
+    if (settings.theme === "auto") {
+      mql = window.matchMedia("(prefers-color-scheme: dark)");
+      const onChange = (e: MediaQueryListEvent) => {
+        document.documentElement.classList.toggle("dark", e.matches);
+      };
+      mql.addEventListener("change", onChange);
+      return () => mql?.removeEventListener("change", onChange);
+    }
+  }, [settings.theme]);
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -210,7 +243,7 @@ const ParentProfil = () => {
                 <select
                   value={settings.language}
                   onChange={(e) => setSettings({...settings, language: e.target.value})}
-                  className="w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg"
+                  className="w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg dark:text-white"
                 >
                   <option value="fr">Français</option>
                   <option value="en">English</option>
@@ -222,15 +255,16 @@ const ParentProfil = () => {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Thème
                 </label>
-                <select
-                  value={settings.theme}
-                  onChange={(e) => setSettings({...settings, theme: e.target.value})}
-                  className="w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg"
-                >
-                  <option value="auto">Auto</option>
-                  <option value="light">Clair</option>
-                  <option value="dark">Sombre</option>
-                </select>
+              <select
+  value={settings.theme}
+  onChange={(e) => setSettings({ ...settings, theme: e.target.value as "auto"|"light"|"dark" })}
+  className="w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg dark:text-white"
+>
+  <option value="auto">Auto</option>
+  <option value="light">Clair</option>
+  <option value="dark">Sombre</option>
+</select>
+
               </div>
               
               <div className="flex items-center justify-between">
@@ -313,10 +347,13 @@ const ParentProfil = () => {
                 <span className="text-white">🔒</span>
                 <span className="text-white font-medium">Confidentialité</span>
               </Link>
-              
-              <button className="w-full mt-4 px-4 py-2 bg-white text-orange-600 font-medium rounded-lg hover:bg-gray-100 transition-colors">
-                Déconnexion
-              </button>
+                <Link
+              to="/signin"
+              className="flex w-full items-center justify-center p-3 rounded-lg bg-white text-orange-600 font-medium hover:bg-gray-100 transition-colors"
+             >
+             Déconnexion
+             </Link>
+
             </div>
           </div>
         </div>
