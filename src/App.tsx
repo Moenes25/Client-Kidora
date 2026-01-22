@@ -40,6 +40,9 @@ import ParentActivitiesPage from "./parent/pages/ParentActivitiesPage";
 import ParentGallery from "./parent/pages/ParentGallery";
 import ActivitiesAll from "./parent/pages/ActivitiesAll";
 import SuiviPedagogique from "./parent/pages/SuiviPedagogique";
+import HelpCenter from "./parent/pages/HelpCenter";
+import ContactSupport from "./parent/pages/ContactSupport";
+import Privacy from "./parent/pages/Privacy";
 
 export default function App() {
   return (
@@ -66,6 +69,10 @@ export default function App() {
              {/* optionnel: accès direct par enfant */}
            <Route path="gallery/:child" element={<ParentGallery />} />
            <Route path="activities" element={<ActivitiesAll />} />
+
+           <Route path="/parent/help" element={<HelpCenter />} />
+           <Route path="/parent/contact" element={<ContactSupport />} />
+          <Route path="/parent/privacy" element={<Privacy />} />
             <Route index  element={<HomeParent />} />
             <Route path="enfants" element={<Enfants />} />
             <Route path="activites_enfants" element={<ActivitiesEnfants />} />
