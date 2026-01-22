@@ -39,6 +39,7 @@ import ParentEvaluationsPage from "./parent/pages/ParentEvaluationsPage";
 import ParentActivitiesPage from "./parent/pages/ParentActivitiesPage";
 import ParentGallery from "./parent/pages/ParentGallery";
 import ActivitiesAll from "./parent/pages/ActivitiesAll";
+import SuiviPedagogique from "./parent/pages/SuiviPedagogique";
 
 export default function App() {
   return (
@@ -61,6 +62,7 @@ export default function App() {
           </Route>
           <Route path="/parent" element={<AppLayoutParent />}>
           <Route path="gallery" element={<ParentGallery />} />
+           <Route path="/parent/suivi-pedagogique" element={<SuiviPedagogique />} />
              {/* optionnel: accès direct par enfant */}
            <Route path="gallery/:child" element={<ParentGallery />} />
            <Route path="activities" element={<ActivitiesAll />} />
