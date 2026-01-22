@@ -1,298 +1,244 @@
-import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router";
-import { useLocation } from "react-router";
-import { useSidebar } from "../../context/SidebarContext";
+// src/educateur/layout/AppHeader.tsx
+import { useEffect, useMemo, useRef, useState } from "react";
+import { NavLink, Link, useLocation } from "react-router-dom";
 import { ThemeToggleButton } from "../../components/common/ThemeToggleButton";
 import NotificationDropdown from "../../components/header/NotificationDropdown";
 import UserDropdown from "../../components/header/UserDropdown";
+import logoUrl from "../../assets/img/logo/logo.png";
 
-const AppHeader: React.FC = () => {
-  const [isApplicationMenuOpen, setApplicationMenuOpen] = useState(false);
+type NavItem = {
+  name: string;
+  path: string;
+  icon: JSX.Element;
+};
+
+const NAV_LINKS: NavItem[] = [
+  {
+    name: "Accueil",
+    path: "/educateur",
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+        <polyline points="9 22 9 12 15 12 15 22"/>
+      </svg>
+    ),
+  },
+  {
+    name: "Enfants",
+    path: "/educateur/children",
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="5" r="3"/>
+        <path d="M12 22V8"/>
+        <path d="m5 12-2.5 4L5 20l2-2 1-3"/>
+        <path d="m19 12 2.5 4L19 20l-2-2-1-3"/>
+      </svg>
+    ),
+  },
+  {
+    name: "Activités",
+    path: "/educateur/activities",
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 2v20M2 12h20"/>
+        <path d="m4.93 4.93 14.14 14.14"/>
+        <path d="m19.07 4.93-14.14 14.14"/>
+      </svg>
+    ),
+  },
+  {
+    name: "Rapports",
+    path: "/educateur/reports",
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14 3v4a1 1 0 0 0 1 1h4"/>
+        <path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/>
+        <path d="M9 9h1"/>
+        <path d="M9 13h6"/>
+        <path d="M9 17h6"/>
+      </svg>
+    ),
+  },
+];
+
+export default function AppHeader() {
+  const [openMobile, setOpenMobile] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
-  const { isMobileOpen, toggleSidebar, toggleMobileSidebar } = useSidebar();
 
-  const handleToggle = () => {
-    if (window.innerWidth >= 1024) {
-      toggleSidebar();
-    } else {
-      toggleMobileSidebar();
-    }
-  };
-
-  const toggleApplicationMenu = () => {
-    setApplicationMenuOpen(!isApplicationMenuOpen);
-  };
-
+  // (optionnel) raccourci clavier pour focus une zone de recherche si tu l’ajoutes plus tard
   const inputRef = useRef<HTMLInputElement>(null);
-
   useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key === "k") {
-        event.preventDefault();
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
         inputRef.current?.focus();
       }
     };
-
-    document.addEventListener("keydown", handleKeyDown);
-
+    const onScroll = () => setScrolled(window.scrollY > 4);
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
     return () => {
-      document.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("scroll", onScroll);
     };
   }, []);
 
-  // Fonction pour vérifier si un lien est actif
-  const isActive = (path: string) => {
-    if (path === "/educateur") {
-      return location.pathname === path;
-    }
-    return location.pathname === path || location.pathname.startsWith(path + "/");
-  };
-
-  // Définition des liens de navigation avec icônes SVG
-  const navLinks = [
-    { 
-      name: "Accueil", 
-      path: "/educateur",
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-          <polyline points="9 22 9 12 15 12 15 22"/>
-        </svg>
-      ),
-      color: "text-blue-100",
-      bgColor: "bg-blue-400/30",
-      borderColor: "border-blue-400/50",
-      activeBgColor: "bg-blue-400/40",
-      activeColor: "text-white"
-    },
-    { 
-      name: "Enfants", 
-      path: "/educateur/children", 
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="5" r="3"/>
-          <path d="M12 22V8"/>
-          <path d="m5 12-2.5 4L5 20l2-2 1-3"/>
-          <path d="m19 12 2.5 4L19 20l-2-2-1-3"/>
-        </svg>
-      ),
-      color: "text-purple-100",
-      bgColor: "bg-purple-400/30",
-      borderColor: "border-purple-400/50",
-      activeBgColor: "bg-purple-400/40",
-      activeColor: "text-white"
-    },
-    { 
-      name: "Activités", 
-      path: "/educateur/activities",
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M12 2v20M2 12h20"/>
-          <path d="m4.93 4.93 14.14 14.14"/>
-          <path d="m19.07 4.93-14.14 14.14"/>
-        </svg>
-      ),
-      color: "text-green-100",
-      bgColor: "bg-green-400/30",
-      borderColor: "border-green-400/50",
-      activeBgColor: "bg-green-400/40",
-      activeColor: "text-white"
-    },
-    { 
-      name: "Rapports", 
-      path: "/educateur/reports",
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M14 3v4a1 1 0 0 0 1 1h4"/>
-          <path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/>
-          <path d="M9 9h1"/>
-          <path d="M9 13h6"/>
-          <path d="M9 17h6"/>
-        </svg>
-      ),
-      color: "text-orange-100",
-      bgColor: "bg-orange-400/30",
-      borderColor: "border-orange-400/50",
-      activeBgColor: "bg-orange-400/40",
-      activeColor: "text-white"
-    }
-  ];
+  const nav = useMemo(() => NAV_LINKS, []);
 
   return (
-    <header className="sticky top-0 flex w-full border-indigo-400/30 bg-gradient-to-br from-indigo-500 to-purple-600 z-99999 lg:border-b">
-      {/* <div className="flex flex-col items-center justify-between grow lg:flex-row lg:px-6">
-        <div className="flex items-center justify-between w-full gap-2 px-3 py-3 border-b border-indigo-400/20 sm:gap-4 lg:justify-normal lg:border-b-0 lg:px-0 lg:py-4"> */}
-       <div className="flex flex-col items-center justify-between grow lg:flex-row lg:px-6">
-        <div className="flex items-center justify-between w-full gap-2 px-3 py-3 border-b border-gray-200 dark:border-indigo-400/20 sm:gap-4 lg:justify-normal lg:border-b-0 lg:px-0 lg:py-4">
-          <button
-            className="items-center justify-center w-10 h-10 border-white/20 text-white rounded-lg z-99999 lg:flex lg:h-11 lg:w-11 lg:border hover:bg-white/10"
-            onClick={handleToggle}
-            aria-label="Toggle Sidebar"
-          >
-            {isMobileOpen ? (
-              <svg
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
+    <header
+      className={[
+        "sticky top-0 z-[9999]",
+        "bg-gradient-to-r from-indigo-600 to-purple-600",
+        "text-white",
+        "border-b border-white/10",
+        scrolled ? "shadow-sm" : "shadow-none",
+      ].join(" ")}
+    >
+      {/* Skip link */}
+      <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-3 rounded px-3 py-2 bg-black text-white text-sm">
+        Aller au contenu
+      </a>
+
+      <div className="mx-auto max-w-screen-2xl px-3 lg:px-6">
+        <div className="flex h-16 lg:h-18 items-center gap-3">
+          {/* Branding */}
+          <Link to="/educateur" aria-label="Accueil Kidora" className="mr-0 select-none">
+            <div className="flex flex-col items-start leading-none">
+              <img src={logoUrl} alt="" className="h-12 lg:h-14 w-auto" />
+              <span
+                className="mt-0.5 font-extrabold uppercase tracking-wide text-[11px] sm:text-sm lg:text-[15px] leading-[1.05] drop-shadow"
+                aria-hidden="true"
               >
-                <path
-                  fillRule="evenodd"
-                  clipRule="evenodd"
-                  d="M6.21967 7.28131C5.92678 6.98841 5.92678 6.51354 6.21967 6.22065C6.51256 5.92775 6.98744 5.92775 7.28033 6.22065L11.999 10.9393L16.7176 6.22078C17.0105 5.92789 17.4854 5.92788 17.7782 6.22078C18.0711 6.51367 18.0711 6.98855 17.7782 7.28144L13.0597 12L17.7782 16.7186C18.0711 17.0115 18.0711 17.4863 17.7782 17.7792C17.4854 18.0721 17.0105 18.0721 16.7176 17.7792L11.999 13.0607L7.28033 17.7794C6.98744 18.0722 6.51256 18.0722 6.21967 17.7794C5.92678 17.4865 5.92678 17.0116 6.21967 16.7187L10.9384 12L6.21967 7.28131Z"
-                  fill="currentColor"
-                />
-              </svg>
-            ) : (
-              <svg
-                width="16"
-                height="12"
-                viewBox="0 0 16 12"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  fillRule="evenodd"
-                  clipRule="evenodd"
-                  d="M0.583252 1C0.583252 0.585788 0.919038 0.25 1.33325 0.25H14.6666C15.0808 0.25 15.4166 0.585786 15.4166 1C15.4166 1.41421 15.0808 1.75 14.6666 1.75L1.33325 1.75C0.919038 1.75 0.583252 1.41422 0.583252 1ZM0.583252 11C0.583252 10.5858 0.919038 10.25 1.33325 10.25L14.6666 10.25C15.0808 10.25 15.4166 10.5858 15.4166 11C15.4166 11.4142 15.0808 11.75 14.6666 11.75L1.33325 11.75C0.919038 11.75 0.583252 11.4142 0.583252 11ZM1.33325 5.25C0.919038 5.25 0.583252 5.58579 0.583252 6C0.583252 6.41421 0.919038 6.75 1.33325 6.75L7.99992 6.75C8.41413 6.75 8.74992 6.41421 8.74992 6C8.74992 5.58579 8.41413 5.25 7.99992 5.25L1.33325 5.25Z"
-                  fill="currentColor"
-                />
-              </svg>
-            )}
-          </button>
-
-          {/* Logo mobile remplacé par le titre */}
-          <div className="lg:hidden">
-            <h1 className="text-white font-bold text-lg tracking-wide">
-              <span className="text-white/90">KIDORA</span>
-              <span className="text-white font-bold">-Portail Educateur</span>
-            </h1>
-          </div>
-
-          {/* Logo desktop remplacé par le titre */}
-          <div className="hidden lg:flex items-center mr-6">
-            <h1 className="text-white font-bold text-xl tracking-wider">
-              <span className="text-white/90">KIDORA</span>
-              <span className="text-white font-bold">-Portail Educateur</span>
-            </h1>
-          </div>
-
-          {/* Navigation links - Desktop CENTRÉE */}
-          <div className="hidden lg:flex items-center justify-center flex-1">
-            <div className="flex items-center gap-2">
-              {navLinks.map((link) => (
-                <div key={link.path} className="relative">
-                  <Link
-                    to={link.path}
-                    className={`flex items-center gap-2 px-5 py-2.5 rounded-lg transition-all duration-300 ${
-                      isActive(link.path)
-                        ? `${link.activeBgColor} ${link.activeColor} font-semibold shadow-sm`
-                        : "text-white/90 hover:bg-white/10 hover:text-white"
-                    }`}
-                  >
-                    <span className={`${isActive(link.path) ? link.activeColor : "text-white/80"}`}>
-                      {link.icon}
+                {Array.from("PORTAIL EDUCATEUR").map((ch, i) => {
+                  const COLORS = ["#FF7A00", "#FF3D57", "#FFC400", "#28C76F", "#3F8CFF", "#8D5CF6"];
+                  if (ch === " ") {
+                    return (
+                      <span key={`space-${i}`} className="inline-block" style={{ width: "0.8rem" }} aria-hidden="true" />
+                    );
+                  }
+                  const color = COLORS[i % COLORS.length];
+                  return (
+                    <span key={`${ch}-${i}`} className="inline-block" style={{ color }}>
+                      {ch}
                     </span>
-                    <span className="text-sm font-medium">{link.name}</span>
-                  </Link>
-                  {isActive(link.path) && (
-                    <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-3/4 h-0.5 bg-current rounded-full bg-white"></div>
-                  )}
-                </div>
-              ))}
+                  );
+                })}
+              </span>
             </div>
+          </Link>
+
+          {/* Nav centrée (desktop) */}
+          <nav aria-label="Navigation principale" className="hidden lg:flex flex-1 justify-center">
+            <ul className="flex items-center gap-2">
+              {nav.map((link) => (
+                <li key={link.path} className="relative">
+                  <NavLink
+                    to={link.path}
+                    end={link.path === "/educateur"} // match exact pour Accueil
+                    className={({ isActive }) =>
+                      [
+                        "group inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm transition-all",
+                        "focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40",
+                        isActive
+                          ? "text-white bg-white/15 border border-white/25 shadow-sm backdrop-blur-md"
+                          : "text-white/90 hover:bg-white/10 hover:text-white active:scale-[.98]",
+                      ].join(" ")
+                    }
+                  >
+                    <span className="text-current">{link.icon}</span>
+                    <span>{link.name}</span>
+
+                    {/* halo hover */}
+                    <span
+                      className="pointer-events-none absolute inset-0 rounded-xl opacity-0 transition-opacity group-hover:opacity-100"
+                      aria-hidden="true"
+                      style={{ boxShadow: "0 0 0 2px rgba(255,255,255,.06) inset, 0 10px 30px rgba(0,0,0,.12)" }}
+                    />
+                  </NavLink>
+
+                  {/* soulignement animé */}
+                  <NavLink to={link.path} end={link.path === "/educateur"}>
+                    {({ isActive }) => (
+                      <span
+                        className="pointer-events-none absolute -bottom-1 left-1/2 h-0.5 -translate-x-1/2 rounded-full bg-white transition-all duration-300 ease-out"
+                        style={{ width: isActive ? "75%" : "0%" }}
+                        aria-hidden="true"
+                      />
+                    )}
+                  </NavLink>
+                </li>
+              ))}
+            </ul>
+          </nav>
+
+          {/* Actions droites */}
+          <div className="ml-auto flex items-center gap-2 sm:gap-3">
+            <ThemeToggleButton />
+            <NotificationDropdown />
+            <UserDropdown />
           </div>
 
+          {/* Bouton ouverture nav mobile */}
           <button
-            onClick={toggleApplicationMenu}
-            className="flex items-center justify-center w-10 h-10 text-white/90 rounded-lg z-99999 hover:bg-white/10 lg:hidden"
+            onClick={() => setOpenMobile((v) => !v)}
+            className="lg:hidden ml-2 inline-flex items-center justify-center rounded-lg h-10 w-10 text-white/90 hover:bg-white/10"
+            aria-expanded={openMobile}
+            aria-controls="mobile-nav"
+            aria-label="Ouvrir la navigation"
           >
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                fillRule="evenodd"
-                clipRule="evenodd"
-                d="M5.99902 10.4951C6.82745 10.4951 7.49902 11.1667 7.49902 11.9951V12.0051C7.49902 12.8335 6.82745 13.5051 5.99902 13.5051C5.1706 13.5051 4.49902 12.8335 4.49902 12.0051V11.9951C4.49902 11.1667 5.1706 10.4951 5.99902 10.4951ZM17.999 10.4951C18.8275 10.4951 19.499 11.1667 19.499 11.9951V12.0051C19.499 12.8335 18.8275 13.5051 17.999 13.5051C17.1706 13.5051 16.499 12.8335 16.499 12.0051V11.9951C16.499 11.1667 17.1706 10.4951 17.999 10.4951ZM13.499 11.9951C13.499 11.1667 12.8275 10.4951 11.999 10.4951C11.1706 10.4951 10.499 11.1667 10.499 11.9951V12.0051C10.499 12.8335 11.1706 13.5051 11.999 13.5051C12.8275 13.5051 13.499 12.8335 13.499 12.0051V11.9951Z"
-                fill="currentColor"
-              />
+            <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
+              <circle cx="10" cy="10" r="2" fill="currentColor" />
+              <circle cx="4" cy="10" r="2" fill="currentColor" />
+              <circle cx="16" cy="10" r="2" fill="currentColor" />
             </svg>
           </button>
-
-          {/* Boutons à droite (thème, notifications, utilisateur) */}
-          <div className="hidden lg:flex items-center gap-2">
-            <ThemeToggleButton />
-            <NotificationDropdown />
-            <Link
-              to="/signin"
-              className="flex items-center gap-3 px-3 py-2 font-medium text-green-100 rounded-lg group text-theme-sm hover:bg-white/5 hover:text-gray-300"
-            >
-              <svg
-                className="fill-green-100 group-hover:fill-gray-300"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                style={{ transform: 'scaleX(-1)' }}
-              >
-                <path
-                  fillRule="evenodd"
-                  clipRule="evenodd"
-                  d="M15.1007 19.247C14.6865 19.247 14.3507 18.9112 14.3507 18.497L14.3507 14.245H12.8507V18.497C12.8507 19.7396 13.8581 20.747 15.1007 20.747H18.5007C19.7434 20.747 20.7507 19.7396 20.7507 18.497L20.7507 5.49609C20.7507 4.25345 19.7433 3.24609 18.5007 3.24609H15.1007C13.8581 3.24609 12.8507 4.25345 12.8507 5.49609V9.74501L14.3507 9.74501V5.49609C14.3507 5.08188 14.6865 4.74609 15.1007 4.74609L18.5007 4.74609C18.9149 4.74609 19.2507 5.08188 19.2507 5.49609L19.2507 18.497C19.2507 18.9112 18.9149 19.247 18.5007 19.247H15.1007ZM3.25073 11.9984C3.25073 12.2144 3.34204 12.4091 3.48817 12.546L8.09483 17.1556C8.38763 17.4485 8.86251 17.4487 9.15549 17.1559C9.44848 16.8631 9.44863 16.3882 9.15583 16.0952L5.81116 12.7484L16.0007 12.7484C16.4149 12.7484 16.7507 12.4127 16.7507 11.9984C16.7507 11.5842 16.4149 11.2484 16.0007 11.2484L5.81528 11.2484L9.15585 7.90554C9.44864 7.61255 9.44847 7.13767 9.15547 6.84488C8.86248 6.55209 8.3876 6.55226 8.09481 6.84525L3.52309 11.4202C3.35673 11.5577 3.25073 11.7657 3.25073 11.9984Z"
-                  fill=""
-                />
-              </svg>
-              déconnexion
-            </Link>
-          </div>
         </div>
-        
-        <div
-          className={`${
-            isApplicationMenuOpen ? "flex" : "hidden"
-          } 
-          items-center justify-between w-full gap-4 px-5 py-4 lg:hidden shadow-theme-md bg-gradient-to-br from-indigo-500 to-purple-600`}
-        >
-          {/* Navigation links - Mobile */}
-          <div className="w-full">
-            <div className="grid grid-cols-4 gap-2">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.path}
-                  to={link.path}
-                  className={`flex flex-col items-center gap-1 px-2 py-3 rounded-lg transition-all ${
-                    isActive(link.path)
-                      ? `${link.activeBgColor} ${link.activeColor} font-semibold`
-                      : "bg-white/10 text-white/90 hover:bg-white/20"
-                  }`}
-                  onClick={() => setApplicationMenuOpen(false)}
-                >
-                  <div className={`p-2 rounded-lg ${isActive(link.path) ? link.bgColor : 'bg-white/20'}`}>
-                    <span className={`${isActive(link.path) ? link.activeColor : "text-white"}`}>
-                      {link.icon}
-                    </span>
-                  </div>
-                  <span className="text-xs font-medium">{link.name}</span>
-                </Link>
-              ))}
-            </div>
-          </div>
 
-          <div className="flex items-center gap-2 2xsm:gap-3 w-full justify-center mt-4">
-            <ThemeToggleButton />
-            <NotificationDropdown />
+        {/* Sheet mobile (animation ouverture/fermeture) */}
+        <div
+          id="mobile-nav"
+          className={[
+            "lg:hidden overflow-hidden transition-[grid-template-rows,_opacity] duration-300",
+            openMobile ? "grid grid-rows-[1fr] opacity-100" : "grid grid-rows-[0fr] opacity-0",
+          ].join(" ")}
+        >
+          <div className="min-h-0">
+            {/* Bottom Tab Bar (mobile) */}
+            <nav
+              aria-label="Navigation mobile fixe"
+              className="lg:hidden fixed bottom-3 left-1/2 z-[9999] -translate-x-1/2
+                        max-w-md w-[92vw] rounded-2xl bg-black/25 backdrop-blur-md p-1
+                        shadow-lg ring-1 ring-white/10
+                        pb-[env(safe-area-inset-bottom)]"
+            >
+              <ul className="flex justify-between gap-1">
+                {nav.map((link) => (
+                  <li key={link.path} className="flex-1">
+                    <NavLink
+                      to={link.path}
+                      end={link.path === "/educateur"}
+                      className={({ isActive }) =>
+                        [
+                          "flex flex-col items-center justify-center gap-1 rounded-xl py-2 text-[11px]",
+                          "transition active:scale-[.98]",
+                          isActive ? "bg-white text-black font-semibold" : "text-white/90 hover:bg-white/10",
+                        ].join(" ")
+                      }
+                      onClick={() => setOpenMobile(false)}
+                    >
+                      <span className="w-5 h-5">{link.icon}</span>
+                      <span className="leading-none">{link.name}</span>
+                    </NavLink>
+                  </li>
+                ))}
+              </ul>
+            </nav>
           </div>
-          <UserDropdown />
         </div>
       </div>
     </header>
   );
-};
-
-export default AppHeader;
+}
