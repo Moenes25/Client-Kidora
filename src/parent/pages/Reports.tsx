@@ -92,7 +92,7 @@ function Bar({ value }: { value: number }) {
   const color =
     v >= 90 ? "bg-green-500" : v >= 80 ? "bg-blue-500" : v >= 70 ? "bg-amber-500" : "bg-rose-500";
   return (
-    <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
+    <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700 ">
       <div className={`h-full ${color}`} style={{ width: `${v}%` }} />
     </div>
   );
@@ -746,7 +746,7 @@ const handleDownloadPDF = async (rapport: Rapport) => {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Rechercher dans les rapports…"
-                className="w-full rounded-lg border border-slate-200 bg-slate-50 py-3 pl-10 pr-4 focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500 dark:border-white/10 dark:bg-white/10"
+                className="w-full rounded-lg border border-slate-200 bg-slate-50 py-3 pl-10 pr-4 focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500 dark:border-white/10 dark:bg-white/10 dark:text-white"
               />
             </div>
           </div>
@@ -889,8 +889,8 @@ const handleDownloadPDF = async (rapport: Rapport) => {
                 <div className="mt-4 space-y-2">
                   {r.competences.slice(0, 2).map((c, i) => (
                     <div key={i} className="text-xs">
-                      <div className="mb-1 flex items-center justify-between">
-                        <span className="font-medium">{c.nom}</span>
+                      <div className="mb-1 flex items-center justify-between dark:text-slate-300">
+                        <span className="font-medium ">{c.nom}</span>
                         <span>{c.niveau}%</span>
                       </div>
                       <Bar value={c.niveau} />
@@ -907,7 +907,6 @@ const handleDownloadPDF = async (rapport: Rapport) => {
                       onClick={() => setSelectedRapport(r)}
                       className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 px-3 py-2 text-sm font-semibold text-white shadow hover:brightness-110"
                     >
-                      <EyeIcon className="size-4" />
                       Consulter
                     </button>
                   </div>
