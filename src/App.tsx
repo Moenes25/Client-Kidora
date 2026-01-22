@@ -43,6 +43,7 @@ import SuiviPedagogique from "./parent/pages/SuiviPedagogique";
 import HelpCenter from "./parent/pages/HelpCenter";
 import ContactSupport from "./parent/pages/ContactSupport";
 import Privacy from "./parent/pages/Privacy";
+import ChangePassword from "./pages/AuthPages/ChangePassword";
 
 export default function App() {
   return (
@@ -73,6 +74,7 @@ export default function App() {
            <Route path="/parent/help" element={<HelpCenter />} />
            <Route path="/parent/contact" element={<ContactSupport />} />
           <Route path="/parent/privacy" element={<Privacy />} />
+          
             <Route index  element={<HomeParent />} />
             <Route path="enfants" element={<Enfants />} />
             <Route path="activites_enfants" element={<ActivitiesEnfants />} />
@@ -118,6 +120,7 @@ export default function App() {
           {/* Auth Layout */}
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
+          <Route path="/change-password" element={<ChangePassword />} />
 
           {/* Fallback Route */}
           <Route path="*" element={<NotFound />} />

@@ -1,9 +1,12 @@
 // pages/Profil.tsx
 import { useEffect, useState } from "react"
 import { Link } from "react-router";
-
+import { useTranslation } from "react-i18next";
+import { setAppLanguage } from "../../utils/lang";
 
 const ParentProfil = () => {
+  
+const { t, i18n } = useTranslation();
   const [parentInfo, setParentInfo] = useState({
     name: "Sophie Martin",
     email: "sophie.martin@email.com",
@@ -240,15 +243,15 @@ const ParentProfil = () => {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Langue
                 </label>
-                <select
-                  value={settings.language}
-                  onChange={(e) => setSettings({...settings, language: e.target.value})}
-                  className="w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg dark:text-white"
-                >
-                  <option value="fr">Français</option>
-                  <option value="en">English</option>
-                  <option value="ar">العربية</option>
-                </select>
+               <select
+  value={i18n.language}
+  onChange={(e) => setAppLanguage(e.target.value as "fr"|"en"|"ar")}
+  className="w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border rounded-lg dark:text-white"
+>
+  <option value="fr">Français</option>
+  <option value="en">English</option>
+  <option value="ar">العربية</option>
+</select>
               </div>
               
               <div>
@@ -321,10 +324,14 @@ const ParentProfil = () => {
                   />
                 </button>
               </div>
-              
-              <button className="w-full px-4 py-2 border border-red-300 dark:border-red-600 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
-                Changer le mot de passe
-              </button>
+            <Link
+  to="/change-password"
+  className="w-full inline-flex items-center justify-center px-4 py-2 border border-red-300 dark:border-red-600
+             text-red-600 dark:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+>
+  Changer le mot de passe
+</Link>
+
             </div>
           </div>
 
