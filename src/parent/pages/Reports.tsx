@@ -942,7 +942,7 @@ const handleDownloadPDF = async (rapport: Rapport) => {
                       {r.competences.map((c, i) => (
                         <div
                           key={i}
-                          className="rounded-lg bg-slate-50 p-3 text-center dark:bg-slate-800/50"
+                          className="rounded-lg bg-slate-200 p-3 text-center dark:bg-slate-800/50"
                         >
                           <div className="text-xs text-slate-600 dark:text-slate-300">
                             {c.nom}

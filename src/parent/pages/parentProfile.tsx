@@ -1,18 +1,36 @@
 // pages/Profil.tsx
-import { useEffect, useState } from "react"
-import { Link } from "react-router";
+import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom"; // ✅
 import { useTranslation } from "react-i18next";
 import { setAppLanguage } from "../../utils/lang";
+// en haut du fichier
+import { Edit3, Save } from "lucide-react";
+
+
 
 const ParentProfil = () => {
+
+      // dans le composant
+const [isEditing, setIsEditing] = useState(false);
+const [flashMsg, setFlashMsg] = useState<string | null>(null);
+
+function handleToggleEdit() {
+  if (isEditing) {
+    // ici tu peux appeler ton API de sauvegarde
+    // await api.save(parentInfo)
+    setFlashMsg("Votre profil a été modifié.");
+    setTimeout(() => setFlashMsg(null), 2500);
+  }
+  setIsEditing((v) => !v);
+}
   
 const { t, i18n } = useTranslation();
   const [parentInfo, setParentInfo] = useState({
-    name: "Sophie Martin",
-    email: "sophie.martin@email.com",
-    phone: "+33 6 12 34 56 78",
-    address: "123 Rue de l'Éducation, 75000 Paris",
-    children: ["Lucas", "Emma"],
+    name: "Mohamed ben Ali",
+    email: "mohamedBenAli@gmail.com",
+    phone: "+216 55 245 789",
+    address: "Rue de République, 6400 Tunis",
+    children: ["Ahmed", "Sara" , "Mohamed", "Nour"],
     notificationPreferences: {
       activities: true,
       reports: true,
@@ -20,7 +38,8 @@ const { t, i18n } = useTranslation();
       urgent: true
     },
     subscription: "Premium",
-    joinDate: "15/01/2023"
+    joinDate: "15/01/2023",
+     avatarUrl: "" 
   });
 
   const [settings, setSettings] = useState({
@@ -35,6 +54,8 @@ const { t, i18n } = useTranslation();
     devices: 2,
     twoFactor: false
   });
+  const [avatarPreview, setAvatarPreview] = useState<string>(""); // URL locale (preview)
+const fileInputRef = useRef<HTMLInputElement>(null);
    // 👉 applique le thème au chargement et à chaque changement
   useEffect(() => {
     const root = document.documentElement;
@@ -56,6 +77,7 @@ const { t, i18n } = useTranslation();
 
     apply(settings.theme);
 
+
     // si "auto", on suit les changements système en live
     let mql: MediaQueryList | null = null;
     if (settings.theme === "auto") {
@@ -67,20 +89,55 @@ const { t, i18n } = useTranslation();
       return () => mql?.removeEventListener("change", onChange);
     }
   }, [settings.theme]);
+  // Ouvre la fenêtre de sélection
+const openFilePicker = () => fileInputRef.current?.click();
+
+// Quand l’utilisateur choisit un fichier
+const handleAvatarChange: React.ChangeEventHandler<HTMLInputElement> = async (e) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+
+  // (optionnel) petite validation
+  const maxSizeMb = 5;
+  if (file.size > maxSizeMb * 1024 * 1024) {
+    alert(`Image trop lourde (>${maxSizeMb} Mo).`);
+    e.target.value = "";
+    return;
+  }
+
+  // Aperçu immédiat côté client
+  const localUrl = URL.createObjectURL(file);
+  setAvatarPreview((old) => {
+    if (old) URL.revokeObjectURL(old); // nettoie l’ancienne URL
+    return localUrl;
+  });
+
+  // (facultatif) upload au backend si tu as une API
+  // try {
+  //   const fd = new FormData();
+  //   fd.append("avatar", file);
+  //   const res = await fetch("/api/profile/avatar", { method: "POST", body: fd });
+  //   const data = await res.json(); // { url: "https://cdn/..." }
+  //   setParentInfo((p) => ({ ...p, avatarUrl: data.url }));
+  //   URL.revokeObjectURL(localUrl); // on n’a plus besoin du preview
+  //   setAvatarPreview("");
+  // } catch (err) {
+  //   console.error(err);
+  //   // si l’upload échoue, on garde le preview local
+  // }
+};
+
 
   return (
     <div className="space-y-6 animate-fade-in">
       {/* En-tête */}
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Mon Profil
-          </h1>
           <p className="text-gray-600 dark:text-gray-300 mt-2">
             Gérez vos informations personnelles et préférences
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 hidden">
           <button className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
             Exporter données
           </button>
@@ -95,55 +152,98 @@ const { t, i18n } = useTranslation();
         <div className="lg:col-span-2 space-y-6">
           {/* Carte informations personnelles */}
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Informations Personnelles</h2>
+           <div className="mb-4 flex items-center justify-between">
+    <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+      Informations Personnelles
+    </h2>
+
+    <button
+      onClick={handleToggleEdit}
+      className="inline-flex items-center gap-2 rounded-lg px-3 py-1.5
+                 bg-slate-100 hover:bg-slate-200 text-slate-700
+                 dark:bg-white/10 dark:text-white/80 dark:hover:bg-white/15
+                 transition"
+      title={isEditing ? "Enregistrer" : "Modifier"}
+    >
+      {isEditing ? <Save className="h-4 w-4" /> : <Edit3 className="h-4 w-4" />}
+      <span className="text-sm font-semibold">
+        {isEditing ? "Enregistrer" : "Modifier"}
+      </span>
+    </button>
+  </div>{/* petit message de confirmation */}
+  {flashMsg && (
+    <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700 dark:border-emerald-900/40 dark:bg-emerald-900/20 dark:text-emerald-300">
+      {flashMsg}
+    </div>
+  )}
             
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Nom complet
                 </label>
-                <input
-                  type="text"
-                  value={parentInfo.name}
-                  onChange={(e) => setParentInfo({...parentInfo, name: e.target.value})}
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                />
+              <input
+  type="text"
+  value={parentInfo.name}
+  onChange={(e) => setParentInfo({ ...parentInfo, name: e.target.value })}
+  disabled={!isEditing}
+  className={
+    "w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg dark:text-white " +
+    "focus:ring-2 focus:ring-orange-500 focus:border-transparent " +
+    (!isEditing ? "opacity-70 cursor-not-allowed" : "")
+  }
+/>
               </div>
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Email
                 </label>
-                <input
-                  type="email"
-                  value={parentInfo.email}
-                  onChange={(e) => setParentInfo({...parentInfo, email: e.target.value})}
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                />
+               <input
+  type="email"
+  value={parentInfo.email}
+  onChange={(e) => setParentInfo({ ...parentInfo, email: e.target.value })}
+  disabled={!isEditing}
+  className={
+    "w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg dark:text-white " +
+    "focus:ring-2 focus:ring-orange-500 focus:border-transparent " +
+    (!isEditing ? "opacity-70 cursor-not-allowed" : "")
+  }
+/>
               </div>
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Téléphone
                 </label>
-                <input
-                  type="tel"
-                  value={parentInfo.phone}
-                  onChange={(e) => setParentInfo({...parentInfo, phone: e.target.value})}
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                />
+               <input
+  type="tel"
+  value={parentInfo.phone}
+  onChange={(e) => setParentInfo({ ...parentInfo, phone: e.target.value })}
+  disabled={!isEditing}
+  className={
+    "w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg dark:text-white " +
+    "focus:ring-2 focus:ring-orange-500 focus:border-transparent " +
+    (!isEditing ? "opacity-70 cursor-not-allowed" : "")
+  }
+/>
               </div>
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Adresse
                 </label>
-                <input
-                  type="text"
-                  value={parentInfo.address}
-                  onChange={(e) => setParentInfo({...parentInfo, address: e.target.value})}
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                />
+               <input
+  type="text"
+  value={parentInfo.address}
+  onChange={(e) => setParentInfo({ ...parentInfo, address: e.target.value })}
+  disabled={!isEditing}
+  className={
+    "w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg " +
+    "focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:text-white " +
+    (!isEditing ? "opacity-70 cursor-not-allowed" : "")
+  }
+/>
               </div>
             </div>
             
@@ -157,7 +257,7 @@ const { t, i18n } = useTranslation();
                     {child}
                   </span>
                 ))}
-                <button className="px-4 py-2 border border-dashed border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 rounded-full hover:bg-gray-50 dark:hover:bg-gray-700">
+                <button className="px-4 py-2 border border-dashed border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 rounded-full hover:bg-gray-50 dark:hover:bg-gray-700 hidden">
                   + Ajouter
                 </button>
               </div>
@@ -214,9 +314,19 @@ const { t, i18n } = useTranslation();
           {/* Photo et statut */}
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
             <div className="flex flex-col items-center">
-              <div className="w-32 h-32 rounded-full bg-gradient-to-r from-orange-500 to-red-500 flex items-center justify-center text-white text-4xl font-bold mb-4">
-                SM
-              </div>
+             {/* Avatar */}
+  { (avatarPreview || parentInfo.avatarUrl) ? (
+    <img
+      src={avatarPreview || parentInfo.avatarUrl}
+      alt={parentInfo.name}
+      className="w-32 h-32 rounded-full object-cover ring-2 ring-white shadow mb-4 dark:ring-slate-800"
+    />
+  ) : (
+    <div className="w-32 h-32 rounded-full bg-gradient-to-r from-orange-500 to-red-500
+                    flex items-center justify-center text-white text-4xl font-bold mb-4">
+      {parentInfo.name.split(" ").map(s=>s[0]).slice(0,2).join("") /* initiales */}
+    </div>
+  )}
               <h3 className="text-xl font-bold text-gray-900 dark:text-white">{parentInfo.name}</h3>
               <p className="text-gray-600 dark:text-gray-300">{parentInfo.email}</p>
               
@@ -228,9 +338,22 @@ const { t, i18n } = useTranslation();
                 Membre depuis {parentInfo.joinDate}
               </div>
               
-              <button className="mt-4 w-full px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                Changer la photo
-              </button>
+             <button
+    onClick={openFilePicker}
+    className="mt-4 w-full px-4 py-2 border border-gray-300 dark:border-gray-600
+               text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+  >
+    Changer la photo
+  </button>
+
+  {/* input file caché */}
+  <input
+    ref={fileInputRef}
+    type="file"
+    accept="image/*"
+    onChange={handleAvatarChange}
+    className="hidden"
+  />
             </div>
           </div>
 
@@ -296,12 +419,12 @@ const { t, i18n } = useTranslation();
             <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Sécurité</h3>
             
             <div className="space-y-4">
-              <div className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+              <div className="p-3 bg-gray-200 dark:bg-gray-700/50 rounded-lg">
                 <div className="text-sm text-gray-500 dark:text-gray-400">Dernière connexion</div>
                 <div className="font-medium text-gray-900 dark:text-white">{security.lastLogin}</div>
               </div>
               
-              <div className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+              <div className="p-3 bg-gray-200 dark:bg-gray-700/50 rounded-lg">
                 <div className="text-sm text-gray-500 dark:text-gray-400">Appareils connectés</div>
                 <div className="font-medium text-gray-900 dark:text-white">{security.devices} appareil(s)</div>
               </div>
