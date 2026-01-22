@@ -72,7 +72,7 @@ export default function DeleteConfirmation({
             </div>
 
             <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800/30 rounded-lg p-4 mb-6">
-              {/* <div className="flex items-center gap-3 mb-3">
+              <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 overflow-hidden rounded-full">
                   <img
                     src={enfant.imageUrl}
@@ -97,7 +97,7 @@ export default function DeleteConfirmation({
                     </span>
                   </div>
                 </div>
-              </div> */}
+              </div>
 
               <p className="text-sm text-gray-700 dark:text-gray-300">
                 <span className="font-medium">Attention :</span> La suppression de cet enfant entraînera :

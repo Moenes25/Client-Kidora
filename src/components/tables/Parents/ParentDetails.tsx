@@ -10,9 +10,9 @@ interface ParentDetailsProps {
 }
 
 export default function ParentDetails({ isOpen, onClose, parent }: ParentDetailsProps) {
-  const [parentImageUrl, setParentImageUrl] = useState<string>('/uploads/users/default-avatar-parent.png');
+  const [parentImageUrl, setParentImageUrl] = useState<string>('/default-avatar.png');
   const [childrenImageUrls, setChildrenImageUrls] = useState<string[]>([]);
-
+  const [loadingImages, setLoadingImages] = useState<boolean>(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -31,49 +31,67 @@ export default function ParentDetails({ isOpen, onClose, parent }: ParentDetails
       loadAllImages();
     } else {
       // Réinitialiser les URLs quand le modal se ferme
-      setParentImageUrl('/uploads/users/default-avatar-parent.png');
+      setParentImageUrl('/default-avatar.png');
       setChildrenImageUrls([]);
     }
   }, [isOpen, parent]);
 
-  const loadAllImages = () => {
+  const loadAllImages = async () => {
     if (!parent) return;
     
-   
+    setLoadingImages(true);
     try {
       // Charger l'image du parent
       if (parent.image) {
-          const parentUrl = imageApi.getImageUrl(parent.image);
+        try {
+          const parentUrl = await imageApi.getImage(parent.image);
           setParentImageUrl(parentUrl);
-        } else {
-          const defaultImageUrl = imageApi.getImageUrl('/uploads/users/default-avatar-parent.png');
-          setParentImageUrl(defaultImageUrl);
+        } catch (error) {
+          console.error('Erreur de chargement de l\'image du parent:', error);
+          setParentImageUrl('/default-avatar.png');
         }
+      }
+
       // Charger les images des enfants
       if (parent.enfants?.images?.length > 0) {
-        const childUrls = parent.enfants.images.map((imagePath, index) => {
-          
+        const childPromises = parent.enfants.images.map(async (imagePath, index) => {
+          try {
             if (!imagePath || imagePath.trim() === '') {
-              return  imageApi.getImageUrl('/uploads/enfants/default-avatar-enfant.png');;
+              return '/default-child-avatar.png';
             }
-            return  imageApi.getImageUrl(imagePath);
+            return await imageApi.getImage(imagePath);
+          } catch (error) {
+            console.error(`Erreur de chargement de l'image enfant ${index + 1}:`, error);
+            return '/default-child-avatar.png';
+          }
         });
+
+        const childUrls = await Promise.all(childPromises);
         setChildrenImageUrls(childUrls);
       }
     } catch (error) {
       console.error('Erreur générale de chargement des images:', error);
-      const defaultParentImage = imageApi.getImageUrl('/uploads/users/default-avatar-parent.png');
-      setParentImageUrl(defaultParentImage);
-      if (parent.enfants?.images?.length > 0) {
-        const defaultChildImages = parent.enfants.images.map(() => 
-          imageApi.getImageUrl('/uploads/enfants/default-avatar-enfant.png')
-        );
-        setChildrenImageUrls(defaultChildImages);
-      }
-    } 
+    } finally {
+      setLoadingImages(false);
+    }
   };
 
-
+  // Nettoyage des URLs blob
+  useEffect(() => {
+    return () => {
+      // Nettoyer l'URL du parent
+      if (parentImageUrl && parentImageUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(parentImageUrl);
+      }
+      
+      // Nettoyer les URLs des enfants
+      childrenImageUrls.forEach(url => {
+        if (url && url.startsWith('blob:')) {
+          URL.revokeObjectURL(url);
+        }
+      });
+    };
+  }, [parentImageUrl, childrenImageUrls]);
 
   if (!isOpen || !parent) return null;
 
@@ -88,8 +106,7 @@ export default function ParentDetails({ isOpen, onClose, parent }: ParentDetails
 
   // Gestionnaire d'erreur pour les images
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-    const defaultImageUrl = imageApi.getImageUrl('/uploads/users/default-avatar-parent.png');
-    e.currentTarget.src = defaultImageUrl;
+    e.currentTarget.src = '/default-avatar.png';
   };
 
   const handleChildImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>, index: number) => {
@@ -124,15 +141,16 @@ export default function ParentDetails({ isOpen, onClose, parent }: ParentDetails
             {/* Section Photo et infos du parent */}
             <div className="flex items-center gap-4">
               <div className="w-20 h-20 overflow-hidden rounded-full">
-               
+                {loadingImages ? (
+                  <div className="w-full h-full bg-gray-200 animate-pulse rounded-full"></div>
+                ) : (
                   <img
                     src={parentImageUrl}
                     alt={`${parent.prenom} ${parent.nom}`}
                     className="w-full h-full object-cover"
                     onError={handleImageError}
-                     loading="lazy"
                   />
-                
+                )}
               </div>
               <div>
                 <h4 className="text-xl font-bold text-gray-900 dark:text-white">
@@ -199,44 +217,33 @@ export default function ParentDetails({ isOpen, onClose, parent }: ParentDetails
                 <p className="text-gray-600 dark:text-gray-400 italic">Aucun enfant associé</p>
               ) : (
                 <div className="flex flex-wrap gap-3">
-                  {
-                    parent.enfants?.images?.map((imageUrl, index) => {
-                            const enfantNom = parent.enfants?.prenoms?.[index] || `Enfant ${index + 1}`;
-                            console.log("enfantNom", enfantNom);
-                            return (
-                              <div key={index} className="text-center">
-                              <div className="w-16 h-16 overflow-hidden rounded-full border-2 border-gray-200 dark:border-gray-700">
-                                <img
-                                  src={imageApi.getImageUrl(imageUrl || '/uploads/enfants/default-avatar-enfant.png')}
-                                  alt={enfantNom}
-                                  className="w-full h-full object-cover"
-                                  onError={(e) => {
-                                    e.currentTarget.src = imageApi.getImageUrl('/uploads/enfants/default-avatar-enfant.png');
-                                  }}
-                                  loading="lazy"
-                                />
-                              </div>
-                              <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
-                                {enfantNom} {/* Affiche seulement le prénom */}
-                              </p>
-                            </div>
-                            )
-                    })
-                    // childrenImageUrls.map((imageUrl, index) => (
-                    //   <div key={index} className="text-center">
-                    //     <div className="w-16 h-16 overflow-hidden rounded-full border-2 border-gray-200 dark:border-gray-700">
-                    //       <img
-                    //         src={imageUrl}
-                    //         alt={`Enfant ${index + 1}`}
-                    //         className="w-full h-full object-cover"
-                    //         onError={(e) => handleChildImageError(e, index)}
-                    //         loading="lazy"
-                    //       />
-                    //     </div>
-                    //     <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">Enfant {index + 1}</p>
-                    //   </div>
-                    // ))
-                  }
+                  {loadingImages ? (
+                    // Placeholders pendant le chargement
+                    Array.from({ length: parent.enfants?.images?.length || 0 }).map((_, index) => (
+                      <div key={index} className="text-center">
+                        <div className="w-16 h-16 overflow-hidden rounded-full border-2 border-gray-200 dark:border-gray-700">
+                          <div className="w-full h-full bg-gray-200 animate-pulse rounded-full"></div>
+                        </div>
+                        <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">Chargement...</p>
+                      </div>
+                    ))
+                  ) : (
+                    // Images chargées
+                    childrenImageUrls.map((imageUrl, index) => (
+                      <div key={index} className="text-center">
+                        <div className="w-16 h-16 overflow-hidden rounded-full border-2 border-gray-200 dark:border-gray-700">
+                          <img
+                            src={imageUrl}
+                            alt={`Enfant ${index + 1}`}
+                            className="w-full h-full object-cover"
+                            onError={(e) => handleChildImageError(e, index)}
+                            loading="lazy"
+                          />
+                        </div>
+                        <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">Enfant {index + 1}</p>
+                      </div>
+                    ))
+                  )}
                 </div>
               )}
             </div>

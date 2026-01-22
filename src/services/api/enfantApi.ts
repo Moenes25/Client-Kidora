@@ -6,7 +6,6 @@ export interface EnfantRequest {
   prenom: string;
   age: number;
   classe: string;
-  parentId?: string;
   
 }
 
@@ -18,7 +17,6 @@ export interface EnfantResponse {
   classe: string;
   imageUrl: string;
   parentId: string;
-  classeNom: string;
 }
 
 // Type pour le frontend (à adapter selon vos besoins)
@@ -117,7 +115,6 @@ export const enfantApi = {
       if (data.prenom !== undefined) enfantData.prenom = data.prenom;
       if (data.age !== undefined) enfantData.age = data.age;
       if (data.classe !== undefined) enfantData.classe = data.classe;
-      if (data.parentId !== undefined) enfantData.parentId = data.parentId;
       
       formData.append('enfant', JSON.stringify(enfantData));
       
@@ -187,13 +184,5 @@ export const enfantApi = {
     } catch (error: any) {
       throw new Error(error.response?.data?.message || error.message || "Erreur lors du téléchargement de l'image");
     }
-  },
-   getEnfantsByClasse: async (classeId: string): Promise<EnfantResponse[]> => {
-    try {
-      const response = await apiClient.get<EnfantResponse[]>(`/enfants/enfants-by-classe/${classeId}`);
-      return response.data;
-    } catch (error: any) {
-      throw new Error(error.response?.data?.message || error.message || 'Erreur lors de la récupération des enfants par classe');
-    }
-  },
+  }
 };

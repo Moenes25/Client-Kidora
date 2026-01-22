@@ -21,33 +21,20 @@ export const parentApi = {
         const formData = new FormData();
         
         // Préparer les données pour correspondre à votre DTO backend
-        // const prtData = {
-        //     nom: parentData.nom,
-        //     prenom: parentData.prenom,
-        //     email: parentData.email,
-        //     password: parentData.password,
-        //     numTel: parentData.numTel || '', 
-        //     role: RoleUsers.PARENT,  // ⭐ Ajouter le rôle
-        //     statutClient: parentData.statutClient || StatutClient.ACTIF,
-        //     profession: parentData.profession || '',
-        //     relation: parentData.relation || '',
-        // };
+        const prtData = {
+            nom: parentData.nom,
+            prenom: parentData.prenom,
+            email: parentData.email,
+            password: parentData.password,
+            numTel: parentData.numTel || '', 
+            role: RoleUsers.PARENT,  // ⭐ Ajouter le rôle
+            statutClient: parentData.statutClient || StatutClient.ACTIF,
+            profession: parentData.profession || '',
+            relation: parentData.relation || '',
+        };
         
-        // formData.append('user', JSON.stringify(prtData));
-        
-        formData.append('nom', parentData.nom);
-        formData.append('prenom', parentData.prenom);
-        formData.append('email', parentData.email);
-        formData.append('password', parentData.password);
-        formData.append('role', RoleUsers.PARENT);
+        formData.append('user', JSON.stringify(prtData));
 
-
-        
-        // Paramètres optionnels
-        if (parentData.numTel) formData.append('numTel', parentData.numTel);
-        if (parentData.profession) formData.append('profession', parentData.profession);
-        if (parentData.relation) formData.append('relation', parentData.relation);
-        if (parentData.statutClient) formData.append('statutClient', parentData.statutClient);
         
         if (imageFile) {
             formData.append('image', imageFile);
@@ -72,17 +59,11 @@ export const parentApi = {
             const formData = new FormData();
             
             // Ajouter chaque champ individuellement (comme dans votre backend)
-            // Object.entries(updateData).forEach(([key, value]) => {
-            //     if (value !== undefined && value !== null && value !== '') {
-            //     formData.append(key, value.toString());
-            //     }
-            // });
-            if(updateData.nom) formData.append('nom', updateData.nom);
-            if(updateData.prenom) formData.append('prenom', updateData.prenom);
-            if(updateData.numTel) formData.append('numTel', updateData.numTel);
-            if(updateData.profession) formData.append('profession', updateData.profession);
-            if(updateData.relation) formData.append('relation', updateData.relation);
-            if(updateData.statutClient) formData.append('statutClient', updateData.statutClient);
+            Object.entries(updateData).forEach(([key, value]) => {
+                if (value !== undefined && value !== null && value !== '') {
+                formData.append(key, value.toString());
+                }
+            });
             
             if (imageFile) {
                 formData.append('imageFile', imageFile);

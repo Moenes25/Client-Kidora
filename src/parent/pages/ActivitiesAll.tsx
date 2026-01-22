@@ -1,17 +1,29 @@
-// src/parent/pages/Activities.tsx
-import { useState, useEffect, useMemo } from "react";
-import { useParams, Link } from "react-router";
+// src/parent/pages/ActivitiesAll.tsx
+// Page "Toutes les activités (famille)" — style IDENTIQUE à src/parent/pages/Activities.tsx
+// Tailwind requis. Dépend de: react-router, PageMeta, Modal, ../../icons
+
+import { useMemo, useState } from "react";
+import { Link } from "react-router";
 import PageMeta from "../../components/common/PageMeta";
 import Modal from "../../components/Modal";
-import { CalenderIcon, AngleLeftIcon, EyeIcon } from "../../icons";
+import { CalenderIcon, EyeIcon } from "../../icons";
 
-/* ======================= Types ======================= */
-interface ActiviteEnfant {
+/* ======================= Types (identiques + enfant) ======================= */
+interface EvaluationActivite {
+  participation: "excellente" | "bonne" | "moyenne" | "faible";
+  observations: string;
+  competencesAcquises: string[];
+  note: number; // 1..5
+}
+
+type Type = "creatif" | "sportif" | "educatif" | "musical" | "nature" | "social";
+
+interface ActiviteFamille {
   id: number;
   titre: string;
   description: string;
-  type: "creatif" | "sportif" | "educatif" | "musical" | "nature" | "social";
-  date: string;   // ISO string (YYYY-MM-DD)
+  type: Type;
+  date: string;   // YYYY-MM-DD
   heure: string;  // HH:mm
   duree: number;  // minutes
   classe: string;
@@ -20,17 +32,15 @@ interface ActiviteEnfant {
   objectifs: string[];
   observation?: string;
   evaluation?: EvaluationActivite;
-}
-interface EvaluationActivite {
-  participation: "excellente" | "bonne" | "moyenne" | "faible";
-  observations: string;
-  competencesAcquises: string[];
-  note: number; // 1..5
+  // Ajouts pour page "All":
+  childId: number;
+  childName: string;
+  childAvatar: string;
 }
 
-/* ======================= UI Meta ======================= */
+/* ======================= UI Meta (copié/collé de Activities.tsx) ======================= */
 const typeMeta: Record<
-  ActiviteEnfant["type"],
+  Type,
   { label: string; emoji: string; chip: string; grad: string; ring: string }
 > = {
   creatif: {
@@ -99,8 +109,8 @@ const participationChip: Record<
   },
 };
 
-/* ======================= Petits composants ======================= */
-function TypePill({ type }: { type: ActiviteEnfant["type"] }) {
+/* ======================= Petits composants (identiques) ======================= */
+function TypePill({ type }: { type: Type }) {
   const t = typeMeta[type];
   return (
     <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${t.chip}`}>
@@ -121,45 +131,34 @@ function RatingStars({ value }: { value: number }) {
   );
 }
 
-function RingAvatar({ src, alt }: { src: string; alt: string }) {
+/* Utils */
+const frDate = (iso: string) =>
+  new Date(iso).toLocaleDateString("fr-FR", {
+    weekday: "short",
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+  function StatCard({ label, value }: { label: string; value: number }) {
   return (
-    <div className="relative grid place-items-center" style={{ width: 90, height: 90 }}>
-      <div
-        className="absolute inset-0 animate-[spin_9s_linear_infinite] rounded-full bg-[conic-gradient(theme(colors.blue.500),theme(colors.cyan.400),theme(colors.fuchsia.500),theme(colors.blue.500))] opacity-90"
-        style={{ filter: "saturate(1.1)" }}
-      />
-      <div className="absolute inset-1 rounded-full bg-white dark:bg-slate-900" />
-      <img
-        src={src}
-        alt={alt}
-        className="relative z-10 h-20 w-20 rounded-full object-cover ring-2 ring-white dark:ring-slate-800 shadow"
-      />
+    <div className="rounded-xl border border-slate-200/70 bg-white px-3 py-2 text-center shadow-sm transition hover:shadow-md dark:border-white/10 dark:bg-white/[0.04]">
+      <div className="text-lg font-bold text-slate-900 dark:text-white">{value}</div>
+      <div className="text-[11px] text-slate-500">{label}</div>
     </div>
   );
 }
 
-/* Formatage utils */
-const frDate = (iso: string) => new Date(iso).toLocaleDateString("fr-FR", { weekday: "short", day: "2-digit", month: "short", year: "numeric" });
-
 /* ======================= Page ======================= */
-export default function ParentActivitiesPage() {
-  const { childId } = useParams<{ childId?: string }>();
-
-  const [enfant, setEnfant] = useState<{ id: number; name: string; age: string; class: string; avatar: string } | null>(null);
-  const [filterType, setFilterType] = useState<"all" | ActiviteEnfant["type"]>("all");
-  const [query, setQuery] = useState("");
-  const [sort, setSort] = useState<"recent" | "oldest" | "best">("recent");
-  const [selectedActivite, setSelectedActivite] = useState<ActiviteEnfant | null>(null);
-
+export default function ActivitiesAll() {
   /* ---------- Données locales (démo) ---------- */
   const enfants = [
-    { id: 1, name: "Ahmed Ben Salah", age: "8 ans", class: "CE2", avatar: "/images/3-4_ans/enfant_1.jpg" },
-    { id: 2, name: "Sara Ben Salah", age: "6 ans", class: "CP", avatar: "/images/3-4_ans/enfant_3.jpg" },
-    { id: 3, name: "Mohamed Ben Salah", age: "10 ans", class: "CM2", avatar: "/images/3-4_ans/enfant_6.jpg" },
-    { id: 4, name: "Nour Ben Salah", age: "7 ans", class: "CE1", avatar: "/images/3-4_ans/enfant_4.jpg" },
+    { id: 1, name: "Ahmed Ben Salah", class: "CE2", avatar: "/images/3-4_ans/enfant_1.jpg" },
+    { id: 2, name: "Sara Ben Salah", class: "CP", avatar: "/images/3-4_ans/enfant_3.jpg" },
+    { id: 3, name: "Mohamed Ben Salah", class: "CM2", avatar: "/images/3-4_ans/enfant_6.jpg" },
+    { id: 4, name: "Nour Ben Salah", class: "CE1", avatar: "/images/3-4_ans/enfant_4.jpg" },
   ];
 
-  const activites: ActiviteEnfant[] = [
+  const activites: ActiviteFamille[] = [
     {
       id: 1,
       titre: "Atelier Peinture Libre",
@@ -175,10 +174,13 @@ export default function ParentActivitiesPage() {
       observation: "Les enfants étaient très enthousiastes.",
       evaluation: {
         participation: "excellente",
-        observations: "Ahmed a créé une œuvre remarquable avec des couleurs vives et harmonieuses. Très concentré.",
+        observations: "Œuvres colorées et harmonieuses, très bonne concentration.",
         competencesAcquises: ["Mélange des couleurs", "Précision du geste", "Expression créative"],
         note: 5,
       },
+      childId: 1,
+      childName: "Ahmed",
+      childAvatar: enfants[0].avatar,
     },
     {
       id: 2,
@@ -194,10 +196,13 @@ export default function ParentActivitiesPage() {
       objectifs: ["Travail d'équipe", "Motricité globale", "Respect des règles"],
       evaluation: {
         participation: "bonne",
-        observations: "Bon leadership. A encouragé ses camarades et respecté les règles.",
+        observations: "Bon leadership, encourage ses camarades et respecte les règles.",
         competencesAcquises: ["Leadership", "Esprit d'équipe", "Coordination"],
         note: 4,
       },
+      childId: 2,
+      childName: "Sara",
+      childAvatar: enfants[1].avatar,
     },
     {
       id: 3,
@@ -213,10 +218,13 @@ export default function ParentActivitiesPage() {
       objectifs: ["Sensibilisation musicale", "Rythme", "Écoute active"],
       evaluation: {
         participation: "moyenne",
-        observations: "Intéressé mais timide au début. A participé après observation.",
+        observations: "Intéressé mais timide au début, participe après observation.",
         competencesAcquises: ["Reconnaissance des sons", "Respect du rythme"],
         note: 3,
       },
+      childId: 3,
+      childName: "Mohamed",
+      childAvatar: enfants[2].avatar,
     },
     {
       id: 4,
@@ -236,6 +244,9 @@ export default function ParentActivitiesPage() {
         competencesAcquises: ["Soin des plantes", "Observation scientifique", "Patience"],
         note: 5,
       },
+      childId: 4,
+      childName: "Nour",
+      childAvatar: enfants[3].avatar,
     },
     {
       id: 5,
@@ -251,10 +262,13 @@ export default function ParentActivitiesPage() {
       objectifs: ["Curiosité scientifique", "Observation", "Hypothèses"],
       evaluation: {
         participation: "bonne",
-        observations: "Grand intérêt. A formulé des hypothèses pertinentes.",
+        observations: "Grand intérêt, formule des hypothèses pertinentes.",
         competencesAcquises: ["Méthode scientifique", "Observation", "Curiosité"],
         note: 4,
       },
+      childId: 1,
+      childName: "Ahmed",
+      childAvatar: enfants[0].avatar,
     },
     {
       id: 6,
@@ -270,27 +284,32 @@ export default function ParentActivitiesPage() {
       objectifs: ["Langage", "Imagination", "Écoute"],
       evaluation: {
         participation: "faible",
-        observations: "Un peu timide pour s'exprimer devant le groupe. Écoute attentive.",
+        observations: "Timide pour s'exprimer devant le groupe, écoute attentive.",
         competencesAcquises: ["Écoute active", "Compréhension des histoires"],
         note: 2,
       },
+      childId: 2,
+      childName: "Sara",
+      childAvatar: enfants[1].avatar,
     },
   ];
 
-  /* ---------- Load enfant ---------- */
-  useEffect(() => {
-    if (childId) {
-      const enfantData = enfants.find((e) => e.id.toString() === childId);
-      setEnfant(enfantData || enfants[0]);
-    } else {
-      setEnfant(enfants[0]);
-    }
-  }, [childId]);
+  /* ---------- Filtres ---------- */
+  const [filterType, setFilterType] = useState<"all" | Type>("all");
+  const [childFilter, setChildFilter] = useState<number | "__ALL__">("__ALL__"); // <- filtre par nom d’enfant
+  const [query, setQuery] = useState("");
+  const [sort, setSort] = useState<"recent" | "oldest" | "best">("recent");
+  const [selectedActivite, setSelectedActivite] = useState<ActiviteFamille | null>(null);
 
-  /* ---------- Filtrage / Recherche / Tri ---------- */
+  /* ---------- Filtrage / Recherche / Tri (identique + enfant) ---------- */
   const filteredSorted = useMemo(() => {
     const q = query.trim().toLowerCase();
-    let list = activites.filter((a) => (filterType === "all" ? true : a.type === filterType));
+
+    let list = activites.filter((a) =>
+      (filterType === "all" ? true : a.type === filterType) &&
+      (childFilter === "__ALL__" ? true : a.childId === childFilter)
+    );
+
     if (q) {
       list = list.filter((a) => {
         const blob = [
@@ -298,6 +317,7 @@ export default function ParentActivitiesPage() {
           a.description,
           a.educateur,
           a.classe,
+          a.childName,
           ...a.objectifs,
           ...a.materiel,
           a.evaluation?.observations || "",
@@ -308,26 +328,26 @@ export default function ParentActivitiesPage() {
         return blob.includes(q);
       });
     }
+
     list = list.sort((A, B) => {
       if (sort === "recent") return new Date(B.date).getTime() - new Date(A.date).getTime();
       if (sort === "oldest") return new Date(A.date).getTime() - new Date(B.date).getTime();
-      // best
+      // best (exactement comme Activities.tsx mais sur note)
       const na = A.evaluation?.note ?? 0;
       const nb = B.evaluation?.note ?? 0;
       if (nb !== na) return nb - na;
       return new Date(B.date).getTime() - new Date(A.date).getTime();
     });
     return list;
-  }, [activites, filterType, query, sort]);
+  }, [activites, filterType, childFilter, query, sort]);
 
   /* ---------- Groupé par date pour timeline ---------- */
   const groupedByDay = useMemo(() => {
-    const map = new Map<string, ActiviteEnfant[]>();
+    const map = new Map<string, ActiviteFamille[]>();
     filteredSorted.forEach((a) => {
       const k = a.date; // yyyy-mm-dd
       map.set(k, [...(map.get(k) || []), a]);
     });
-    // tri des jours (desc par défaut sauf si oldest)
     const days = [...map.entries()].sort(([d1], [d2]) =>
       sort === "oldest" ? new Date(d1).getTime() - new Date(d2).getTime() : new Date(d2).getTime() - new Date(d1).getTime()
     );
@@ -344,42 +364,30 @@ export default function ParentActivitiesPage() {
     return { total, excellentes, notes4, totalMinutes, uniqueTypes };
   }, [filteredSorted]);
 
-  if (!enfant) {
-    return (
-      <div className="flex h-64 items-center justify-center">
-        <div className="animate-pulse text-slate-500 dark:text-slate-400">Chargement…</div>
-      </div>
-    );
-  }
-
   /* ======================= Render ======================= */
   return (
     <>
-      <PageMeta title={`Activités de ${enfant.name}`} description={`Suivez les activités de ${enfant.name} à l'école`} />
+      <PageMeta title="Toutes les activités" description="Vue globale des activités de la famille" />
 
-      {/* HERO */}
+      {/* HERO (même style) */}
       <section className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-lg dark:border-white/10 dark:bg-slate-900">
         <span aria-hidden className="pointer-events-none absolute -top-24 -left-24 h-64 w-64 rounded-full bg-indigo-400/20 blur-3xl" />
         <span aria-hidden className="pointer-events-none absolute -bottom-24 -right-16 h-72 w-72 rounded-full bg-fuchsia-400/20 blur-3xl" />
 
         <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-center gap-5">
-            <RingAvatar src={enfant.avatar} alt={enfant.name} />
-            <div>
-              <div className="mb-1">
-                <Link to="/parent/enfants" className="inline-flex items-center gap-2 text-sky-600 hover:underline">
-                  <AngleLeftIcon className="size-4" />
-                  Retour aux enfants
-                </Link>
-              </div>
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Activités de {enfant.name}</h1>
-              <p className="text-sm text-slate-600 dark:text-slate-300">
-                {enfant.age} • {enfant.class}
-              </p>
+          <div>
+            <div className="mb-1">
+              <Link to="/parent" className="inline-flex items-center gap-2 text-sky-600 hover:underline">
+                ← Retour à l’accueil
+              </Link>
             </div>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Toutes les activités</h1>
+            <p className="text-sm text-slate-600 dark:text-slate-300">
+              Vue globale, tous les enfants confondus.
+            </p>
           </div>
 
-          {/* Stats */}
+          {/* Stats (même composant que Activities.tsx) */}
           <div className="grid w-full grid-cols-2 gap-3 sm:w-auto sm:grid-cols-5">
             <StatCard label="Activités" value={stats.total} />
             <StatCard label="⭐ Excellentes" value={stats.excellentes} />
@@ -389,12 +397,12 @@ export default function ParentActivitiesPage() {
           </div>
         </div>
 
-        {/* Filtres + recherche */}
+        {/* Filtres + recherche (même look, + filtre enfant) */}
         <div className="relative z-10 mt-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="flex flex-wrap items-center gap-2">
             {(["all", "creatif", "sportif", "educatif", "musical", "nature", "social"] as const).map((t) => {
               const active = filterType === t;
-              const asType = t !== "all" ? (t as ActiviteEnfant["type"]) : "creatif";
+              const asType = t !== "all" ? (t as Type) : "creatif";
               const grad = t === "all" ? "from-slate-500 to-slate-400" : typeMeta[asType].grad;
               return (
                 <button
@@ -404,13 +412,26 @@ export default function ParentActivitiesPage() {
                     active ? `bg-gradient-to-r ${grad} text-white shadow` : "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-white/10 dark:text-white/80"
                   }`}
                 >
-                  {t === "all" ? "Tous" : typeMeta[t as ActiviteEnfant["type"]].label}
+                  {t === "all" ? "Tous" : typeMeta[t as Type].label}
                 </button>
               );
             })}
           </div>
 
           <div className="flex flex-1 flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:justify-end">
+            {/* Filtre enfant (par nom) */}
+            <select
+              value={childFilter}
+              onChange={(e) => setChildFilter(e.target.value === "__ALL__" ? "__ALL__" : Number(e.target.value))}
+              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-500 dark:border-white/10 dark:bg-black sm:max-w-[220px] dark:text-white"
+            >
+              <option value="__ALL__">Tous les enfants</option>
+              {enfants.map((c) => (
+                <option key={c.id} value={c.id}>{c.name.split(" ")[0]}</option>
+              ))}
+            </select>
+
+            {/* Recherche texte */}
             <div className="relative flex-1 sm:max-w-[340px]">
               <svg xmlns="http://www.w3.org/2000/svg" className="pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="11" cy="11" r="8" />
@@ -419,15 +440,17 @@ export default function ParentActivitiesPage() {
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Rechercher (titre, objectifs, éducateur…) "
-                className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500 dark:border-white/10 dark:bg-white/10"
+                placeholder="Rechercher (titre, objectifs, éducateur, enfant…) "
+                className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500 dark:border-white/10 dark:bg-white/10 dark:text-white"
               />
             </div>
+
+            {/* Tri */}
             <div>
               <select
                 value={sort}
                 onChange={(e) => setSort(e.target.value as any)}
-                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-500 dark:border-white/10 dark:bg-white/5"
+                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-500 dark:border-white/10 dark:bg-black dark:text-white"
               >
                 <option value="recent">Plus récentes</option>
                 <option value="oldest">Plus anciennes</option>
@@ -438,7 +461,7 @@ export default function ParentActivitiesPage() {
         </div>
       </section>
 
-      {/* TIMELINE GROUPÉE PAR JOUR */}
+      {/* TIMELINE GROUPÉE PAR JOUR (même rendu que Activities.tsx) */}
       {groupedByDay.length > 0 ? (
         <div className="mt-6">
           <div className="relative">
@@ -491,6 +514,14 @@ export default function ParentActivitiesPage() {
                                   <span>{a.duree} min</span>
                                   <span className="text-slate-400">•</span>
                                   <TypePill type={a.type} />
+                                  <span className="text-slate-400">•</span>
+                                  <span>👩‍🏫 {a.educateur}</span>
+                                  <span className="text-slate-400">•</span>
+                                  {/* Enfant concerné */}
+                                  <span className="inline-flex items-center gap-2">
+                                    <img src={a.childAvatar} alt={a.childName} className="h-5 w-5 rounded-full object-cover ring-1 ring-white/50" />
+                                    <span className="font-medium text-slate-700 dark:text-slate-200">{a.childName}</span>
+                                  </span>
                                 </div>
                               </div>
                             </div>
@@ -539,7 +570,9 @@ export default function ParentActivitiesPage() {
 
                           {a.evaluation && (
                             <div className="mt-4 rounded-xl border border-slate-200/70 bg-gradient-to-r from-indigo-50 to-cyan-50 p-3 text-sm shadow-xs dark:border-white/10 dark:from-indigo-900/15 dark:to-cyan-900/15">
-                              <div className="mb-1 text-xs font-semibold text-slate-600 dark:text-slate-300">Observation de l’éducateur</div>
+                              <div className="mb-1 text-xs font-semibold text-slate-600 dark:text-slate-300">
+                                Observation de l’éducateur — <span className="font-normal">{a.childName}</span>
+                              </div>
                               <p className="text-slate-700 dark:text-slate-300">{a.evaluation.observations}</p>
                             </div>
                           )}
@@ -565,11 +598,11 @@ export default function ParentActivitiesPage() {
       ) : (
         <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-10 text-center shadow-lg dark:border-white/10 dark:bg-slate-900">
           <div className="text-4xl">🎈</div>
-          <p className="mt-2 text-slate-500 dark:text-slate-400">Aucune activité trouvée pour {enfant.name}</p>
+          <p className="mt-2 text-slate-500 dark:text-slate-400">Aucune activité trouvée</p>
         </div>
       )}
 
-      {/* MODAL */}
+      {/* MODAL (identique) */}
       {selectedActivite && (
         <Modal open={!!selectedActivite} onClose={() => setSelectedActivite(null)} className="mt-16">
           {/* Header */}
@@ -596,6 +629,14 @@ export default function ParentActivitiesPage() {
 
           {/* Body */}
           <div className="max-h-[60vh] space-y-6 overflow-y-auto px-6 py-6">
+            {/* Enfant */}
+            <div className="flex items-center gap-3 text-sm">
+              <img src={selectedActivite.childAvatar} alt={selectedActivite.childName} className="h-8 w-8 rounded-full object-cover ring-2 ring-white dark:ring-slate-800" />
+              <div className="font-medium text-slate-800 dark:text-slate-200">{selectedActivite.childName}</div>
+              <span className="text-slate-400">•</span>
+              <div className="text-slate-600 dark:text-slate-300">{selectedActivite.classe}</div>
+            </div>
+
             {/* Description */}
             <div className="rounded-xl bg-sky-50 px-4 py-3 dark:bg-sky-900/20">
               <div className="mb-1 text-sm font-semibold text-slate-700 dark:text-slate-200">Description</div>
@@ -645,7 +686,7 @@ export default function ParentActivitiesPage() {
               <div className="rounded-xl bg-gradient-to-r from-emerald-50 to-green-50 p-4 dark:from-emerald-900/20 dark:to-green-900/20">
                 <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
                   <div className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                    📊 Évaluation de {enfant.name.split(" ")[0]}
+                    📊 Évaluation de {selectedActivite.childName}
                   </div>
                   <div className="flex items-center gap-2">
                     <RatingStars value={selectedActivite.evaluation.note} />
@@ -705,15 +746,5 @@ export default function ParentActivitiesPage() {
         </Modal>
       )}
     </>
-  );
-}
-
-/* ======================= Sous-composant Stat ======================= */
-function StatCard({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="rounded-xl border border-slate-200/70 bg-white px-3 py-2 text-center shadow-sm transition hover:shadow-md dark:border-white/10 dark:bg-white/[0.04]">
-      <div className="text-lg font-bold text-slate-900 dark:text-white">{value}</div>
-      <div className="text-[11px] text-slate-500">{label}</div>
-    </div>
   );
 }

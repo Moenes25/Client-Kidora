@@ -4,10 +4,8 @@ import PageMeta from "../../components/common/PageMeta";
 import BasicTableOne from "../../components/tables/BasicTables/BasicTableOne";
 import { GroupIcon, UserGroup02Icon } from "../../icons";
 import GestionParents from "../../components/tables/Parents/GestionParents";
-import { useState } from "react";
 
 export default function BasicTables() {
-  const [parentsCount, setParentsCount] = useState(0);
   return (
     <>
       <PageMeta
@@ -16,13 +14,9 @@ export default function BasicTables() {
       />
       {/* <PageBreadcrumb pageTitle="Listes des Parents" /> */}
       <div className="space-y-6">
-        <ComponentCard
-         title="Parents"
-          counterLabel="parents" 
-          counterValue={parentsCount}
-          icon={<GroupIcon />}>
+        <ComponentCard title="Parents" counterLabel="parents" counterValue="8"  icon={<GroupIcon />}>
           {/* <BasicTableOne /> */}
-          <GestionParents onCountChange={setParentsCount} />
+          <GestionParents />
         </ComponentCard>
       </div>
     </>

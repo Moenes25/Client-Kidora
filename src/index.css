@@ -1,7 +1,11 @@
-@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap")
-layer(base);
-
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap");
 @import "tailwindcss";
+
+/* si tu veux des styles de base perso :
+@layer base {
+  html { font-family: Outfit, sans-serif; }
+}
+*/
 
 @custom-variant dark (&:is(.dark *));
 
@@ -185,9 +189,10 @@ layer(base);
   [role="button"]:not(:disabled) {
     cursor: pointer;
   }
-  body {
-    @apply relative font-normal font-outfit z-1 bg-gray-50;
-  }
+ body {
+  @apply relative font-outfit font-medium z-1 bg-gray-50;
+}
+
 }
 
 @utility menu-item {
@@ -776,3 +781,24 @@ span.flatpickr-weekday,
 .simplebar-scrollbar.simplebar-visible:before {
   @apply opacity-100;
 }
+/* ===== PDF SAFE MODE (html2canvas compatible) ===== */
+.pdf-safe,
+.pdf-safe * {
+  /* Désactive les couleurs modernes */
+  color: #000 !important;
+  background-color: #fff !important;
+
+  /* Supprime tous les effets non supportés */
+  background-image: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+  backdrop-filter: none !important;
+
+  /* Empêche les gradients Tailwind */
+  --tw-gradient-from: transparent !important;
+  --tw-gradient-to: transparent !important;
+  --tw-gradient-stops: transparent !important;
+}
+
+
+

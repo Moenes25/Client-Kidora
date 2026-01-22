@@ -9,11 +9,8 @@ import { parentApi } from "../../../services/api/parentApi";
 import { StatutClient } from "../../../types/auth.types";
 import { enfantApi } from "../../../services/api/enfantApi";
 
-interface GestionParentsProps {
-  onCountChange?: (count: number) => void;
-}
 
-export default function GestionParents({ onCountChange }: GestionParentsProps) {
+export default function GestionParents() {
   // États pour les filtres
   const [statutFilter, setStatutFilter] = useState<string>("");
   const [relationFilter, setRelationFilter] = useState<string>("");
@@ -47,14 +44,9 @@ export default function GestionParents({ onCountChange }: GestionParentsProps) {
       parentsData.forEach(parent => {
         const enfantFiltered = enfantsData.filter(enfant => enfant.parentId === parent.id);
         parent.enfants.images = enfantFiltered.map(enfant => enfant.imageUrl);
-        parent.enfants.prenoms = enfantFiltered.map(enfant => enfant.prenom);
-        
       });
       console.log("parentsData", parentsData);
       setParents(parentsData);
-      if (onCountChange) {
-        onCountChange(parentsData.length);
-      }
     } catch (error: any) {
       setError(`Erreur de chargement: ${error.message}`);
       console.error("Erreur lors du chargement des parents:", error);
@@ -286,9 +278,9 @@ if (loading) {
               {/* <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
                 Toutes les Parents
               </h2> */}
-              {/* <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
                 {parents.length} parent(s) au total
-              </p> */}
+              </p>
             </div>
             <div className="flex items-center gap-3">
               {/* Bouton rafraîchir */}

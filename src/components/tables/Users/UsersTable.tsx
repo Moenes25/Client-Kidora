@@ -2,6 +2,7 @@ import { Table, TableBody, TableCell, TableHeader, TableRow } from "../../ui/tab
 import Badge from "../../ui/badge/Badge";
 import { Utilisateur } from './types';
 import { RoleUsers, StatutClient } from "../../../types/auth.types";
+import { useEffect, useState } from "react";
 import { imageApi } from "../../../services/api/imageService";
 
 interface UsersTableProps {
@@ -16,7 +17,9 @@ interface UsersTableProps {
   updatingStatus: string | null;
 }
 
-
+interface ImageCache {
+  [userId: string]: string;
+}
 
 export default function UsersTable({ 
   users, 
@@ -30,21 +33,94 @@ export default function UsersTable({
   updatingStatus
 }: UsersTableProps) {
   
- 
+  const [imageCache, setImageCache] = useState<ImageCache>({});
+  const [loadingImages, setLoadingImages] = useState<boolean>(false);
+  
+  // Charger les images quand la liste d'utilisateurs change
+  useEffect(() => {
+    if (users.length > 0) {
+      loadUsersImages();
+    }
+  }, [users]);
 
+  const loadUsersImages = async () => {
+    setLoadingImages(true);
+    const newCache: ImageCache = { ...imageCache };
+    const usersToLoad = users.slice(0, 20); // Limiter à 20 images pour les performances
 
+    const loadPromises = usersToLoad.map(async (user) => {
+      // Ne charger que si l'image n'est pas déjà en cache
+      if (user.image && !newCache[user.id]) {
+        try {
+          const imageUrl = await imageApi.getImage(user.image);
+          newCache[user.id] = imageUrl;
+        } catch (error) {
+          console.error(`Erreur de chargement de l'image pour ${user.nomPrenom}:`, error);
+          newCache[user.id] = '/default-avatar.png';
+        }
+      }
+    });
 
-  const getUserImage = (user : Utilisateur) => {
-    if(!user || !user.image || user.image.trim() === '') {
-      return  imageApi.getImageUrl('/uploads/users/default-avatar-user.jpg');
-  }
-    return imageApi.getImageUrl(user.image);
-}
+    await Promise.all(loadPromises);
+    setImageCache(newCache);
+    setLoadingImages(false);
+  };
+
+  // Obtenir l'URL de l'image d'un utilisateur
+  const getUserImage = (user: Utilisateur): string => {
+    if (!user || !user.image || user.image.trim() === '') {
+      return '/default-avatar.png';
+    }
+    
+    // Si l'image est déjà en cache
+    if (imageCache[user.id]) {
+      return imageCache[user.id];
+    }
+    
+    // Sinon, charger l'image à la volée (lazy loading)
+    loadSingleImage(user);
+    
+    // Retourner un placeholder pendant le chargement
+    return '/placeholder-avatar.png';
+  };
+
+  // Charger une image individuelle
+  const loadSingleImage = async (user: Utilisateur) => {
+    if (!user.image || imageCache[user.id]) return;
+    
+    try {
+      const imageUrl = await imageApi.getImage(user.image);
+      setImageCache(prev => ({
+        ...prev,
+        [user.id]: imageUrl
+      }));
+    } catch (error) {
+      console.error(`Erreur de chargement de l'image pour ${user.id}:`, error);
+      setImageCache(prev => ({
+        ...prev,
+        [user.id]: '/default-avatar.png'
+      }));
+    }
+  };
+
+  // Nettoyer les URLs blob
+  useEffect(() => {
+    return () => {
+      Object.values(imageCache).forEach(url => {
+        if (url && url.startsWith('blob:')) {
+          URL.revokeObjectURL(url);
+        }
+      });
+    };
+  }, [imageCache]);
 
   // Gestionnaire d'erreur pour les images
-  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-    e.currentTarget.src = imageApi.getImageUrl('/uploads/users/default-avatar-user.jpg');
-   
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>, userId: string) => {
+    e.currentTarget.src = '/default-avatar.png';
+    setImageCache(prev => ({
+      ...prev,
+      [userId]: '/default-avatar.png'
+    }));
   };
 
   const formatDate = (dateString: string) => {
@@ -61,11 +137,9 @@ export default function UsersTable({
   };
 
   const getRoleColor = (role: string) => {
-    return role === RoleUsers.PARENT 
+    return role === 'parent' 
       ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-300'
-      : role === RoleUsers.EDUCATEUR
-        ? 'bg-purple-50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-300'
-        : 'bg-green-50 text-green-600 dark:bg-green-900/30 dark:text-green-300';
+      : 'bg-purple-50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-300';
   };
 
   const getStatusColor = (statut: string | null) => {
@@ -179,7 +253,7 @@ export default function UsersTable({
                           height={40}
                           src={userImageUrl}
                           // alt={user.nomPrenom}
-                          onError={handleImageError}
+                          onError={(e) => handleImageError(e, user.id)}
                           className="w-full h-full object-cover"
                           loading="lazy"
                         />

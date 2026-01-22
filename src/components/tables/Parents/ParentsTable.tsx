@@ -2,8 +2,8 @@ import { Table, TableBody, TableCell, TableHeader, TableRow } from "../../ui/tab
 import Badge from "../../ui/badge/Badge";
 import { Parent } from "./types";
 import { useEffect, useState } from "react";
+// import imageApi from "../../../services/api/imageService";
 import { imageApi } from "../../../services/api/imageService";
-import { StatutClient } from "../../../types/auth.types";
 
 interface ParentsTableProps {
   parents: Parent[];
@@ -16,7 +16,10 @@ interface ParentsTableProps {
   onDelete: (parent: Parent) => void;
 }
 
-// Supprimer le cache d'images blob car on utilise maintenant des URLs directes
+interface ImageCache {
+  [parentId: string]: string;
+}
+
 export default function ParentsTable({
   parents,
   selectedParents,
@@ -28,42 +31,116 @@ export default function ParentsTable({
   onDelete
 }: ParentsTableProps) {
 
+   const [imageCache, setImageCache] = useState<ImageCache>({});
+   const [loadingImages, setLoadingImages] = useState<boolean>(false);
   const getBadgeColor = (statut: string) => {
     switch(statut) {
-      case StatutClient.ACTIF: return "success";
-      case StatutClient.EN_ATTENTE: return "warning";
-      case StatutClient.INACTIF: return "error";
+      case "Actif": return "success";
+      case "En attente": return "warning";
+      case "Inactif": return "error";
       default: return "primary";
     }
   };
+  useEffect(() => {
+      if (parents.length > 0) {
+        loadParentsImages();
+      };
+    }, [parents]);
+  
+  const loadParentsImages = async () => {
+  setLoadingImages(true);
+  const newCache: ImageCache = { ...imageCache };
+  const parentsToLoad = parents.slice(0, 20); // Limite à 20 parents
 
-  // Simplifier la gestion des images - pas besoin de useEffect pour précharger
-  const getParentImageUrl = (parent: Parent): string => {
-    if (!parent.image) {
-      return '/uploads/users/default-avatar-parent.png';
+  const loadPromises = parentsToLoad.map(async (parent) => {
+    // Ne charger que si l'image n'est pas déjà en cache
+    if (parent.image && !newCache[parent.id]) {
+      try {
+        console.log(`Chargement de l'image pour: ${parent.prenom} ${parent.nom}`, parent.image);
+        const imageUrl = await imageApi.getImage(parent.image);
+        newCache[parent.id] = imageUrl;
+      } catch (error) {
+        console.error(`Erreur de chargement de l'image pour ${parent.prenom} ${parent.nom}:`, error);
+        newCache[parent.id] = '/default-avatar.png';
+      }
     }
-    
-    // Utiliser la méthode simplifiée getImageUrl
-    return imageApi.getImageUrl(parent.image);
+  });
+
+  await Promise.all(loadPromises);
+  setImageCache(newCache);
+  setLoadingImages(false);
+};
+
+    const getParentImage  = (parent: Parent): string => {
+        if (!parent.image) {
+          return '/default-avatar.png';
+        }
+        
+        // Si l'image est déjà en cache
+        if (imageCache[parent.id]) {
+          return imageCache[parent.id];
+        }
+        
+        // Sinon, charger l'image à la volée (lazy loading)
+        if (parent.image && !loadingImages) {
+          loadSingleImage(parent);
+        }
+        
+        // Retourner une image de placeholder pendant le chargement
+        return '/placeholder-avatar.png';
+      };
+      const loadSingleImage = async (parent: Parent) => {
+          if (!parent.image || imageCache[parent.id]) return;
+          
+          try {
+            const imageUrl = await imageApi.getImage(parent.image);
+            setImageCache(prev => ({
+              ...prev,
+              [parent.id]: imageUrl
+            }));
+          } catch (error) {
+            console.error(`Erreur de chargement de l'image pour ${parent.id}:`, error);
+            setImageCache(prev => ({
+              ...prev,
+              [parent.id]: '/default-avatar.png'
+            }));
+          }
+        };
+        useEffect(() => {
+    return () => {
+      Object.values(imageCache).forEach(url => {
+        if (url && url.startsWith('blob:')) {
+          URL.revokeObjectURL(url);
+        }
+      });
+    };
+  }, [imageCache]);
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>, educateurId: string) => {
+    e.currentTarget.src = '/default-avatar.png';
+    // Mettre à jour le cache avec l'image par défaut
+    setImageCache(prev => ({
+      ...prev,
+      [educateurId]: '/default-avatar.png'
+    }));
   };
 
-  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-    e.currentTarget.src = imageApi.getImageUrl('/uploads/users/default-avatar-parent.png');
-  };
-
-  const getChildImageUrl = (imagePath: string): string => {
+   const getChildImageUrl = (imagePath: string): string => {
     if (!imagePath || imagePath === '') {
-      return '/uploads/users/default-avatar-enfant.png';
+      return '/default-child-avatar.png';
     }
     
-    // Utiliser getImageUrl pour les enfants aussi
-    return imageApi.getImageUrl(imagePath);
+    // Si c'est déjà une URL complète
+    if (imagePath.startsWith('http')) {
+      return imagePath;
+    }
+    
+    // Sinon, construire l'URL complète (option simple sans blob)
+    return imageApi.getImageUrl ? imageApi.getImageUrl(imagePath) : `http://localhost:8086/${encodeURI(imagePath.startsWith('/') ? imagePath.substring(1) : imagePath)}`;
   };
-
   return (
     <div className="max-w-full overflow-x-auto">
       <Table>
-        <TableHeader className="border-b bg-indigo-500">
+        <TableHeader className="border-b  bg-indigo-500 ">
           <TableRow>
             <TableCell isHeader className="px-5 py-3 font-medium text-white text-start text-theme-xs">
               <div className="flex items-center">
@@ -103,8 +180,7 @@ export default function ParentsTable({
         <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
           {parents.map((parent) => {
             const isSelected = selectedParents.includes(parent.id);
-            const parentImageUrl = getParentImageUrl(parent);
-            
+            const parentImageUrl = getParentImage(parent);
             return (
               <TableRow key={parent.id} className={isSelected ? "bg-blue-50 dark:bg-blue-900/10" : ""}>
                 <TableCell className="px-5 py-4 sm:px-6 text-start">
@@ -121,8 +197,8 @@ export default function ParentsTable({
                           width={40}
                           height={40}
                           src={parentImageUrl}
-                          alt={`${parent.prenom} ${parent.nom}`}
-                          onError={handleImageError}
+                          // alt={`${parent.prenom} ${parent.nom}`}
+                          onError={(e) => handleImageError(e, parent.id)}
                           className="w-full h-full object-cover"
                           loading="lazy"
                         />
@@ -152,15 +228,15 @@ export default function ParentsTable({
                   <div className="flex -space-x-2">
                     {parent.enfants.images.slice(0, 3).map((image, index) => (
                       <div
-                        key={`parent-${parent.id}-enfant-${index}`}
+                        key={index}
                         className="relative w-8 h-8 overflow-hidden border-2 border-white rounded-full dark:border-gray-900"
                       >
                         <img
                           width={32}
                           height={32}
                           src={getChildImageUrl(image)}
-                          alt={`Enfant ${index + 1}`}
-                          onError={(e) => e.currentTarget.src = imageApi.getImageUrl('/uploads/enfants/default-avatar-enfant.png')}
+                          // alt={`Enfant ${index + 1}`}
+                          onError={(e) => e.currentTarget.src = '/default-child-avatar.png'}
                           className="w-full h-full object-cover"
                           loading="lazy"
                         />

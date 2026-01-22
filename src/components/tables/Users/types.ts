@@ -39,7 +39,7 @@ export const converUserToUtilisateur = (user: User):Utilisateur => {
     telephone: user.numTel,
     role: user.role ,
     statut: user.statutClient,
-    image: user.imageUrl || '/uploads/users/default-avatar-parent.png',
+    image: user.imageUrl || '/images/user/default-avatar.jpg',
     classe: user.classe || '',
     dateCreation: new Date().toISOString().split('T')[0], 
     derniereConnexion: new Date().toISOString().split('T')[0], 

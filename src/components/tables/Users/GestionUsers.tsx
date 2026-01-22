@@ -7,11 +7,7 @@ import { Utilisateur, converUserToUtilisateur } from "./types";
 import { RoleUsers, StatutClient, User } from "../../../types/auth.types";
 import { authApi } from "../../../services/api/authApi";
 
-interface GestionUsersProps {
-  onCountChange?: (count: number) => void;
-}
-
-export default function GestionUsers({ onCountChange }: GestionUsersProps) {
+export default function GestionUsers() {
   // États pour les filtres
   const [roleFilter, setRoleFilter] = useState<string>("Tous");
   const [statutFilter, setStatutFilter] = useState<string>("Tous");
@@ -53,9 +49,6 @@ export default function GestionUsers({ onCountChange }: GestionUsersProps) {
       const usersDataConverted = usersData.map(converUserToUtilisateur);
       setUtilisateurs(usersDataConverted);
       setFilteredUsers(usersDataConverted);
-      if (onCountChange) {
-        onCountChange(usersDataConverted.length);
-      }
     } catch (error: any) {
       setError(`Erreur de chargement: ${error.message}`);
       console.error("Erreur lors du chargement des utilisateurs:", error);
@@ -421,9 +414,9 @@ export default function GestionUsers({ onCountChange }: GestionUsersProps) {
             {/* <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
               Gestion des Utilisateurs
             </h2> */}
-            {/* <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
               {utilisateurs.length} utilisateur(s) au total
-            </p> */}
+            </p>
           </div>
           <div className="flex items-center gap-3">
             <button

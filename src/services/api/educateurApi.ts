@@ -15,46 +15,30 @@ export const educateurApi = {
   },
 
   createEducateur: async (educateurData: CreateEducateurDto, imageFile?: File): Promise<User> => {
-    console.log("createEducateur : ", educateurData);
     try {
       const formData = new FormData();
       
-      // const userData = {
-      //   nom: educateurData.nom,
-      //   prenom: educateurData.prenom,
-      //   email: educateurData.email,
-      //   password: educateurData.password,
-      //   numTel: educateurData.numTel || '',
-      //   role: RoleUsers.EDUCATEUR,
-      //   statutClient: educateurData.statutClient || StatutClient.ACTIF,
-      //   specialisation: educateurData.specialisation || '',
-      //   experience: educateurData.experience || 0,
-      //   disponibilite: educateurData.disponibilite || 'disponible',
-      //   adresse: educateurData.adresse || '',
-      // };
+      const userData = {
+        nom: educateurData.nom,
+        prenom: educateurData.prenom,
+        email: educateurData.email,
+        password: educateurData.password,
+        numTel: educateurData.numTel || '',
+        role: RoleUsers.EDUCATEUR,
+        statutClient: educateurData.statutClient || StatutClient.ACTIF,
+        specialisation: educateurData.specialisation || '',
+        experience: educateurData.experience || 0,
+        disponibilite: educateurData.disponibilite || 'disponible',
+        classe: educateurData.classe || '',
+        adresse: educateurData.adresse || '',
+      };
       
-      // formData.append('user', JSON.stringify(userData));
+      formData.append('user', JSON.stringify(userData));
 
-      // if (imageFile) {
-      //   formData.append('image', imageFile);
-      // }
-    formData.append('nom', educateurData.nom);
-    formData.append('prenom', educateurData.prenom);
-    formData.append('email', educateurData.email);
-    formData.append('password', educateurData.password);
-    formData.append('role', RoleUsers.EDUCATEUR);
-    
-    // Paramètres optionnels
-    if (educateurData.numTel) formData.append('numTel', educateurData.numTel);
-    if (educateurData.adresse) formData.append('adresse', educateurData.adresse);
-    if (educateurData.specialisation) formData.append('specialisation', educateurData.specialisation);
-    if (educateurData.experience !== undefined) formData.append('experience', educateurData.experience.toString());
-    if (educateurData.disponibilite) formData.append('disponibilite', educateurData.disponibilite);
-    if (educateurData.statutClient) formData.append('statutClient', educateurData.statutClient);
-    
-    if (imageFile) {
-      formData.append('image', imageFile); 
-    }
+      if (imageFile) {
+        formData.append('imageFile', imageFile);
+      }
+      
       const response = await apiClient.post<User>('/client/register', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -62,11 +46,6 @@ export const educateurApi = {
       });
       return response.data;
     } catch (error: any) {
-      console.error('Erreur détaillée createEducateur:', {
-      message: error.message,
-      response: error.response?.data,
-      status: error.response?.status
-    });
       const errorMessage = error.response?.data?.message || error.message || "Erreur lors de la création de l'éducateur";
       throw new Error(errorMessage);
     }
@@ -75,21 +54,12 @@ export const educateurApi = {
   updateEducateur: async (id: string, updateData: UpdateEducateurDto, imageFile?: File): Promise<User> => {
     try {
       const formData = new FormData();
-    if (updateData.nom) formData.append('nom', updateData.nom);
-    if (updateData.prenom) formData.append('prenom', updateData.prenom);
-    if (updateData.numTel) formData.append('numTel', updateData.numTel);
-    if (updateData.adresse) formData.append('adresse', updateData.adresse);
-    if (updateData.specialisation) formData.append('specialisation', updateData.specialisation);
-    if (updateData.experience !== undefined) formData.append('experience', updateData.experience.toString());
-    if (updateData.disponibilite) formData.append('disponibilite', updateData.disponibilite);
-    if (updateData.statutClient) formData.append('statutClient', updateData.statutClient);
-    
       
-      // Object.entries(updateData).forEach(([key, value]) => {
-      //   if (value !== undefined && value !== null && value !== '') {
-      //     formData.append(key, value.toString());
-      //   }
-      // });
+      Object.entries(updateData).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          formData.append(key, value.toString());
+        }
+      });
       
       if (imageFile) {
         formData.append('imageFile', imageFile);

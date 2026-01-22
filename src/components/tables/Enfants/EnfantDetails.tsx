@@ -3,7 +3,7 @@ import Badge from "../../ui/badge/Badge";
 import { StatutClient } from '../../../types/auth.types';
 import { Parent } from '../Parents/types';
 import { useEffect, useState } from 'react';
-import { imageApi } from '../../../services/api/imageService';
+import imageApi from '../../../services/api/imageService';
 
 interface EnfantDetailsProps {
   isOpen: boolean;
@@ -18,33 +18,38 @@ export default function EnfantDetails({ isOpen, onClose, enfant, onEdit , parent
  
   
 
-  const [enfantImageUrl, setEnfantImageUrl] = useState<string>(
-     imageApi.getImageUrl('/uploads/enfants/default-avatar-enfant.png')
-  );
-  const [parentImageUrl, setParentImageUrl] = useState<string>(
-     imageApi.getImageUrl('/uploads/users/default-avatar-parent.png')
-  );
-  
+  const [enfantImageUrl, setEnfantImageUrl] = useState<string>('/default-avatar.png');
+  const [parentImageUrl, setParentImageUrl] = useState<string>('/default-avatar.png');
+  const [loadingImages, setLoadingImages] = useState<boolean>(true);
 
     useEffect(() => {
     if (isOpen && enfant) {
-     if (enfant.imageUrl) {
-       const enfantUrl = imageApi.getImageUrl(enfant.imageUrl);
-       setEnfantImageUrl(enfantUrl);
-     } else {
-      setEnfantImageUrl(imageApi.getImageUrl('/uploads/enfants/default-avatar-enfant.png'));
-     }
-
-     if (parent.image) {
-       const parentUrl = imageApi.getImageUrl(parent.image);
-       setParentImageUrl(parentUrl);
-     } else {
-       setParentImageUrl(imageApi.getImageUrl('/uploads/users/default-avatar-parent.png'));
-     }
+      loadImages();
     }
   }, [isOpen, enfant, parent]);
 
+  
+  const loadImages = async () => {
+    setLoadingImages(true);
+    try {
+      // Charger l'image de l'enfant
+      if (enfant.imageUrl) {
+        const enfantUrl = await imageApi.getImage(enfant.imageUrl);
+        setEnfantImageUrl(enfantUrl);
+      }
 
+      // Charger l'image du parent
+      if (parent.image) {
+        const parentUrl = await imageApi.getImage(parent.image);
+        setParentImageUrl(parentUrl);
+      }
+    } catch (error) {
+      console.error('Erreur de chargement des images:', error);
+      // Garder les images par défaut
+    } finally {
+      setLoadingImages(false);
+    }
+  };
   
   if (!isOpen) return null;
    console.log("enfant", enfant);
@@ -60,8 +65,8 @@ export default function EnfantDetails({ isOpen, onClose, enfant, onEdit , parent
 
 
   const getStatutText = (statut: string) => {
-    return statut === StatutClient.ACTIF ? 'Actif' : 
-           statut === StatutClient.INACTIF ? 'Inactif' :
+    return statut === 'actif' ? 'Actif' : 
+           statut === 'inactif' ? 'Inactif' : 
            'En attente';
   };
   
@@ -93,17 +98,18 @@ export default function EnfantDetails({ isOpen, onClose, enfant, onEdit , parent
             <div className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
               <div className="relative">
                 <div className="w-24 h-24 overflow-hidden rounded-full">
-                
+                  {loadingImages ? (
+                    <div className="w-full h-full bg-gray-200 animate-pulse rounded-full"></div>
+                  ) : (
                   <img
                     src={enfantImageUrl}
                     // alt={`${enfant.prenom} ${enfant.nom}`}
                     className="w-full h-full object-cover"
                      onError={(e) => {
-                       e.currentTarget.src = imageApi.getImageUrl('/uploads/enfants/default-avatar-enfant.png');
-
+                        e.currentTarget.src = '/default-avatar.png';
                       }}
                   />
-                
+                  )}
                 </div>
                 <div className="absolute -bottom-2 -right-2">
                   <Badge
@@ -131,7 +137,7 @@ export default function EnfantDetails({ isOpen, onClose, enfant, onEdit , parent
                   </div>
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Classe</p>
-                    <p className="font-medium">{enfant.nomClasse}</p>
+                    <p className="font-medium">{enfant.classe}</p>
                   </div>
                 </div>
               </div>
@@ -142,16 +148,18 @@ export default function EnfantDetails({ isOpen, onClose, enfant, onEdit , parent
               <h5 className="font-medium text-gray-900 dark:text-white mb-3">Parent Référent</h5>
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 overflow-hidden rounded-full">
-               
+                  {loadingImages ? (
+                    <div className="w-full h-full bg-gray-200 animate-pulse rounded-full"></div>
+                  ) : (
                   <img
                     src={parentImageUrl}
                     // alt={`${parent.prenom} ${parent.nom}`}
                     className="w-full h-full object-cover"
                      onError={(e) => {
-                       e.currentTarget.src = imageApi.getImageUrl('/uploads/users/default-avatar-parent.png');
+                        e.currentTarget.src = '/default-avatar.png';
                       }}
                   />
-                  
+                    )}
                 </div>
                 <div className="flex-1">
                   <p className="font-medium text-gray-900 dark:text-white">
@@ -187,8 +195,8 @@ export default function EnfantDetails({ isOpen, onClose, enfant, onEdit , parent
                 <h5 className="font-medium text-gray-900 dark:text-white mb-3">Informations</h5>
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">Nº d'inscription :</span>
-                    <span className="font-medium">{enfant.id.slice(0, 6)}</span>
+                    <span className="text-gray-600 dark:text-gray-400">ID :</span>
+                    <span className="font-medium">#{enfant.id}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600 dark:text-gray-400">Statut actuel :</span>

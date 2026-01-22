@@ -51,7 +51,7 @@ export const convertBackendToEducateur = (user: User): Educateur => {
     prenom: user.prenom,
     email: user.email,
     numTel: user.numTel || '',
-    image: user.imageUrl || '/uploads/users/default-avatar-educateur.jpg',
+    image: user.imageUrl || '/images/user/default-avatar.jpg',
     specialite: user.specialisation || 'Non spécifiée',
     experience: user.experience ||0 ,
     disponibilite: user.disponibilite || 'Disponible',

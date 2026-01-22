@@ -1,5 +1,4 @@
 
-import { useState } from "react";
 import ComponentCard from "../../components/common/ComponentCard";
 import PageMeta from "../../components/common/PageMeta";
 import BasicTablesUsers from "../../components/tables/BasicTableUsers";
@@ -8,7 +7,6 @@ import { UserGroup02Icon } from "../../icons";
 ;
 
 export default function TableUsers() {
-  const [usersCount, setUsersCount] = useState(0);
   return (
     <>
       <PageMeta
@@ -17,14 +15,10 @@ export default function TableUsers() {
       />
       {/* <PageBreadcrumb pageTitle="Listes des Parents" /> */}
       <div className="space-y-6">
-        <ComponentCard 
-        title="Utilisateurs" 
-        counterLabel="utilisateurs" 
-        counterValue={usersCount}
-        icon={<UserGroup02Icon />}>
+        <ComponentCard title="Utilisateurs" counterLabel="utilisateurs" counterValue="8" icon={<UserGroup02Icon />}>
           {/* <BasicTableOne /> */}
           {/* <BasicTablesUsers /> */}
-          <GestionUsers onCountChange={setUsersCount}/>
+          <GestionUsers />
         </ComponentCard>
       </div>
     </>

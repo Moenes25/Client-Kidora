@@ -3,6 +3,13 @@ import { useState } from "react";
 import { Link } from "react-router";
 
 const ActivitiesEnfants = () => {
+  const objectifsPedas: Record<string, string> = {
+  "4-5": "Développement des compétences motrices fondamentales, initiation au langage et premières interactions sociales.",
+  "5-6": "Préparation aux apprentissages scolaires avec motricité fine, vocabulaire de base, logique.",
+  "6-7": "Lecture, écriture, calcul. Développement de l'autonomie et des habiletés sociales.",
+  "8-9": "Renforcement des savoirs de base, développement du raisonnement, créativité et curiosité.",
+  "10-11": "Approfondissement des matières scolaires, autonomie, esprit critique et projets complexes.",
+};
   // États pour la navigation
   const [selectedAgeGroup, setSelectedAgeGroup] = useState<string>("4-5");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -80,6 +87,18 @@ const ActivitiesEnfants = () => {
       { id: "arts", name: "Arts", icon: "🎭", color: "from-amber-500 to-orange-500", iconBg: "bg-gradient-to-br from-amber-100 to-orange-100" },
       { id: "sport", name: "Sport", icon: "⚽", color: "from-red-500 to-rose-500", iconBg: "bg-gradient-to-br from-red-100 to-rose-100" },
     ],
+    "8-9": [
+  { id: "lecture-avancee", name: "Lecture Avancée", icon: "📚", color: "from-indigo-500 to-blue-500", iconBg: "bg-gradient-to-br from-indigo-100 to-blue-100" },
+  { id: "experiences", name: "Expériences", icon: "🧪", color: "from-green-500 to-teal-500", iconBg: "bg-gradient-to-br from-green-100 to-teal-100" },
+  { id: "musique", name: "Musique", icon: "🎵", color: "from-pink-500 to-rose-500", iconBg: "bg-gradient-to-br from-pink-100 to-rose-100" },
+],
+
+"10-11": [
+  { id: "programmation", name: "Programmation", icon: "💻", color: "from-blue-600 to-purple-600", iconBg: "bg-gradient-to-br from-blue-100 to-purple-100" },
+  { id: "sciences", name: "Sciences", icon: "🔬", color: "from-green-500 to-emerald-500", iconBg: "bg-gradient-to-br from-green-100 to-emerald-100" },
+  { id: "art-numerique", name: "Art Numérique", icon: "🖌️", color: "from-rose-500 to-pink-500", iconBg: "bg-gradient-to-br from-rose-100 to-pink-100" },
+],
+
   };
 
   // Activités premium
@@ -159,7 +178,83 @@ const ActivitiesEnfants = () => {
         color: "from-rose-400 to-rose-600",
         bgColor: "bg-gradient-to-br from-rose-50 to-rose-100 dark:from-rose-900/30 dark:to-rose-800/20"
       },
+      
     ],
+    "lecture-avancee": [
+  {
+    id: "lec1",
+    title: "Club de Lecture",
+    duration: "40 min",
+    points: 40,
+    description: "Discussion autour d’un chapitre avec des questions ouvertes",
+    difficulty: "Moyen",
+    icon: "📖",
+    skills: ["Compréhension", "Analyse", "Expression"],
+    color: "from-indigo-500 to-blue-500",
+    bgColor: "bg-gradient-to-br from-indigo-100 to-blue-100 dark:from-indigo-900/30 dark:to-blue-900/20",
+  }
+],
+
+"experiences": [
+  {
+    id: "exp1",
+    title: "Volcan Maison",
+    duration: "30 min",
+    points: 35,
+    description: "Réaliser une éruption volcanique avec du vinaigre et bicarbonate",
+    difficulty: "Facile",
+    icon: "🌋",
+    skills: ["Observation", "Curiosité", "Méthode scientifique"],
+    color: "from-green-400 to-teal-500",
+    bgColor: "bg-gradient-to-br from-green-100 to-teal-100 dark:from-green-900/30 dark:to-teal-900/20",
+  }
+],
+
+"programmation": [
+  {
+    id: "prog1",
+    title: "Découverte Scratch",
+    duration: "45 min",
+    points: 50,
+    description: "Créer une animation simple avec Scratch",
+    difficulty: "Moyen",
+    icon: "🧑‍💻",
+    skills: ["Logique", "Création", "Résolution de problème"],
+    color: "from-blue-600 to-purple-600",
+    bgColor: "bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/20",
+  }
+],
+
+"sciences": [
+  {
+    id: "sci1",
+    title: "Cycle de l'eau",
+    duration: "30 min",
+    points: 40,
+    description: "Créer une maquette du cycle de l’eau à la maison",
+    difficulty: "Facile",
+    icon: "💧",
+    skills: ["Connaissances", "Observation", "Créativité"],
+    color: "from-emerald-400 to-green-500",
+    bgColor: "bg-gradient-to-br from-emerald-100 to-green-100 dark:from-emerald-900/30 dark:to-green-900/20",
+  }
+],
+
+"art-numerique": [
+  {
+    id: "art1",
+    title: "Crée ton Emoji",
+    duration: "25 min",
+    points: 30,
+    description: "Dessiner un emoji en pixel art avec un outil numérique",
+    difficulty: "Facile",
+    icon: "🎨",
+    skills: ["Design", "Créativité", "Informatique"],
+    color: "from-pink-500 to-rose-500",
+    bgColor: "bg-gradient-to-br from-pink-100 to-rose-100 dark:from-pink-900/30 dark:to-rose-900/20",
+  }
+],
+
   };
 
   // Fonctions utilitaires
@@ -184,8 +279,9 @@ const ActivitiesEnfants = () => {
     setSelectedActivity(null);
   };
 
+
   return (
-    <div className="max-w-5xl w-full mx-auto min-h-screen bg-gradient-to-b from-slate-50 to-blue-50 dark:from-gray-900 dark:to-slate-900 py-2 px-4">
+    <div className=" w-full mx-auto min-h-screen bg-gradient-to-b from-slate-50 to-blue-50 dark:from-gray-900 dark:to-slate-900 py-2 px-4">
       <div className="max-w-7xl mx-auto space-y-10">
         
         <div className="text-center mb-4 relative">
@@ -312,6 +408,7 @@ const ActivitiesEnfants = () => {
                 </button>
               ))}
             </div>
+            
 
             {/* Info Card */}
             <div className={`mt-8 p-6 rounded-2xl ${ageGroups.find(g => g.id === selectedAgeGroup)?.bgColor} border border-white/20`}>
@@ -321,11 +418,10 @@ const ActivitiesEnfants = () => {
                 </div>
                 <div className="flex-1">
                   <h4 className="font-semibold text-slate-900 dark:text-white mb-2">Objectifs pédagogiques spécifiques</h4>
-                  <p className="text-slate-700 dark:text-slate-300">
-                    {selectedAgeGroup === "4-5" && "Développement des compétences motrices fondamentales, initiation au langage et premières interactions sociales. Acquisition des bases sensorielles et cognitives."}
-                    {selectedAgeGroup === "5-6" && "Préparation aux apprentissages scolaires avec un focus sur la motricité fine, le vocabulaire de base et les premières notions de logique."}
-                    {selectedAgeGroup === "6-7" && "Acquisition des compétences en lecture, écriture et calcul. Développement de l'autonomie et des habiletés sociales."}
-                  </p>
+              <p className="text-slate-700 dark:text-slate-300">
+                      {objectifsPedas[selectedAgeGroup] || "Objectifs pédagogiques adaptés à l'âge de votre enfant."}
+              </p>
+
                 </div>
               </div>
             </div>

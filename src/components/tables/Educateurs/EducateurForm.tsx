@@ -1,16 +1,13 @@
 import { useEffect, useState } from "react";
 import { CreateEducateurDto, Educateur, UpdateEducateurDto } from "./Types";
-import { RoleUsers, StatutClient, User } from "../../../types/auth.types";
-import { imageApi } from "../../../services/api/imageService";
-import { classService, ClasseResponseDto } from "../../../services/api/classService";
-import { educateurClasseApi, EducateurClasseRequestDto } from "../../../services/api/educateurClasseService";
+import { RoleUsers, StatutClient } from "../../../types/auth.types";
 
 interface EducateurFormProps {
   isOpen: boolean;
   onClose: () => void;
   educateur?: Educateur | null;
   // onFormChange: (field: keyof Educateur, value: any) => void;
-  onSave: (educateurData: CreateEducateurDto | UpdateEducateurDto, imageFile?: File) => Promise<User | boolean>;
+  onSave: (educateurData: CreateEducateurDto | UpdateEducateurDto, imageFile?: File) => Promise<boolean>;
   title: string;
   subtitle: string;
   isEdit?: boolean;
@@ -32,7 +29,7 @@ export default function EducateurForm({
     prenom: "",
     email: "",
     numTel: "",
-    image: imageApi.getImageUrl('/uploads/users/default-avatar-educateur.jpg'),
+    image: "/images/user/default-avatar.jpg",
     specialite: "",
     experience: 0,
     disponibilite: 'Disponible',
@@ -41,21 +38,12 @@ export default function EducateurForm({
   });
 
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string>(
-    imageApi.getImageUrl('/uploads/users/default-avatar-educateur.jpg')
-   );
   const [password, setPassword] = useState<string>("DefaultPassword123!");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [classeOptions, setClasseOptions] = useState<ClasseResponseDto[]>([]); // Remplace la constante statique
-  const [loadingClasses, setLoadingClasses] = useState(false);
-  const [selectedClasseIds, setSelectedClasseIds] = useState<string[]>([]);
-  
 
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
-      fetchClasses();
       if (educateur && isEdit) {
         setFormData({
           nom: educateur.nom,
@@ -69,103 +57,25 @@ export default function EducateurForm({
           classes: educateur.classes,
           statut: educateur.statut
         });
-        if (educateur.id) {
-          loadEducateurClasses(educateur.id);
-        }
-        if (educateur.image) {
-        const imageUrl = imageApi.getImageUrl(educateur.image);
-        setPreviewUrl(imageUrl);
-      } else {
-        setPreviewUrl(imageApi.getImageUrl('/uploads/users/default-avatar-educateur.jpg'));
-      }
       } else {
         setFormData({
           nom: "",
           prenom: "",
           email: "",
           numTel: "",
-          image: imageApi.getImageUrl('/uploads/users/default-avatar-educateur.jpg'),
+          image: "/images/user/default-avatar.jpg",
           specialite: "",
           experience: 0,
           disponibilite: 'Disponible',
           classes: [],
           statut: StatutClient.ACTIF
         });
-         setPreviewUrl(imageApi.getImageUrl('/uploads/users/default-avatar-educateur.jpg'));
       }
       setPassword("DefaultPassword123!");
       setImageFile(null);
       setErrors({});
     }
-    else {
-      document.body.style.overflow = 'unset';
-    }
-    return () => {
-      document.body.style.overflow = 'unset';
-      if (previewUrl && previewUrl.startsWith('blob:')) {
-        URL.revokeObjectURL(previewUrl);
-      }
-    };
   }, [isOpen, educateur, isEdit]);
-
-
-  const fetchClasses = async () => {
-  try {
-    setLoadingClasses(true);
-    const classes = await classService.getAllClasses();
-    // Extraire les noms des classes
-    // const classNames = classes.map((classe: ClasseResponseDto) => classe.nom_classe);
-    // console.log("les classes sont", classNames);
-    setClasseOptions(classes);
-  } catch (error) {
-    console.error("Erreur lors du chargement des classes:", error);
-   
-  } finally {
-    setLoadingClasses(false);
-  }
-};
-
-  const loadEducateurClasses = async (educateurId: string) => {
-  try {
-    const assignations = await educateurClasseApi.getClassesByEducateur(educateurId);
-    const classeIds = assignations.map(assignation => assignation.classeId);
-    setSelectedClasseIds(classeIds);
-  } catch (error) {
-    console.error("Erreur lors du chargement des classes de l'éducateur:", error);
-  }
-};
-  const handleClasseSelection = (classeId: string, isChecked: boolean) => {
-    if (isChecked) {
-      setSelectedClasseIds(prev => [...prev, classeId]);
-    } else {
-      setSelectedClasseIds(prev => prev.filter(id => id !== classeId));
-    }
-  };
-  const assignerClassesAvecEducateur = async (educateurId: string) => {
-    try {
-      const assignations: Promise<any>[] = [];
-      
-      // Pour chaque classe sélectionnée, créer une assignation
-      for (const classeId of selectedClasseIds) {
-        const assignationData: EducateurClasseRequestDto = {
-          educateurId: educateurId,
-          classeId: classeId,
-          dateAssignation: new Date().toISOString()
-        };
-        
-        assignations.push(educateurClasseApi.assignerEducateurAClasse(assignationData));
-      }
-      
-      // Attendre que toutes les assignations soient créées
-      await Promise.all(assignations);
-      console.log(`${selectedClasseIds.length} classe(s) assignée(s) avec succès`);
-      
-      return true;
-    } catch (error) {
-      console.error("Erreur lors de l'assignation des classes:", error);
-      throw error;
-    }
-  };
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -174,13 +84,8 @@ export default function EducateurForm({
       
       // Prévisualisation
       const imageUrl = URL.createObjectURL(file);
-      setPreviewUrl(imageUrl);
       setFormData(prev => ({ ...prev, image: imageUrl }));
     }
-  };
-
-   const handleImageError = () => {
-    setPreviewUrl(imageApi.getImageUrl('/uploads/users/default-avatar-educateur.jpg'));
   };
 
    const validateForm = () => {
@@ -214,13 +119,19 @@ export default function EducateurForm({
     "Langues étrangères",
     "Activités sportives",
     "Éveil sensoriel",
-    "Mathématiques préscolaires",
-    "Jeux éducatifs",
-    "anglais",
-    "français",
-
+    "Mathématiques préscolaires"
   ];
-  
+  const classeOptions = [
+    "Toute Petite Section",
+    "Petite Section",
+    "Moyenne Section",
+    "Grande Section",
+    "CP",
+    "CE1",
+    "CE2",
+    "CM1",
+    "CM2"
+  ];
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -233,17 +144,20 @@ export default function EducateurForm({
       
     try {
       let dataToSend;
-      if (isEdit && educateur?.id) {
+      if (isEdit) {
+        console.log("formData", formData);
         dataToSend = {
           nom: formData.nom,
           prenom: formData.prenom,
           numTel: formData.numTel,
           experience: formData.experience,
           disponibilite: formData.disponibilite,
+          classe: formData.classes?.[0] || '',
           specialisation: formData.specialite,
           statutClient: formData.statut,
         } as UpdateEducateurDto;
       } else {
+        console.log("formData", formData);
         dataToSend = {
           nom: formData.nom,
           prenom: formData.prenom,
@@ -252,42 +166,17 @@ export default function EducateurForm({
           numTel: formData.numTel,
           experience: formData.experience,
           disponibilite: formData.disponibilite,
+          classe: formData.classes?.[0] || '',
           specialisation: formData.specialite,
           statutClient: formData.statut,
           role: RoleUsers.EDUCATEUR
         } as CreateEducateurDto;
+        console.log("dataToSend", dataToSend);
       }
-      const result = await onSave(dataToSend, imageFile || undefined);
-      if(result){
-        let educateurId: string | null = null;
-         if (isEdit && educateur?.id) {
-          educateurId = educateur.id;
-         } else if (result && typeof result === 'object' && 'id' in result) {
-           educateurId = (result as any).id;
-          } else {
-          console.warn("Impossible de récupérer l'ID directement, tentative de récupération...");
-         }
-
-          if (educateurId && selectedClasseIds.length > 0) {
-            try {
-                await assignerClassesAvecEducateur(educateurId);
-              alert(`Éducateur créé avec ${selectedClasseIds.length} classe(s) assignée(s) avec succès`);
-            } catch (assignError : any) {
-          console.error("Erreur lors de l'assignation des classes:", assignError);
-          alert(`Éducateur créé, mais certaines classes n'ont pas pu être assignées. Erreur: ${assignError.message}`);
-          // On ferme quand même le modal, l'éducateur est créé
-        }
-          } else if (educateurId && selectedClasseIds.length === 0) {
-        console.log("Éducateur créé sans classes assignées");
-        alert("Éducateur créé avec succès (aucune classe assignée)");
-      } else {
-        console.warn("Éducateur créé mais ID non récupéré pour l'assignation des classes");
-        alert("Éducateur créé avec succès");
+      const success = await onSave(dataToSend, imageFile || undefined);
+      if (success) {
+        onClose();
       }
-      onClose();
-      }
-      
-      
     } catch (error: any) {
       console.error("Erreur lors de la soumission:", error);
       alert(`Erreur: ${error.message}`);
@@ -336,24 +225,16 @@ export default function EducateurForm({
                 {/* <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
                   <span className="text-2xl">👨‍🏫</span>
                 </div> */}
-                <div className="w-16 h-16 overflow-hidden rounded-full relative">
-                  
-                    <img
-                      src={previewUrl}
-                      alt="Photo de profil"
-                      className="w-full h-full object-cover"
-                      onError={handleImageError}
-                    />
-                  
-                  {isEdit && educateur?.image &&  (
-                    <div className="absolute bottom-0 right-0 bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
-                      Actuelle
-                    </div>
-                  )}
+                <div className="w-16 h-16 overflow-hidden rounded-full">
+                  <img
+                    src={formData.image}
+                    // alt={`${formData.prenom} ${formData.nom}`}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
                 <div className="flex-1">
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                   Photo de profil
+                    Photo (URL)
                   </label>
                   <input
                     type="file"
@@ -364,11 +245,6 @@ export default function EducateurForm({
                   <p className="text-xs text-gray-500 mt-1">
                     Formats acceptés: JPG, PNG, GIF. Max: 5MB
                   </p>
-                  {isEdit && (
-                    <p className="text-xs text-gray-500 mt-1">
-                      Laissez vide pour conserver l'image actuelle
-                    </p>
-                  )}
                 </div>
               </div>
               {!isEdit && (
@@ -521,11 +397,9 @@ export default function EducateurForm({
                     onChange={(e) => handleFormChange('disponibilite', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                   >
-                    <option value="">Sélectionnez une disponibilité</option>
-                    <option value="Lundi à Vendredi">Lundi à Vendredi</option>
-                    <option value="Mi-temps">Mi-temps</option>
-                     <option value="Temps plein">Temps plein</option>
-                      <option value="Disponible">Disponible</option>
+                    <option value="disponible">Disponible</option>
+                    <option value="occupe">Occupé</option>
+                    <option value="absence">Absence</option>
                   </select>
                 </div>
                 <div>
@@ -537,11 +411,8 @@ export default function EducateurForm({
                     onChange={(e) => handleFormChange('statut', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                   >
-                    <option value="">Sélectionnez un statut</option>
-                    <option value={StatutClient.EN_ATTENTE}>En attente</option>
-                    <option value={StatutClient.ACTIF}>Actif</option>
-                    <option value={StatutClient.INACTIF}>Inactif</option>
-                 
+                    <option value="actif">Actif</option>
+                    <option value="inactif">Inactif</option>
                   </select>
                 </div>
               </div>
@@ -550,97 +421,33 @@ export default function EducateurForm({
               <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Classes assignées
-                {isEdit && (
-                    <span className="ml-2 text-xs text-yellow-600 dark:text-yellow-400">
-                      (Non modifiable Ici )
-                    </span>
-                  )}
               </label>
-              {loadingClasses ? (
-                  <div className="flex items-center justify-center p-4">
-                    <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-600"></div>
-                    <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">Chargement des classes...</span>
-                  </div>
-                ) : classeOptions.length === 0 ? (
-                  <div className="text-center p-4 text-gray-500 dark:text-gray-400">
-                    Aucune classe disponible
-                  </div>
-               ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {classeOptions.map((classe) => (
-                  <div key={classe.id} className="flex items-center gap-2">
+                {classeOptions.map((classe, index) => (
+                  <div key={index} className="flex items-center gap-2">
                     <input
                       type="checkbox"
-                      id={`classe-${classe.id}`}
-                      checked={selectedClasseIds.includes(classe.id)}
-                      onChange={(e) => handleClasseSelection(classe.id, e.target.checked)
-                    }
-                     disabled={isEdit}
+                      id={`classe-${index}`}
+                      checked={formData.classes?.includes(classe) || false}
+                      onChange={(e) => {
+                        const currentClasses = formData.classes || [];
+                        if (e.target.checked) {
+                          handleFormChange('classes', [...currentClasses, classe]);
+                        } else {
+                          handleFormChange('classes', currentClasses.filter(c => c !== classe));
+                        }
+                      }}
                       className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
                     />
                     <label 
-                      htmlFor={`classe-${classe.id}`}
-                      className={`text-sm text-gray-700 dark:text-gray-300 ${
-                        isEdit ? 'cursor-default' : 'cursor-pointer'
-                      }`}
+                      htmlFor={`classe-${index}`}
+                      className="text-sm text-gray-700 dark:text-gray-300 cursor-pointer"
                     >
-                      <span className="w-3 h-3 rounded-full" 
-                            style={{ backgroundColor: `var(--color-${classe.couleur_classe})` }}></span>
-                      {classe.nom_classe}
-                      <span className="text-xs text-gray-500 ml-auto">
-                        ({classe.trancheAge})
-                      </span>
+                      {classe}
                     </label>
                   </div>
                 ))}
               </div>
-              )}
-              {isEdit && selectedClasseIds.length > 0 && (
-  <div className="mt-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
-    <p className="text-sm text-yellow-700 dark:text-yellow-400 font-medium mb-2">
-      ⓘ Les classes assignées ne peuvent pas être modifiées
-    </p>
-    <div className="flex flex-wrap gap-2">
-      {selectedClasseIds.map(classeId => {
-        const classe = classeOptions.find(c => c.id === classeId);
-        return classe ? (
-          <span 
-            key={classeId} 
-            className="inline-flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-800"
-          >
-            <span 
-              className="w-2.5 h-2.5 rounded-full" 
-              style={{ backgroundColor: `var(--color-${classe.couleur_classe})` }}
-            ></span>
-            {classe.nom_classe}
-            <span className="text-xs ml-1">({classe.trancheAge})</span>
-          </span>
-        ) : null;
-      })}
-    </div>
-  </div>
-)}
-
-          {/* Section normale en mode création */}
-          {!isEdit && selectedClasseIds.length > 0 && (
-            <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-              <p className="text-sm text-blue-700 dark:text-blue-300">
-                {selectedClasseIds.length} classe(s) sélectionnée(s)
-              </p>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {selectedClasseIds.map(classeId => {
-                  const classe = classeOptions.find(c => c.id === classeId);
-                  return classe ? (
-                    <span key={classeId} className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
-                      <span className="w-2 h-2 rounded-full" 
-                            style={{ backgroundColor: `var(--color-${classe.couleur_classe})` }}></span>
-                      {classe.nom_classe}
-                    </span>
-                  ) : null;
-                })}
-              </div>
-            </div>
-          )}
             </div>
 
 

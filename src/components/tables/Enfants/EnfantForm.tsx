@@ -1,8 +1,5 @@
 import { Enfant, EnfantFormData } from './types';
 import { Parent } from '../Parents/types';
-import { imageApi } from "../../../services/api/imageService";
-import { useState, useEffect, useRef } from 'react';
-import classService, { ClasseResponseDto } from '../../../services/api/classService';
 interface EnfantFormProps {
   isOpen: boolean;
   onClose: () => void;
@@ -29,21 +26,14 @@ export default function EnfantForm({
   onImageChange
 }: EnfantFormProps) {
   
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  
-  // État local pour l'URL de prévisualisation
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  
   if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSave();
   };
-  const [classes, setClasses] = useState<ClasseResponseDto[]>([]);
-  const [isLoadingClasses, setIsLoadingClasses] = useState(false);
-  const [classesError, setClassesError] = useState<string | null>(null);
-  // const classes = ["Toute Petite Section", "Petite Section", "Moyenne Section", "Grande Section", "CP", "CE1", "CE2"];
+
+  const classes = ["Toute Petite Section", "Petite Section", "Moyenne Section", "Grande Section", "CP", "CE1", "CE2"];
 
   const title = isEditing ? "Modifier l'Enfant" : "Ajouter un nouvel enfant";
   const subtitle = isEditing ? `${enfant?.prenom} ${enfant?.nom}` : "Remplissez les informations de l'enfant";
@@ -60,43 +50,12 @@ export default function EnfantForm({
       // Prévisualisation temporaire
       const reader = new FileReader();
       reader.onloadend = () => {
-        const result = reader.result as string;
-        // Mettre à jour la prévisualisation locale
-        setImagePreview(result);
-        onFormChange('image', result);
+        onFormChange('image', reader.result as string);
       };
       reader.readAsDataURL(file);
     }
   };
-   const handleRemoveImage = () => {
-    setImagePreview(null);
-    onFormChange('image', null);
-    // Réinitialiser l'input file
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
-  useEffect(() => {
-    if (formData.image && formData.image.startsWith('data:')) {
-      setImagePreview(formData.image);
-    } else if (enfant?.imageUrl) {
-      // Utiliser l'image existante en mode édition
-      setImagePreview(imageApi.getImageUrl(enfant.imageUrl));
-    } else {
-      setImagePreview(null);
-    }
-  }, [formData.image, enfant]);
-
-  const getImageUrl = (imagePath: string | null | undefined, type: 'enfant' | 'parent'): string => {
-  if (!imagePath || imagePath.trim() === '') {
-    return type === 'enfant' 
-      ? imageApi.getImageUrl('/uploads/enfants/default-avatar-enfant.png')
-      : imageApi.getImageUrl('/uploads/users/default-avatar-parent.png');
-  }
   
-  return imageApi.getImageUrl(imagePath);
-};
     const getSelectedParent = (): Parent | undefined => {
     // Si on a un parentId, trouver le parent correspondant
     if (formData.parentId) {
@@ -121,41 +80,6 @@ export default function EnfantForm({
       // });
     }
   };
-
-   useEffect(() => {
-    if (isOpen) {
-      loadClasses();
-        if (!isEditing) {
-        setImagePreview(null);
-      }
-    }
-  }, [isOpen]);
-
-  const loadClasses = async () => {
-    setIsLoadingClasses(true);
-    setClassesError(null);
-    
-    try {
-      const data = await classService.getAllClasses();
-      setClasses(data);
-    } catch (error) {
-      console.error("Erreur lors du chargement des classes:", error);
-      setClassesError("Impossible de charger la liste des classes");
-    } finally {
-      setIsLoadingClasses(false);
-    }
-  };
-  const formatClasseName = (classe: ClasseResponseDto): string => {
-    return `${classe.nom_classe} - ${classe.trancheAge}`;
-  };
-
-  // Fonction pour obtenir la classe par ID
-  const getClasseById = (id: string): ClasseResponseDto | undefined => {
-    return classes.find(c => c.id === id);
-  };
-  
-
-
   return (
     <div className="fixed inset-0 z-[100000] overflow-y-auto">
       <div className="fixed inset-0 bg-black/50 z-[100000]" onClick={onClose} />
@@ -191,14 +115,11 @@ export default function EnfantForm({
                   <div className="relative w-32 h-32 mb-4">
                     <div className="w-32 h-32 overflow-hidden rounded-full border-4 border-white dark:border-gray-700 shadow-lg">
                       <img
-                        src={
-                          imagePreview ||
-                          (enfant?.imageUrl ? imageApi.getImageUrl(enfant.imageUrl) :
-                           imageApi.getImageUrl('/uploads/enfants/default-avatar-enfant.png'))}
+                        src={formData.image || enfant?.imageUrl || '/images/default-child.jpg'}
                         alt={`${formData.prenom || ''} ${formData.nom || ''}`}
                         className="w-full h-full object-cover"
                         onError={(e) => {
-                         e.currentTarget.src = imageApi.getImageUrl('/uploads/enfants/default-avatar-enfant.png');
+                          e.currentTarget.src = '/images/default-child.jpg';
                         }}
                       />
                     </div>
@@ -212,18 +133,6 @@ export default function EnfantForm({
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
                     </label>
-                    {imagePreview && !isEditing && (
-                      <button
-                        type="button"
-                        onClick={handleRemoveImage}
-                        className="absolute top-0 right-0 w-8 h-8 bg-red-500 rounded-full flex items-center justify-center cursor-pointer hover:bg-red-600 transition-colors"
-                        title="Supprimer la photo"
-                      >
-                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    )}
                     <input
                       id="image-upload"
                       type="file"
@@ -234,25 +143,14 @@ export default function EnfantForm({
                     />
                   </div>
                   <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
-                     {imagePreview 
-                      ? "Photo sélectionnée ✓" 
-                      : `Cliquez sur l'icône pour ${!isEditing ? 'sélectionner' : 'changer'} la photo`
-                    }
-                   
+                    Cliquez sur l'icône pour {!isEditing ? 'sélectionner' : 'changer'} la photo
                   </p>
-                  {!isEditing && !imageFile && !imagePreview && (
+                  {!isEditing && !imageFile && (
                     <p className="text-xs text-red-500 mt-1">
                       Une photo est requise
                     </p>
                   )}
-                  {imagePreview && !isEditing && (
-                    <p className="text-xs text-green-600 mt-1">
-                      Nouvelle photo sélectionnée
-                    </p>
-                  )}
                 </div>
-
-                
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -303,73 +201,17 @@ export default function EnfantForm({
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Classe *
                     </label>
-                     {isLoadingClasses ? (
-                      <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                        <span className="text-sm text-gray-500">Chargement des classes...</span>
-                      </div>
-                    ) : classesError ? (
-                      <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                        <p className="text-sm text-red-600 dark:text-red-400">
-                          {classesError}
-                        </p>
-                        <p className="text-xs text-red-500 dark:text-red-400 mt-1">
-                          Veuillez d'abord créer des classes dans l'application
-                        </p>
-                      </div>
-                    ): classes.length === 0 ? (
-                      <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-                        <p className="text-sm text-yellow-700 dark:text-yellow-300">
-                          Aucune classe disponible
-                        </p>
-                        <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-1">
-                          Veuillez créer des classes avant d'ajouter un enfant
-                        </p>
-                      </div>
-                    ): (
-                      <>
-                        <select
-                          required
-                          value={formData.classe || ''}
-                          onChange={(e) => onFormChange('classe', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                        >
-                          <option value="">Sélectionnez une classe</option>
-                          {classes.map(classe => (
-                            <option 
-                              key={classe.id} 
-                              value={classe.id}
-                              title={`Capacité: ${classe.capacite} élèves - Créée par: ${classe.created_by_nom}`}
-                            >
-                              {formatClasseName(classe)}
-                              {classe.salle && ` - ${classe.salle}`}
-                            </option>
-                          ))}
-                        </select>
-                        
-                        {/* Informations sur la classe sélectionnée */}
-                        {formData.classe && (
-                          <div className="mt-2 p-2 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                            <p className="text-xs text-gray-600 dark:text-gray-400">
-                              {(() => {
-                                const selectedClasse = getClasseById(formData.classe);
-                                if (selectedClasse) {
-                                  return (
-                                    <>
-                                      <span className="font-medium">{selectedClasse.nom_classe}</span>
-                                      {selectedClasse.description_classe && ` - ${selectedClasse.description_classe}`}
-                                      {selectedClasse.salle && ` (${selectedClasse.salle})`}
-                                    </>
-                                  );
-                                }
-                                return "Classe sélectionnée";
-                              })()}
-                            </p>
-                          </div>
-                        )}
-                      </>
-                    )}
-
+                    <select
+                      required
+                      value={formData.classe || ''}
+                      onChange={(e) => onFormChange('classe', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">Sélectionnez une classe</option>
+                      {classes.map(classe => (
+                        <option key={classe} value={classe}>{classe}</option>
+                      ))}
+                    </select>
                   </div>
                 </div>
 
@@ -428,11 +270,11 @@ export default function EnfantForm({
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 overflow-hidden rounded-full border-2 border-gray-200 dark:border-gray-700">
                         <img
-                          src={getImageUrl(selectedParent.image, 'parent')}
+                          src={selectedParent.image || '/images/default-parent.jpg'}
                           alt={`${selectedParent.prenom} ${selectedParent.nom}`}
                           className="w-full h-full object-cover"
                           onError={(e) => {
-                            e.currentTarget.src = getImageUrl(null, 'parent');
+                            e.currentTarget.src = '/images/default-parent.jpg';
                           }}
                         />
                       </div>
@@ -486,14 +328,11 @@ export default function EnfantForm({
                   !formData.prenom || 
                   !formData.age || 
                   !formData.classe || 
-                  (!isEditing && !formData.parentId) ||
-                  isLoadingClasses ||
-                   classes.length === 0
+                  (!isEditing && !formData.parentId)
                 }
                 className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                {/* {saveButtonText} */}
-                 {isLoadingClasses ? 'Chargement...' : saveButtonText}
+                {saveButtonText}
               </button>
             </div>
           </form>
