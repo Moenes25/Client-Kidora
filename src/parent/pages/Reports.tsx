@@ -4,6 +4,8 @@ import { Link, useNavigate, useParams } from "react-router";
 import PageMeta from "../../components/common/PageMeta";
 import Modal from "../../components/Modal";
 import { DownloadIcon, EyeIcon, CalenderIcon, AngleLeftIcon } from "../../icons";
+import Swal from "sweetalert2";
+
 
 
 /* -------------------------------- Types -------------------------------- */
@@ -244,13 +246,52 @@ export default function ParentReportsPage() {
   const { childId } = useParams<{ childId?: string }>();
   const navigate = useNavigate();
 
-  const [data] = useState<Rapport[]>(rapportsSeed);
+  const [data, setData] = useState<Rapport[]>(rapportsSeed);
   const [selectedChild, setSelectedChild] = useState<string>("Tous les enfants");
   const [filterType, setFilterType] = useState<TRapportType | "all">("all");
   const [filterStatut, setFilterStatut] = useState<TRapportStatut | "all">(
     "all"
   );
-  
+  const [confirming, setConfirming] = useState(false);
+  const handleConfirmRead = async () => {
+  if (!selectedRapport) return;
+  if (selectedRapport.statut === "lu") {
+    // déjà confirmé -> feedback visuel simple
+    await Swal.fire({
+      icon: "info",
+      title: "Déjà confirmé",
+      text: "Ce rapport est déjà marqué comme lu.",
+      confirmButtonText: "OK",
+    });
+    return;
+  }
+
+  try {
+    setConfirming(true);
+
+    // 👉 si tu as une API, appelle-la ici (await api.markAsRead(selectedRapport.id))
+
+    // Met à jour la liste (card + stats + filtres)
+    setData(prev =>
+      prev.map(r =>
+        r.id === selectedRapport.id ? { ...r, statut: "lu" } : r
+      )
+    );
+
+    // Met à jour l’élément ouvert dans la modale (pour désactiver le bouton)
+    setSelectedRapport(r => (r ? { ...r, statut: "lu" } : r));
+
+    await Swal.fire({
+      icon: "success",
+      title: "Rapport confirmé",
+      text: "Ce rapport a été marqué comme lu.",
+      confirmButtonText: "OK",
+    });
+  } finally {
+    setConfirming(false);
+  }
+};
+
   const [query, setQuery] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
  const [selectedRapport, setSelectedRapport] = useState<Rapport | null>(null);
@@ -388,6 +429,7 @@ const handleDownloadPDF = async (rapport: Rapport) => {
       r.readAsDataURL(blob);
     });
   };
+
 
   const doc = new jsPDF("p", "mm", "a4");
 
@@ -796,6 +838,7 @@ const handleDownloadPDF = async (rapport: Rapport) => {
                 key={r.id}
                 className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-white/10 dark:bg-white/[0.04]"
               >
+
                 {/* Accent dégradé */}
                 <span
                   aria-hidden
@@ -1187,7 +1230,22 @@ const handleDownloadPDF = async (rapport: Rapport) => {
           >
             Fermer
           </button>
-          {/* 👉 Ce bouton utilise aussi la capture visuelle */}
+        <button
+  onClick={handleConfirmRead}
+  disabled={confirming || selectedRapport.statut === "lu"}
+  className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium
+    ${selectedRapport.statut === "lu"
+      ? "bg-slate-200 text-slate-500 cursor-not-allowed dark:bg-white/10 dark:text-white/40"
+      : "bg-emerald-600 text-white hover:bg-emerald-700"
+    }`}
+>
+  {selectedRapport.statut === "lu"
+    ? "Lecture confirmée"
+    : confirming
+      ? "Confirmation..."
+      : "Confirmer lecture"}
+</button>
+
           <button
            onClick={() => handleDownloadPDF(selectedRapport)}
 

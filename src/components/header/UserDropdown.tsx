@@ -108,7 +108,7 @@ export default function UserDropdown() {
             <DropdownItem
               onItemClick={closeDropdown}
               tag="a"
-              to="/admin/profile"
+              to="/parent/profil"
               className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium
                          text-slate-700 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/40
                          dark:text-slate-200 dark:hover:bg-white/5"
@@ -125,7 +125,7 @@ export default function UserDropdown() {
             <DropdownItem
               onItemClick={closeDropdown}
               tag="a"
-              to="/admin/settings"
+              to="/parent/privacy"
               className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium
                          text-slate-700 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/40
                          dark:text-slate-200 dark:hover:bg-white/5"
@@ -143,7 +143,7 @@ export default function UserDropdown() {
             <DropdownItem
               onItemClick={closeDropdown}
               tag="a"
-              to="/admin/support"
+              to="/parent/help"
               className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium
                          text-slate-700 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/40
                          dark:text-slate-200 dark:hover:bg-white/5"
