@@ -212,7 +212,7 @@ const AppHeader: React.FC = () => {
             className="flex items-center justify-center w-10 h-10 text-white/90 rounded-lg z-99999 hover:bg-white/10 lg:hidden"
           >
             <svg
-              width="24"
+              width="240"
               height="24"
               viewBox="0 0 24 24"
               fill="none"
@@ -228,7 +228,7 @@ const AppHeader: React.FC = () => {
           </button>
 
           {/* Boutons à droite (thème, notifications, utilisateur) */}
-          <div className="hidden lg:flex items-center gap-2">
+          <div className="hidden lg:flex items-center gap-5">
             <ThemeToggleButton />
             <NotificationDropdown />
             <Link
@@ -251,7 +251,7 @@ const AppHeader: React.FC = () => {
                   fill=""
                 />
               </svg>
-              déconnexion
+              Déconnexion
             </Link>
           </div>
         </div>
