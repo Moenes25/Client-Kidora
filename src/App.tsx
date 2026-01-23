@@ -44,6 +44,7 @@ import HelpCenter from "./parent/pages/HelpCenter";
 import ContactSupport from "./parent/pages/ContactSupport";
 import Privacy from "./parent/pages/Privacy";
 import ChangePassword from "./pages/AuthPages/ChangePassword";
+import MessagingInbox from "./parent/pages/MessagingInbox";
 
 export default function App() {
   return (
@@ -74,6 +75,7 @@ export default function App() {
            <Route path="/parent/help" element={<HelpCenter />} />
            <Route path="/parent/contact" element={<ContactSupport />} />
           <Route path="/parent/privacy" element={<Privacy />} />
+          <Route path="/parent/messaging" element={<MessagingInbox />} />
           
             <Route index  element={<HomeParent />} />
             <Route path="enfants" element={<Enfants />} />
@@ -82,6 +84,7 @@ export default function App() {
              <Route path="enfant/:childId/reports" element={<ParentReportsPage />} />
              <Route path="enfant/:childId/activities" element={<ParentActivitiesPage />} />
              <Route path="enfant/:childId/evaluations" element={<ParentEvaluationsPage />} />
+
           </Route>
           {/* Dashboard Layout */}
           <Route path='/admin' element={<AppLayout />}>
