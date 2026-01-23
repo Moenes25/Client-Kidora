@@ -1,7 +1,6 @@
-// src/educateur/pages/Reports.tsx
 import PageMeta from "../../components/common/PageMeta";
-import { useState } from "react";
-import { 
+import { useMemo, useState } from "react";
+import {
   UserIcon,
   CalenderIcon,
   DownloadIcon,
@@ -11,140 +10,502 @@ import {
   CheckCircleIcon,
   CloseIcon,
   ArrowUpIcon,
-  ArrowDownIcon
+  ArrowDownIcon,
 } from "../../icons";
 
+/* -------------------- Types -------------------- */
 interface Rapport {
   id: number;
   titre: string;
-  type: 'individuel_hebdomadaire' | 'individuel_quotidien' | 'classe_hebdomadaire' | 'trimestriel';
+  type:
+    | "individuel_hebdomadaire"
+    | "individuel_quotidien"
+    | "classe_hebdomadaire"
+    | "trimestriel";
   periode: string;
   dateCreation: string;
   auteur: string;
   enfantsConcernes: number;
-  statut: 'brouillon' | 'finalise' | 'envoye' | 'archive';
+  statut: "brouillon" | "finalise" | "envoye" | "archive";
   resume?: string;
   actionsRecommandees?: string[];
   motsCles?: string[];
-  importance: 'faible' | 'moyenne' | 'haute';
+  importance: "faible" | "moyenne" | "haute";
 }
 
 interface ModeleRapport {
   id: number;
   nom: string;
   description: string;
-  type: string;
-  tempsEstime: number; // en minutes
+  type: Rapport["type"];
+  tempsEstime: number; // minutes
   sections: string[];
 }
 
+/* -------------------- Helpers visuels -------------------- */
+const typeIcon = (t: Rapport["type"]) =>
+  t === "individuel_hebdomadaire"
+    ? "📅👤"
+    : t === "individuel_quotidien"
+    ? "📝👤"
+    : t === "classe_hebdomadaire"
+    ? "📅👥"
+    : "📊📈";
+
+const typeTone = (t: Rapport["type"]) =>
+  t === "individuel_hebdomadaire"
+    ? "indigo"
+    : t === "individuel_quotidien"
+    ? "emerald"
+    : t === "classe_hebdomadaire"
+    ? "purple"
+    : "amber";
+
+const toneBg = (tone: string) =>
+  ({
+    indigo: "from-indigo-500 to-violet-600",
+    emerald: "from-emerald-500 to-teal-600",
+    purple: "from-purple-500 to-fuchsia-600",
+    amber: "from-amber-500 to-orange-600",
+  }[tone] || "from-slate-500 to-slate-700");
+
+const chipByType = (t: Rapport["type"]) =>
+  ({
+    individuel_hebdomadaire:
+      "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300",
+    individuel_quotidien:
+      "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300",
+    classe_hebdomadaire:
+      "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
+    trimestriel:
+      "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
+  }[t]);
+
+const chipByStatut = (s: Rapport["statut"]) =>
+  ({
+    brouillon:
+      "text-gray-700 dark:text-gray-300",
+    finalise:
+      "text-green-700 dark:text-green-300",
+    envoye:
+      "text-blue-700 dark:text-blue-300",
+    archive:
+      "text-purple-700 dark:text-purple-300",
+  }[s]);
+
+const chipByImportance = (p: Rapport["importance"]) =>
+  ({
+    haute:
+      "bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-300",
+    moyenne:
+      "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
+    faible:
+      "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300",
+  }[p]);
+
+const typeLabel = (t: Rapport["type"]) =>
+  t === "individuel_hebdomadaire"
+    ? "Individuel Hebdomadaire"
+    : t === "individuel_quotidien"
+    ? "Individuel Quotidien"
+    : t === "classe_hebdomadaire"
+    ? "Classe Hebdomadaire"
+    : "Trimestriel";
+
+
+
+
+/* Pills lisibles sur fond coloré */
+function StatusPill({ statut }: { statut: Rapport["statut"] }) {
+  const label =
+    statut === "brouillon"
+      ? "Brouillon"
+      : statut === "finalise"
+      ? "Finalisé"
+      : statut === "envoye"
+      ? "Envoyé"
+      : "Archivé";
+  return (
+    <span
+      className={`dark:text-slate-800 inline-flex items-center gap-2 rounded-full bg-white/85 px-3 py-1 text-[11px] font-semibold shadow-sm ring-1 ring-black/5 ${chipByStatut(
+        statut
+      )}`}
+    >
+      <span
+        className={`inline-block h-2.5 w-2.5 rounded-full ${
+          statut === "brouillon"
+            ? "bg-gray-400"
+            : statut === "finalise"
+            ? "bg-green-500"
+            : statut === "envoye"
+            ? "bg-blue-500"
+            : "bg-purple-500"
+        }`}
+      />
+      {label}
+    </span>
+  );
+}
+function TypePill({ type }: { type: Rapport["type"] }) {
+  return (
+    <span
+      className={`rounded-full bg-white/85 px-3 py-1 text-[11px] font-semibold shadow-sm ring-1 ring-black/5 capitalize ${chipByType(
+        type
+      )}`}
+    >
+      {typeLabel(type)}
+    </span>
+  );
+}
+
+/* Mini composants */
+function GlassStat({
+  icon,
+  label,
+  value,
+  ring = "indigo",
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: number | string;
+  ring?: "indigo" | "green" | "amber" | "cyan";
+}) {
+  const ringCls =
+    ring === "green"
+      ? "ring-green-300/50 dark:ring-green-400/20"
+      : ring === "amber"
+      ? "ring-amber-300/50 dark:ring-amber-400/20"
+      : ring === "cyan"
+      ? "ring-cyan-300/50 dark:ring-cyan-400/20"
+      : "ring-indigo-300/50 dark:ring-indigo-400/20";
+  return (
+    <div className={`rounded-2xl bg-white/10 p-4 backdrop-blur ring-1 ${ringCls} shadow-[inset_0_1px_0_rgba(255,255,255,.25)]`}>
+      <div className="flex items-center gap-3">
+        <div className="grid h-10 w-10 place-items-center rounded-xl bg-white/20">{icon}</div>
+        <div>
+          <div className="text-xs text-white/80">{label}</div>
+          <div className="text-2xl font-extrabold text-white">{value}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+/* ---------- UI helpers (type → icône, couleurs) ---------- */
+const TYPE_META_REPORT: Record<
+  Rapport["type"],
+  { label: string; emoji: string; grad: string; bar: string; dot: string }
+> = {
+  individuel_hebdomadaire: {
+    label: "Individuel Hebdomadaire",
+    emoji: "📅👤",
+    grad: "from-indigo-500/15 via-violet-500/10 to-fuchsia-500/10",
+    bar: "from-indigo-500 to-violet-600",
+    dot: "bg-indigo-500",
+  },
+  individuel_quotidien: {
+    label: "Individuel Quotidien",
+    emoji: "📝👤",
+    grad: "from-emerald-500/15 via-teal-500/10 to-cyan-500/10",
+    bar: "from-emerald-500 to-teal-600",
+    dot: "bg-emerald-500",
+  },
+  classe_hebdomadaire: {
+    label: "Classe Hebdomadaire",
+    emoji: "📅👥",
+    grad: "from-purple-500/15 via-fuchsia-500/10 to-pink-500/10",
+    bar: "from-purple-500 to-fuchsia-600",
+    dot: "bg-purple-500",
+  },
+  trimestriel: {
+    label: "Trimestriel",
+    emoji: "📊📈",
+    grad: "from-amber-500/15 via-orange-500/10 to-rose-500/10",
+    bar: "from-amber-500 to-orange-600",
+    dot: "bg-amber-500",
+  },
+};
+
+/* ---------- Fancy progress bar ---------- */
+function FancyBar({ pct, gradient }: { pct: number; gradient: string }) {
+  const safe = Math.max(0, Math.min(100, pct));
+  return (
+    <div className="relative h-2.5 w-44 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
+      <div
+        className={`h-full rounded-full bg-gradient-to-r ${gradient} transition-[width] duration-700`}
+        style={{ width: `${safe}%` }}
+      />
+      {/* shimmer */}
+      <div
+        className="pointer-events-none absolute inset-y-0 left-0 w-20 -translate-x-16 animate-[shimmer_1.8s_ease_infinite] rounded-full bg-white/30 mix-blend-overlay"
+        style={{ width: `${Math.max(15, safe * 0.3)}%` }}
+      />
+      <style>{`
+        @keyframes shimmer { 
+          0%{ transform: translateX(-4rem) } 
+          100%{ transform: translateX(14rem) } 
+        }
+      `}</style>
+    </div>
+  );
+}
+
+/* ---------- Ligne de répartition ---------- */
+function TypeRow({
+  type,
+  count,
+  total,
+}: {
+  type: Rapport["type"];
+  count: number;
+  total: number;
+}) {
+  const meta = TYPE_META_REPORT[type];
+  const pct = total === 0 ? 0 : Math.round((count / total) * 100);
+  return (
+    <div
+      className={`
+        group relative grid grid-cols-[1fr_auto_auto] items-center gap-3 rounded-xl
+        px-3 py-3 ring-1 ring-slate-200/70 dark:ring-white/10
+        bg-white/70 dark:bg-slate-900/60
+        hover:shadow-md transition
+        overflow-hidden
+      `}
+    >
+      {/* halo décoratif */}
+      <div
+        aria-hidden
+        className={`pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-r ${meta.grad}`}
+      />
+      <div className="relative z-10 flex items-center gap-3">
+      <div className="grid size-12 place-items-center rounded-lg bg-white shadow-sm ring-1 ring-black/5 dark:bg-slate-800">
+     <span className="text-md leading-none whitespace-nowrap">{meta.emoji}</span>
+      </div>
+
+        <div className="text-slate-800 dark:text-slate-200 font-medium">
+          {TYPE_META_REPORT[type].label}
+        </div>
+      </div>
+
+      <div className="relative z-10">
+        <FancyBar pct={pct} gradient={meta.bar} />
+      </div>
+
+      <div className="relative z-10 flex items-center gap-2 pl-1">
+        <span className={`inline-block size-2 rounded-full ${meta.dot}`} />
+        <span className="tabular-nums font-semibold text-slate-900 dark:text-white">
+          {count}
+        </span>
+        <span className="text-xs text-slate-500 dark:text-slate-400">({pct}%)</span>
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Carte complète Répartition ---------- */
+function TypeBreakdownCard({
+  total,
+  data,
+}: {
+  total: number;
+  data: {
+    individuel_hebdomadaire: number;
+    individuel_quotidien: number;
+    classe_hebdomadaire: number;
+    trimestriel: number;
+  };
+}) {
+  return (
+    <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 dark:border-white/10 dark:bg-slate-900">
+      {/* gradient d’arrière-plan */}
+      <div
+        aria-hidden
+        className="absolute -top-20 -right-24 h-64 w-64 rounded-full bg-sky-400/20 blur-3xl"
+      />
+      <div
+        aria-hidden
+        className="absolute -bottom-24 -left-20 h-64 w-64 rounded-full bg-fuchsia-400/10 blur-3xl"
+      />
+      <div className="relative z-10 mb-5 flex items-center justify-between">
+        <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+          Répartition par type
+        </h3>
+        <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700 dark:bg-white/10 dark:text-slate-300">
+          Total : {total}
+        </span>
+      </div>
+
+      <div className="relative z-10 grid gap-3">
+        <TypeRow
+          type="individuel_hebdomadaire"
+          count={data.individuel_hebdomadaire}
+          total={total}
+        />
+        <TypeRow
+          type="individuel_quotidien"
+          count={data.individuel_quotidien}
+          total={total}
+        />
+        <TypeRow
+          type="classe_hebdomadaire"
+          count={data.classe_hebdomadaire}
+          total={total}
+        />
+        <TypeRow
+          type="trimestriel"
+          count={data.trimestriel}
+          total={total}
+        />
+      </div>
+    </div>
+  );
+}
+
+/* -------------------- Page -------------------- */
 export default function ReportsPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterType, setFilterType] = useState("all");
-  const [filterStatut, setFilterStatut] = useState("all");
+  const [filterType, setFilterType] = useState<"all" | Rapport["type"]>("all");
+  const [filterStatut, setFilterStatut] = useState<
+    "all" | Rapport["statut"]
+  >("all");
+  const [viewMode, setViewMode] = useState<"list" | "stats">("list");
+
   const [selectedRapport, setSelectedRapport] = useState<Rapport | null>(null);
-  const [viewMode, setViewMode] = useState<'list' | 'stats'>('list');
   const [showModeleModal, setShowModeleModal] = useState(false);
   const [showViewRapport, setShowViewRapport] = useState(false);
-  
+
   const [rapports, setRapports] = useState<Rapport[]>([
-    { 
-      id: 1, 
-      titre: "Rapport Hebdomadaire - Classe (3-4) ans", 
-      type: 'classe_hebdomadaire',
+    {
+      id: 1,
+      titre: "Rapport Hebdomadaire - Classe (3-4) ans",
+      type: "classe_hebdomadaire",
       periode: "08-12 Janvier 2024",
       dateCreation: "2024-01-12",
       auteur: "Mme. Dupont",
       enfantsConcernes: 8,
-      statut: 'envoye',
-      resume: "Semaine productive avec focus sur la motricité fine. Excellent progrès pour Emma et Lucas.",
-      actionsRecommandees: ["Continuer les activités de manipulation fine", "Renforcer l'autonomie vestimentaire", "Intégrer plus d'activités sensorielles"],
+      statut: "envoye",
+      resume:
+        "Semaine productive avec focus sur la motricité fine. Excellent progrès pour Emma et Lucas.",
+      actionsRecommandees: [
+        "Continuer les activités de manipulation fine",
+        "Renforcer l'autonomie vestimentaire",
+        "Intégrer plus d'activités sensorielles",
+      ],
       motsCles: ["motricité", "progrès", "socialisation"],
-      importance: 'moyenne'
+      importance: "moyenne",
     },
-    { 
-      id: 2, 
-      titre: "Rapport Individuel Hebdomadaire - Fatima Zahra", 
-      type: 'individuel_hebdomadaire',
+    {
+      id: 2,
+      titre: "Rapport Individuel Hebdomadaire - Fatima Zahra",
+      type: "individuel_hebdomadaire",
       periode: "08-12 Janvier 2024",
       dateCreation: "2024-01-12",
       auteur: "Mme. Dupont",
       enfantsConcernes: 1,
-      statut: 'finalise',
-      resume: "Progrès remarquables en mathématiques et leadership. Montre une grande maturité sociale.",
-      actionsRecommandees: ["Encourager le tutorat des plus jeunes", "Défis mathématiques supplémentaires", "Responsabilités de classe"],
+      statut: "finalise",
+      resume:
+        "Progrès remarquables en mathématiques et leadership. Montre une grande maturité sociale.",
+      actionsRecommandees: [
+        "Encourager le tutorat des plus jeunes",
+        "Défis mathématiques supplémentaires",
+        "Responsabilités de classe",
+      ],
       motsCles: ["leadership", "mathématiques", "maturité"],
-      importance: 'haute'
+      importance: "haute",
     },
-    { 
-      id: 3, 
-      titre: "Rapport Individuel Quotidien - Lucas Martin", 
-      type: 'individuel_quotidien',
+    {
+      id: 3,
+      titre: "Rapport Individuel Quotidien - Lucas Martin",
+      type: "individuel_quotidien",
       periode: "15 Janvier 2024",
       dateCreation: "2024-01-15",
       auteur: "M. Martin",
       enfantsConcernes: 1,
-      statut: 'brouillon',
-      resume: "Journée difficile avec quelques crises émotionnelles. N'a pas bien dormi la nuit dernière.",
-      actionsRecommandees: ["Adapter le rythme de la journée", "Instaurer un rituel de calme", "Communication avec les parents"],
+      statut: "brouillon",
+      resume:
+        "Journée difficile avec quelques crises émotionnelles. N'a pas bien dormi la nuit dernière.",
+      actionsRecommandees: [
+        "Adapter le rythme de la journée",
+        "Instaurer un rituel de calme",
+        "Communication avec les parents",
+      ],
       motsCles: ["émotions", "sommeil", "adaptation"],
-      importance: 'moyenne'
+      importance: "moyenne",
     },
-    { 
-      id: 4, 
-      titre: "Rapport Trimestriel - Développement Social", 
-      type: 'trimestriel',
+    {
+      id: 4,
+      titre: "Rapport Trimestriel - Développement Social",
+      type: "trimestriel",
       periode: "Octobre-Décembre 2023",
       dateCreation: "2024-01-03",
       auteur: "Mme. Leroy",
       enfantsConcernes: 25,
-      statut: 'envoye',
-      resume: "Amélioration significative des interactions sociales. Réduction des conflits de 40%.",
-      actionsRecommandees: ["Maintenir les activités de groupe", "Travailler la résolution de conflits", "Renforcer l'empathie"],
+      statut: "envoye",
+      resume:
+        "Amélioration significative des interactions sociales. Réduction des conflits de 40%.",
+      actionsRecommandees: [
+        "Maintenir les activités de groupe",
+        "Travailler la résolution de conflits",
+        "Renforcer l'empathie",
+      ],
       motsCles: ["socialisation", "conflits", "empathie"],
-      importance: 'haute'
+      importance: "haute",
     },
-    { 
-      id: 5, 
-      titre: "Rapport Individuel Quotidien - Emma Dubois", 
-      type: 'individuel_quotidien',
+    {
+      id: 5,
+      titre: "Rapport Individuel Quotidien - Emma Dubois",
+      type: "individuel_quotidien",
       periode: "14 Janvier 2024",
       dateCreation: "2024-01-14",
       auteur: "Mme. Dupont",
       enfantsConcernes: 1,
-      statut: 'envoye',
-      resume: "Journée excellente ! Participation active à toutes les activités. A aidé un camarade en difficulté.",
-      actionsRecommandees: ["Encourager ce comportement d'entraide", "Responsabilités supplémentaires", "Félicitations aux parents"],
+      statut: "envoye",
+      resume:
+        "Journée excellente ! Participation active à toutes les activités. A aidé un camarade en difficulté.",
+      actionsRecommandees: [
+        "Encourager ce comportement d'entraide",
+        "Responsabilités supplémentaires",
+        "Félicitations aux parents",
+      ],
       motsCles: ["entraide", "participation", "responsabilité"],
-      importance: 'faible'
+      importance: "faible",
     },
-    { 
-      id: 6, 
-      titre: "Rapport Hebdomadaire - Classe (4-5) ans", 
-      type: 'classe_hebdomadaire',
+    {
+      id: 6,
+      titre: "Rapport Hebdomadaire - Classe (4-5) ans",
+      type: "classe_hebdomadaire",
       periode: "01-05 Janvier 2024",
       dateCreation: "2024-01-05",
       auteur: "M. Martin",
       enfantsConcernes: 12,
-      statut: 'archive',
-      resume: "Bonne reprise après les vacances. Progrès visibles en autonomie et en langage.",
-      actionsRecommandees: ["Continuer le travail sur l'autonomie", "Enrichir le vocabulaire", "Activités de motricité globale"],
+      statut: "archive",
+      resume:
+        "Bonne reprise après les vacances. Progrès visibles en autonomie et en langage.",
+      actionsRecommandees: [
+        "Continuer le travail sur l'autonomie",
+        "Enrichir le vocabulaire",
+        "Activités de motricité globale",
+      ],
       motsCles: ["autonomie", "langage", "progrès"],
-      importance: 'moyenne'
+      importance: "moyenne",
     },
-    { 
-      id: 7, 
-      titre: "Rapport Trimestriel - Compétences Académiques", 
-      type: 'trimestriel',
+    {
+      id: 7,
+      titre: "Rapport Trimestriel - Compétences Académiques",
+      type: "trimestriel",
       periode: "Octobre-Décembre 2023",
       dateCreation: "2024-01-02",
       auteur: "Mme. Dupont",
       enfantsConcernes: 18,
-      statut: 'archive',
-      resume: "Avancées significatives en lecture et écriture. Bon niveau général en mathématiques.",
-      actionsRecommandees: ["Ateliers de lecture supplémentaires", "Défis mathématiques", "Suivi individualisé"],
+      statut: "archive",
+      resume:
+        "Avancées significatives en lecture et écriture. Bon niveau général en mathématiques.",
+      actionsRecommandees: [
+        "Ateliers de lecture supplémentaires",
+        "Défis mathématiques",
+        "Suivi individualisé",
+      ],
       motsCles: ["lecture", "mathématiques", "progrès"],
-      importance: 'haute'
+      importance: "haute",
     },
   ]);
 
@@ -153,613 +514,563 @@ export default function ReportsPage() {
       id: 1,
       nom: "Rapport Individuel Hebdomadaire",
       description: "Suivi hebdomadaire détaillé d'un enfant spécifique",
-      type: 'individuel_hebdomadaire',
+      type: "individuel_hebdomadaire",
       tempsEstime: 30,
-      sections: ["Progrès de la semaine", "Développement social", "Développement cognitif", "Observations", "Objectifs semaine suivante"]
+      sections: [
+        "Progrès de la semaine",
+        "Développement social",
+        "Développement cognitif",
+        "Observations",
+        "Objectifs semaine suivante",
+      ],
     },
     {
       id: 2,
       nom: "Rapport Individuel Quotidien",
       description: "Suivi journalier rapide d'un enfant",
-      type: 'individuel_quotidien',
+      type: "individuel_quotidien",
       tempsEstime: 10,
-      sections: ["Humeur du jour", "Participation", "Relations sociales", "Événements marquants", "À signaler aux parents"]
+      sections: [
+        "Humeur du jour",
+        "Participation",
+        "Relations sociales",
+        "Événements marquants",
+        "À signaler aux parents",
+      ],
     },
     {
       id: 3,
       nom: "Rapport Classe Hebdomadaire",
       description: "Bilan hebdomadaire de l'ensemble de la classe",
-      type: 'classe_hebdomadaire',
+      type: "classe_hebdomadaire",
       tempsEstime: 25,
-      sections: ["Ambiance générale", "Projets réalisés", "Progrès collectifs", "Points d'attention", "Planning semaine suivante"]
+      sections: [
+        "Ambiance générale",
+        "Projets réalisés",
+        "Progrès collectifs",
+        "Points d'attention",
+        "Planning semaine suivante",
+      ],
     },
     {
       id: 4,
       nom: "Rapport Trimestriel",
       description: "Évaluation complète sur 3 mois",
-      type: 'trimestriel',
+      type: "trimestriel",
       tempsEstime: 60,
-      sections: ["Bilan académique", "Développement social", "Compétences acquises", "Objectifs atteints", "Projets futurs"]
-    }
+      sections: [
+        "Bilan académique",
+        "Développement social",
+        "Compétences acquises",
+        "Objectifs atteints",
+        "Projets futurs",
+      ],
+    },
   ];
 
-  const filteredRapports = rapports.filter(rapport => {
-    const matchesSearch = 
-      rapport.titre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      rapport.resume?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      rapport.motsCles?.some(mot => mot.toLowerCase().includes(searchTerm.toLowerCase()));
-    
-    const matchesType = filterType === "all" || rapport.type === filterType;
-    const matchesStatut = filterStatut === "all" || rapport.statut === filterStatut;
-    
-    return matchesSearch && matchesType && matchesStatut;
-  });
+  /* -------------------- Dérivés -------------------- */
+  const filteredRapports = useMemo(() => {
+    return rapports.filter((r) => {
+      const q =
+        r.titre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        r.resume?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        r.motsCles?.some((m) =>
+          m.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+      const t = filterType === "all" || r.type === filterType;
+      const s = filterStatut === "all" || r.statut === filterStatut;
+      return q && t && s;
+    });
+  }, [rapports, searchTerm, filterType, filterStatut]);
 
-  const stats = {
-    totalRapports: rapports.length,
-    envoyes: rapports.filter(r => r.statut === 'envoye').length,
-    brouillons: rapports.filter(r => r.statut === 'brouillon').length,
-    enfantsTotal: rapports.reduce((sum, r) => sum + r.enfantsConcernes, 0),
-    parType: {
-      individuel_hebdomadaire: rapports.filter(r => r.type === 'individuel_hebdomadaire').length,
-      individuel_quotidien: rapports.filter(r => r.type === 'individuel_quotidien').length,
-      classe_hebdomadaire: rapports.filter(r => r.type === 'classe_hebdomadaire').length,
-      trimestriel: rapports.filter(r => r.type === 'trimestriel').length,
-    }
-  };
+  const stats = useMemo(() => {
+    const envoyes = rapports.filter((r) => r.statut === "envoye").length;
+    const brouillons = rapports.filter((r) => r.statut === "brouillon").length;
+    const enfantsTotal = rapports.reduce(
+      (sum, r) => sum + r.enfantsConcernes,
+      0
+    );
+    const parType = {
+      individuel_hebdomadaire: rapports.filter(
+        (r) => r.type === "individuel_hebdomadaire"
+      ).length,
+      individuel_quotidien: rapports.filter(
+        (r) => r.type === "individuel_quotidien"
+      ).length,
+      classe_hebdomadaire: rapports.filter(
+        (r) => r.type === "classe_hebdomadaire"
+      ).length,
+      trimestriel: rapports.filter((r) => r.type === "trimestriel").length,
+    };
+    return {
+      totalRapports: rapports.length,
+      envoyes,
+      brouillons,
+      enfantsTotal,
+      parType,
+    };
+  }, [rapports]);
 
-  const getTypeIcon = (type: string) => {
-    switch(type) {
-      case 'individuel_hebdomadaire': return "📅👤";
-      case 'individuel_quotidien': return "📝👤";
-      case 'classe_hebdomadaire': return "📅👥";
-      case 'trimestriel': return "📊📈";
-      default: return "📄";
-    }
-  };
-
-  const getTypeColor = (type: string) => {
-    switch(type) {
-      case 'individuel_hebdomadaire': return "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400";
-      case 'individuel_quotidien': return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400";
-      case 'classe_hebdomadaire': return "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400";
-      case 'trimestriel': return "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400";
-      default: return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300";
-    }
-  };
-
-  const getTypeLabel = (type: string) => {
-    switch(type) {
-      case 'individuel_hebdomadaire': return "Individuel Hebdomadaire";
-      case 'individuel_quotidien': return "Individuel Quotidien";
-      case 'classe_hebdomadaire': return "Classe Hebdomadaire";
-      case 'trimestriel': return "Trimestriel";
-      default: return type;
-    }
-  };
-
-  const getStatutColor = (statut: string) => {
-    switch(statut) {
-      case 'brouillon': return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300";
-      case 'finalise': return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400";
-      case 'envoye': return "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400";
-      case 'archive': return "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400";
-      default: return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300";
-    }
-  };
-
-  const getImportanceColor = (importance: string) => {
-    switch(importance) {
-      case 'haute': return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400";
-      case 'moyenne': return "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400";
-      case 'faible': return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400";
-      default: return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300";
-    }
-  };
-
+  /* -------------------- Actions -------------------- */
   const handleCreerRapport = (modele: ModeleRapport) => {
     setShowModeleModal(false);
     console.log("Création d'un rapport avec le modèle:", modele.nom);
   };
 
   const handleExporterRapport = (rapport: Rapport) => {
-    console.log("Export du rapport:", rapport.titre);
-     const contenuPDF = `
-    Rapport: ${rapport.titre}
-    Type: ${getTypeLabel(rapport.type)}
-    Période: ${rapport.periode}
-    Éducateur: ${rapport.auteur}
-    Enfants concernés: ${rapport.enfantsConcernes}
-    
-    Résumé:
-    ${rapport.resume || ''}
-    
-    Actions recommandées:
-    ${rapport.actionsRecommandees?.join('\n• ') || ''}
-    
-    Mots-clés:
-    ${rapport.motsCles?.join(', ') || ''}
-    
-    Date: ${new Date().toLocaleDateString('fr-FR')}
-  `;
-  
-  // Simuler le téléchargement
-  const blob = new Blob([contenuPDF], { type: 'text/plain' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `rapport_${rapport.id}_${rapport.titre.replace(/\s+/g, '_')}.txt`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  
-  alert(`Rapport "${rapport.titre}" téléchargé !`);
+    const contenu = `
+Rapport: ${rapport.titre}
+Type: ${typeLabel(rapport.type)}
+Période: ${rapport.periode}
+Éducateur: ${rapport.auteur}
+Enfants concernés: ${rapport.enfantsConcernes}
+
+Résumé:
+${rapport.resume || ""}
+
+Actions recommandées:
+${rapport.actionsRecommandees?.map((a) => "• " + a).join("\n") || ""}
+
+Mots-clés:
+${rapport.motsCles?.join(", ") || ""}
+
+Date: ${new Date().toLocaleDateString("fr-FR")}
+`;
+    const blob = new Blob([contenu], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `rapport_${rapport.id}_${rapport.titre.replace(/\s+/g, "_")}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    alert(`Rapport "${rapport.titre}" téléchargé !`);
   };
 
+  /* -------------------- Render -------------------- */
   return (
     <>
       <PageMeta
         title="Rapports et Bilans | Système de Gestion"
         description="Générez et consultez les rapports pédagogiques et bilans de développement"
       />
-      
-      <div className="mb-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              Rapports et Bilans Pédagogiques
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">
-              Documentez, analysez et partagez le développement des enfants
-            </p>
+
+      {/* HERO créatif */}
+      <section className="relative mb-6 overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 text-white shadow-lg">
+        <span aria-hidden className="pointer-events-none absolute -top-24 -left-16 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
+        <span aria-hidden className="pointer-events-none absolute -bottom-28 -right-10 h-80 w-80 rounded-full bg-fuchsia-400/20 blur-3xl" />
+        <div className="relative z-10 p-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight">
+                Rapports & Bilans ✨
+              </h1>
+              <p className="mt-1 text-white/90">
+                Documentez, analysez et partagez le développement des enfants.
+              </p>
+            </div>
+
           </div>
-          
-          <div className="flex flex-wrap gap-3">
-            <div className="flex gap-2 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
-              <button 
-                onClick={() => setViewMode('list')}
-                className={`px-3 py-1.5 rounded-md transition-colors ${viewMode === 'list' ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-900 dark:text-white' : 'hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'}`}
+
+          {/* KPIs en verre */}
+          <div className="mt-4 grid max-w-full grid-cols-2 gap-3 sm:grid-cols-4">
+            <GlassStat
+              icon={<FileIcon className="size-5 text-white" />}
+              label="Total rapports"
+              value={stats.totalRapports}
+            />
+            <GlassStat
+              icon={<CheckCircleIcon className="size-5 text-white" />}
+              label="Envoyés"
+              value={stats.envoyes}
+              ring="green"
+            />
+            <GlassStat
+              icon={<span>✏️</span>}
+              label="Brouillons"
+              value={stats.brouillons}
+              ring="amber"
+            />
+            <GlassStat
+              icon={<UserIcon className="size-5 text-white" />}
+              label="Enfants couverts"
+              value={stats.enfantsTotal}
+              ring="cyan"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Barre sticky : filtres & modes */}
+      <div className="sticky top-2 z-[5] mb-6 rounded-2xl border border-gray-200 bg-white/70 p-4 backdrop-blur dark:border-gray-800 dark:bg-gray-900/70">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-1 items-center gap-3">
+            <div className="relative flex-1">
+              <input
+                type="text"
+                placeholder="Rechercher (titre, résumé, mots-clés)…"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="dark:text-white w-full rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 pl-10 text-sm outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800"
+              />
+              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                🔎
+              </span>
+            </div>
+
+            <select
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value as any)}
+              className="dark:text-white rounded-xl border border-gray-300 bg-gray-50 px-3 py-3 text-sm focus:ring-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800"
+            >
+              <option value="all">Tous les types</option>
+              <option value="individuel_hebdomadaire">Individuel Hebdomadaire</option>
+              <option value="individuel_quotidien">Individuel Quotidien</option>
+              <option value="classe_hebdomadaire">Classe Hebdomadaire</option>
+              <option value="trimestriel">Trimestriel</option>
+            </select>
+
+            <select
+              value={filterStatut}
+              onChange={(e) => setFilterStatut(e.target.value as any)}
+              className="dark:text-white rounded-xl border border-gray-300 bg-gray-50 px-3 py-3 text-sm focus:ring-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800"
+            >
+              <option value="all">Tous statuts</option>
+              <option value="brouillon">Brouillon</option>
+              <option value="finalise">Finalisé</option>
+              <option value="envoye">Envoyé</option>
+              <option value="archive">Archivé</option>
+            </select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <div className="flex gap-1 rounded-xl bg-gray-100 p-1 dark:bg-gray-800">
+              <button
+                onClick={() => setViewMode("list")}
+                className={`rounded-lg px-3 py-2 text-sm ${
+                  viewMode === "list"
+                    ? "bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-white"
+                    : "text-gray-600 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-700"
+                }`}
               >
                 Liste
               </button>
-              <button 
-                onClick={() => setViewMode('stats')}
-                className={`px-3 py-1.5 rounded-md transition-colors ${viewMode === 'stats' ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-900 dark:text-white' : 'hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'}`}
+              <button
+                onClick={() => setViewMode("stats")}
+                className={`rounded-lg px-3 py-2 text-sm ${
+                  viewMode === "stats"
+                    ? "bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-white"
+                    : "text-gray-600 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-700"
+                }`}
               >
                 Statistiques
               </button>
             </div>
+            <button
+              onClick={() => setShowModeleModal(true)}
+              className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            >
+              Nouveau Rapport
+            </button>
           </div>
         </div>
       </div>
 
-            {/* Vue Statistiques */}
-      {viewMode === 'stats' ? (
+      {/* -------------------- VUE STATS -------------------- */}
+      {viewMode === "stats" ? (
         <div className="space-y-6">
-          {/* Cartes de statistiques principales */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Carte 1 : Total Rapports */}
-            <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 p-5 shadow-md transition-all duration-200 hover:shadow-lg dark:from-blue-600 dark:to-blue-700">
-              <div className="relative z-10">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-blue-100 dark:text-blue-200">
-                      Total Rapports
-                    </p>
-                    <h3 className="mt-2 text-2xl font-bold text-white">
-                      {stats.totalRapports}
-                    </h3>
-                    <p className="mt-1 text-xs text-blue-100/90 dark:text-blue-200/90">
-                      Rapports créés
-                    </p>
-                  </div>
-                  <div className="flex items-center justify-center rounded-lg bg-white/20 p-2.5 backdrop-blur-sm">
-                    <FileIcon className="h-6 w-6 text-white" />
-                  </div>
-                </div>
-                <div className="mt-4 pt-3 border-t border-white/20">
-                  <div className="flex items-center gap-1.5">
-                    <div className="rounded-full bg-white/20 p-0.5">
-                      <ArrowUpIcon className="h-2.5 w-2.5 text-white" />
-                    </div>
-                    <span className="text-xs font-medium text-white">
-                      +12% ce mois
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            {/* Carte 2 : Envoyés aux parents */}
-            <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 p-5 shadow-md transition-all duration-200 hover:shadow-lg dark:from-emerald-600 dark:to-emerald-700">
-              <div className="relative z-10">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-emerald-100 dark:text-emerald-200">
-                      Envoyés
-                    </p>
-                    <h3 className="mt-2 text-2xl font-bold text-white">
-                      {stats.envoyes}
-                    </h3>
-                    <p className="mt-1 text-xs text-emerald-100/90 dark:text-emerald-200/90">
-                      Aux parents
-                    </p>
-                  </div>
-                  <div className="flex items-center justify-center rounded-lg bg-white/20 p-2.5 backdrop-blur-sm">
-                    <CheckCircleIcon className="h-6 w-6 text-white" />
-                  </div>
-                </div>
-                <div className="mt-4 pt-3 border-t border-white/20">
-                  <div className="flex items-center gap-1.5">
-                    <div className="rounded-full bg-white/20 p-0.5">
-                      <div className="h-2 w-2 rounded-full bg-white"></div>
-                    </div>
-                    <span className="text-xs font-medium text-white">
-                      89% des rapports mensuels
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            {/* Carte 3 : En préparation */}
-            <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-amber-400 to-amber-500 p-5 shadow-md transition-all duration-200 hover:shadow-lg dark:from-amber-500 dark:to-amber-600">
-              <div className="relative z-10">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-amber-900 dark:text-amber-950">
-                      En préparation
-                    </p>
-                    <h3 className="mt-2 text-2xl font-bold text-gray-900 dark:text-gray-900">
-                      {stats.brouillons}
-                    </h3>
-                    <p className="mt-1 text-xs text-amber-900/80 dark:text-amber-950/80">
-                      À finaliser cette semaine
-                    </p>
-                  </div>
-                  <div className="flex items-center justify-center rounded-lg bg-white/30 p-2.5 backdrop-blur-sm">
-                    <span className="text-lg text-gray-900">✏️</span>
-                  </div>
-                </div>
-                <div className="mt-4 pt-3 border-t border-amber-900/20 dark:border-amber-950/20">
-                  <div className="inline-flex items-center gap-1.5 rounded-full bg-white/30 px-2 py-1 backdrop-blur-sm">
-                    <div className="h-2 w-2 rounded-full bg-gray-900 animate-pulse"></div>
-                    <span className="text-xs font-semibold text-gray-900 dark:text-gray-900">
-                      En cours de rédaction
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            {/* Carte 4 : Enfants couverts */}
-            <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-cyan-500 to-cyan-600 p-5 shadow-md transition-all duration-200 hover:shadow-lg dark:from-cyan-600 dark:to-cyan-700">
-              <div className="relative z-10">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-cyan-100 dark:text-cyan-200">
-                      Enfants couverts
-                    </p>
-                    <h3 className="mt-2 text-2xl font-bold text-white">
-                      {stats.enfantsTotal}
-                    </h3>
-                    <p className="mt-1 text-xs text-cyan-100/90 dark:text-cyan-200/90">
-                      Moyenne de 6 rapports/enfant
-                    </p>
-                  </div>
-                  <div className="flex items-center justify-center rounded-lg bg-white/20 p-2.5 backdrop-blur-sm">
-                    <UserIcon className="h-6 w-6 text-white" />
-                  </div>
-                </div>
-                <div className="mt-4 pt-3 border-t border-white/20">
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-medium text-white">
-                        Rapports moyens/enfant
-                      </span>
-                      <span className="text-xs font-bold text-white">6</span>
-                    </div>
-                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/20">
-                      <div 
-                        className="h-full rounded-full bg-white transition-all duration-500"
-                        style={{ width: '85%' }}
-                      ></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            {/* Répartition par type (barres animées) */}
+        <TypeBreakdownCard
+  total={stats.totalRapports}
+  data={stats.parType}
+/>
 
-          {/* Graphique de répartition */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5">
-              <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
-                Répartition par type de rapport
+
+            {/* Timeline des échéances */}
+            <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900">
+              <h3 className="mb-4 text-lg font-semibold text-gray-800 dark:text-white">
+                Échéancier
               </h3>
-              <div className="space-y-4">
-                {Object.entries(stats.parType).map(([type, count]) => (
-                  <div key={type} className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xl">{getTypeIcon(type)}</span>
-                      <span className="text-gray-700 dark:text-gray-300">{getTypeLabel(type)}</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-32 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-blue-500 dark:bg-blue-500"
-                          style={{ width: `${(count / stats.totalRapports) * 100}%` }}
-                        ></div>
+              <ol className="relative ml-3 space-y-6 border-l-2 border-dashed border-gray-200 pl-5 dark:border-gray-700">
+                <li className="group relative">
+                  <span className="absolute -left-[9px] top-0 h-4 w-4 rounded-full bg-indigo-500 ring-4 ring-indigo-200 dark:ring-indigo-900/40" />
+                  <div className="flex items-center justify-between rounded-lg bg-indigo-50 p-3 dark:bg-indigo-900/30">
+                    <div>
+                      <div className="font-medium text-gray-900 dark:text-white">
+                        Rapports individuels quotidiens
                       </div>
-                      <span className="font-medium text-gray-900 dark:text-white">{count}</span>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">
+                        Tous les jours à 16h
+                      </div>
                     </div>
+                    <CalenderIcon className="size-5 text-indigo-600 dark:text-indigo-400" />
                   </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5">
-              <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
-                Calendrier des échéances
-              </h3>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
-                  <div>
-                    <div className="font-medium text-gray-900 dark:text-white">Rapports individuels quotidiens</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">Tous les jours à 16h</div>
+                </li>
+                <li className="group relative">
+                  <span className="absolute -left-[9px] top-0 h-4 w-4 rounded-full bg-emerald-500 ring-4 ring-emerald-200 dark:ring-emerald-900/40" />
+                  <div className="flex items-center justify-between rounded-lg bg-emerald-50 p-3 dark:bg-emerald-900/30">
+                    <div>
+                      <div className="font-medium text-gray-900 dark:text-white">
+                        Rapports classe hebdomadaires
+                      </div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">
+                        Tous les vendredis
+                      </div>
+                    </div>
+                    <CalenderIcon className="size-5 text-emerald-600 dark:text-emerald-400" />
                   </div>
-                  <CalenderIcon className="size-5 text-blue-600 dark:text-blue-400" />
-                </div>
-                <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/30 rounded-lg">
-                  <div>
-                    <div className="font-medium text-gray-900 dark:text-white">Rapports classe hebdomadaires</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">Tous les vendredis</div>
+                </li>
+                <li className="group relative">
+                  <span className="absolute -left-[9px] top-0 h-4 w-4 rounded-full bg-amber-500 ring-4 ring-amber-200 dark:ring-amber-900/40" />
+                  <div className="flex items-center justify-between rounded-lg bg-amber-50 p-3 dark:bg-amber-900/30">
+                    <div>
+                      <div className="font-medium text-gray-900 dark:text-white">
+                        Rapports trimestriels
+                      </div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">
+                        15 Mars 2024
+                      </div>
+                    </div>
+                    <CalenderIcon className="size-5 text-amber-600 dark:text-amber-400" />
                   </div>
-                  <CalenderIcon className="size-5 text-green-600 dark:text-green-400" />
-                </div>
-                <div className="flex items-center justify-between p-3 bg-purple-50 dark:bg-purple-900/30 rounded-lg">
-                  <div>
-                    <div className="font-medium text-gray-900 dark:text-white">Rapports trimestriels</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">15 Mars 2024</div>
-                  </div>
-                  <CalenderIcon className="size-5 text-purple-600 dark:text-purple-400" />
-                </div>
-              </div>
+                </li>
+              </ol>
             </div>
           </div>
         </div>
       ) : (
-        // Vue Liste
+        /* -------------------- VUE LISTE -------------------- */
         <>
-          {/* Barre de recherche et filtres */}
-          <div className="mb-6">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1 relative">
-                <svg xmlns="http://www.w3.org/2000/svg" className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="11" cy="11" r="8"/>
-                  <path d="m21 21-4.35-4.35"/>
-                </svg>
-                <input
-                  type="text"
-                  placeholder="Rechercher par titre, résumé ou mots-clés..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-500"
-                />
-              </div>
-              
-              <div className="flex flex-wrap gap-3">
-                <select
-                  value={filterType}
-                  onChange={(e) => setFilterType(e.target.value)}
-                  className="px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-500"
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3 auto-rows-[1fr]">
+            {filteredRapports.map((r) => {
+              const tone = typeTone(r.type);
+              return (
+                <div
+                  key={r.id}
+                  className="flex h-full flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition hover:shadow-lg dark:border-gray-800 dark:bg-gray-900"
                 >
-                  <option value="all">Tous les types</option>
-                  <option value="individuel_hebdomadaire">Individuel Hebdomadaire</option>
-                  <option value="individuel_quotidien">Individuel Quotidien</option>
-                  <option value="classe_hebdomadaire">Classe Hebdomadaire</option>
-                  <option value="trimestriel">Trimestriel</option>
-                </select>
-                
-                <select
-                  value={filterStatut}
-                  onChange={(e) => setFilterStatut(e.target.value)}
-                  className="px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-500"
-                >
-                  <option value="all">Tous les statuts</option>
-                  <option value="brouillon">Brouillon</option>
-                  <option value="finalise">Finalisé</option>
-                  <option value="envoye">Envoyé</option>
-                  <option value="archive">Archivé</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {/* Liste des rapports */}
-          <div className="space-y-4">
-            {filteredRapports.map(rapport => (
-              <div key={rapport.id} className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5 hover:shadow-lg transition-shadow">
-                <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-start gap-3">
-                      <div className={`p-3 rounded-lg ${getTypeColor(rapport.type).split(' ')[0]} text-2xl`}>
-                        {getTypeIcon(rapport.type)}
+                  {/* Header coloré par type */}
+                  <div
+                    className={`flex items-center justify-between bg-gradient-to-r ${toneBg(
+                      tone
+                    )} px-5 py-4`}
+                  >
+                     <div className="">
+                        {typeIcon(r.type)}
                       </div>
-                      <div className="flex-1">
-                        <div className="flex flex-wrap items-center gap-2 mb-2">
-                          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                            {rapport.titre}
+                    <div className="flex items-center gap-3 text-white">
+                     
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="text-base font-semibold leading-tight">
+                            {r.titre}
                           </h3>
-                          <div className="flex flex-wrap gap-1">
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatutColor(rapport.statut)}`}>
-                              {rapport.statut === 'brouillon' ? 'Brouillon' :
-                               rapport.statut === 'finalise' ? 'Finalisé' :
-                               rapport.statut === 'envoye' ? 'Envoyé' : 'Archivé'}
-                            </span>
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getImportanceColor(rapport.importance)}`}>
-                              {rapport.importance === 'haute' ? 'Haute priorité' :
-                               rapport.importance === 'moyenne' ? 'Priorité moyenne' : 'Basse priorité'}
-                            </span>
-                          </div>
-                        </div>
                         
-                        <div className="flex flex-wrap gap-4 text-sm mb-3">
-                          <div className="flex items-center gap-1 text-gray-500 dark:text-gray-500">
-                            <CalenderIcon className="size-4" />
-                            {rapport.periode}
-                          </div>
-                          <div className="flex items-center gap-1 text-gray-500 dark:text-gray-500">
-                            <UserIcon className="size-4" />
-                            {rapport.auteur}
-                          </div>
-                          <div className="flex items-center gap-1 text-gray-500 dark:text-gray-500">
-                            <span className="text-lg">👶</span>
-                            {rapport.enfantsConcernes} enfant{rapport.enfantsConcernes > 1 ? 's' : ''}
-                          </div>
-                          <span className={`px-2 py-0.5 rounded text-xs font-medium ${getTypeColor(rapport.type)}`}>
-                            {getTypeLabel(rapport.type)}
+                        </div>
+                        <div className="text-xs/5 opacity-90">
+                          {r.periode} • {r.enfantsConcernes} enfant
+                          {r.enfantsConcernes > 1 ? "s" : ""}
+                        </div>
+                          
+                      </div>
+                    </div>
+                       <StatusPill statut={r.statut} />
+                  </div>
+
+                  {/* Body */}
+                  <div className="flex grow flex-col p-5">
+                    <div className="mb-3 flex flex-wrap items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
+                      <span className="inline-flex items-center gap-1">
+                        <CalenderIcon className="size-4" />
+                        Créé le{" "}
+                        {new Date(r.dateCreation).toLocaleDateString("fr-FR")}
+                      </span>
+                      <span className="inline-flex items-center gap-1">
+                        <UserIcon className="size-4" />
+                        {r.auteur}
+                      </span>
+                      <span
+                        className={`rounded-md px-2 py-0.5 text-xs ${chipByImportance(
+                          r.importance
+                        )}`}
+                      >
+                        {r.importance === "haute"
+                          ? "Haute priorité"
+                          : r.importance === "moyenne"
+                          ? "Priorité moyenne"
+                          : "Basse priorité"}
+                      </span>
+                    </div>
+
+                    {r.resume && (
+                      <p className="line-clamp-3 text-sm text-gray-600 dark:text-gray-300">
+                        {r.resume}
+                      </p>
+                    )}
+
+                    {!!r.motsCles?.length && (
+                      <div className="mt-3 flex flex-wrap gap-1">
+                        {r.motsCles.map((m, i) => (
+                          <span
+                            key={i}
+                            className="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                          >
+                            #{m}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    {!!r.actionsRecommandees?.length && (
+                      <div className="mt-3">
+                        <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                          Actions recommandées
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {r.actionsRecommandees.slice(0, 3).map((a, i) => (
+                            <span
+                              key={i}
+                              className="rounded bg-blue-50 px-2 py-0.5 text-xs text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
+                            >
+                              {a}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Footer */}
+                    <div className="mt-auto border-t border-gray-200 pt-4 dark:border-gray-800">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`rounded-md px-3 py-2 text-xs ${chipByType(
+                              r.type
+                            )}`}
+                          >
+                            {typeLabel(r.type)}
+                          </span>
+                          <span className="rounded-md bg-gray-100 px-3 py-2 text-xs text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                            {r.enfantsConcernes} enfant
+                            {r.enfantsConcernes > 1 ? "s" : ""}
                           </span>
                         </div>
-                        
-                        {rapport.resume && (
-                          <p className="text-gray-600 dark:text-gray-400 mb-3">
-                            {rapport.resume}
-                          </p>
-                        )}
-                        
-                        {rapport.motsCles && rapport.motsCles.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mb-3">
-                            {rapport.motsCles.map((mot, idx) => (
-                              <span key={idx} className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded">
-                                #{mot}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                        
-                        {rapport.actionsRecommandees && rapport.actionsRecommandees.length > 0 && (
-                          <div className="mt-3">
-                            <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                              Actions recommandées :
-                            </div>
-                            <div className="flex flex-wrap gap-1">
-                              {rapport.actionsRecommandees.slice(0, 3).map((action, idx) => (
-                                <span key={idx} className="text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-0.5 rounded">
-                                  {action}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        )}
+
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => {
+                              setSelectedRapport(r);
+                              setShowViewRapport(true);
+                            }}
+                            className="inline-flex items-center gap-2 rounded-lg bg-blue-50 px-3 py-2 text-sm font-medium text-blue-600 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-300 dark:hover:bg-blue-900/50"
+                          >
+                            Consulter
+                          </button>
+                          <button
+                            onClick={() => handleExporterRapport(r)}
+                            className="rounded-lg bg-gray-100 px-3 py-2 text-sm text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                          >
+                            <DownloadIcon className="inline size-4" />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
-                  
-                  <div className="flex flex-col gap-2 min-w-[200px]">
-                    <button 
-                      onClick={() =>{
-                         setSelectedRapport(rapport)
-                         setShowViewRapport(true);
-                      }
-                        }
-                      className="px-4 py-2 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors text-sm font-medium flex items-center justify-center gap-2"
-                    >
-                      <EyeIcon className="size-4" />
-                      Consulter
-                    </button>
-                    <button 
-                      onClick={() => handleExporterRapport(rapport)}
-                      className="px-4 py-2 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-sm font-medium flex items-center justify-center gap-2"
-                    >
-                      <DownloadIcon className="size-4" />
-                      Télécharger
-                    </button>
-                    {rapport.statut === 'brouillon' && (
-                      <button className="px-4 py-2 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/50 transition-colors text-sm font-medium">
-                        Finaliser le rapport
-                      </button>
-                    )}
-                    {rapport.statut === 'finalise' && (
-                      <button className="px-4 py-2 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors text-sm font-medium">
-                        Envoyer aux parents
-                      </button>
-                    )}
-                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {filteredRapports.length === 0 && (
-            <div className="text-center py-12 bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800">
-              <FileIcon className="size-12 text-gray-400 dark:text-gray-500 mx-auto mb-3" />
-              <p className="text-gray-500 dark:text-gray-400">Aucun rapport trouvé avec ces critères</p>
-              <button 
-                onClick={() => {setSearchTerm(""); setFilterType("all"); setFilterStatut("all");}}
-                className="mt-2 text-blue-600 dark:text-blue-400 hover:underline"
-              >
-                Réinitialiser les filtres
-              </button>
+            <div className="col-span-full rounded-2xl border border-dashed border-gray-300 p-10 text-center text-gray-500 dark:border-gray-700 dark:text-gray-400">
+              <FileIcon className="mx-auto mb-3 size-10 opacity-70" />
+              Aucun rapport ne correspond à vos filtres.
+              <div className="mt-3">
+                <button
+                  onClick={() => {
+                    setSearchTerm("");
+                    setFilterType("all");
+                    setFilterStatut("all");
+                  }}
+                  className="text-indigo-600 underline-offset-2 hover:underline dark:text-indigo-400"
+                >
+                  Réinitialiser les filtres
+                </button>
+              </div>
             </div>
           )}
         </>
       )}
 
-      {/* Modal de sélection de modèle */}
+      {/* -------------------- Modal : modèles -------------------- */}
       {showModeleModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white dark:bg-gray-900 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+        <div className="fixed inset-0 z-[100000]">
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setShowModeleModal(false)}
+          />
+          <div className="relative mx-auto mt-8 w-full max-w-3xl px-4">
+            <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-gray-800 dark:bg-gray-900">
+              <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4 dark:border-gray-800">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                   Choisir un modèle de rapport
                 </h3>
-                <button 
+                <button
                   onClick={() => setShowModeleModal(false)}
-                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                  className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
                 >
-                  <CloseIcon className="size-6" />
+                  <CloseIcon className="size-5" />
                 </button>
               </div>
-              
-              <div className="space-y-4">
-                {modelesRapports.map(modele => (
-                  <div key={modele.id} className="border border-gray-200 dark:border-gray-800 rounded-xl p-4 hover:border-blue-500 dark:hover:border-blue-500 transition-colors">
+
+              <div className="max-h-[70vh] space-y-4 overflow-y-auto p-6">
+                {modelesRapports.map((m) => (
+                  <div
+                    key={m.id}
+                    className="rounded-xl border border-gray-200 p-4 transition-colors hover:border-indigo-500 dark:border-gray-800 dark:hover:border-indigo-500"
+                  >
                     <div className="flex items-start justify-between">
                       <div>
-                        <h4 className="font-semibold text-gray-900 dark:text-white mb-1">
-                          {modele.nom}
-                        </h4>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                          {modele.description}
-                        </p>
-                        <div className="flex items-center gap-4 text-sm">
+                        <div className="mb-1 text-base font-semibold text-gray-900 dark:text-white">
+                          {m.nom}
+                        </div>
+                        <div className="mb-2 text-sm text-gray-600 dark:text-gray-400">
+                          {m.description}
+                        </div>
+                        <div className="flex items-center gap-3 text-sm">
                           <span className="text-gray-500 dark:text-gray-500">
-                            ⏱️ {modele.tempsEstime} min
+                            ⏱️ {m.tempsEstime} min
                           </span>
-                          <span className={`px-2 py-0.5 rounded text-xs font-medium ${getTypeColor(modele.type)}`}>
-                            {getTypeLabel(modele.type)}
+                          <span
+                            className={`rounded px-2 py-0.5 text-xs ${chipByType(
+                              m.type
+                            )}`}
+                          >
+                            {typeLabel(m.type)}
                           </span>
                         </div>
                       </div>
-                      <button 
-                        onClick={() => handleCreerRapport(modele)}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                      <button
+                        onClick={() => handleCreerRapport(m)}
+                        className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
                       >
                         Utiliser
                       </button>
                     </div>
-                    
-                    <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-800">
-                      <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Sections incluses :
+
+                    <div className="mt-3 border-t border-gray-200 pt-3 dark:border-gray-800">
+                      <div className="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Sections incluses
                       </div>
                       <div className="flex flex-wrap gap-1">
-                        {modele.sections.map((section, idx) => (
-                          <span key={idx} className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded">
-                            {section}
+                        {m.sections.map((s, i) => (
+                          <span
+                            key={i}
+                            className="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                          >
+                            {s}
                           </span>
                         ))}
                       </div>
@@ -767,9 +1078,9 @@ export default function ReportsPage() {
                   </div>
                 ))}
               </div>
-              
-              <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-800">
-                <button className="w-full py-3 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl hover:border-blue-500 dark:hover:border-blue-500 transition-colors text-gray-600 dark:text-gray-400">
+
+              <div className="border-t border-gray-200 p-4 dark:border-gray-800">
+                <button className="w-full rounded-xl border-2 border-dashed border-gray-300 px-4 py-3 text-sm text-gray-600 transition-colors hover:border-indigo-500 dark:border-gray-700 dark:text-gray-400 dark:hover:border-indigo-500">
                   + Créer un modèle personnalisé
                 </button>
               </div>
@@ -777,433 +1088,426 @@ export default function ReportsPage() {
           </div>
         </div>
       )}
-      {/* Modal de consultation du rapport */}
 
-{showViewRapport && selectedRapport && (
-  <div className="fixed inset-0 z-[100000] overflow-y-auto">
-    <div className="fixed inset-0 bg-black/50 z-[100000]" onClick={() => setShowViewRapport(false)} />
-    <div className="relative z-[100001] flex min-h-full items-center justify-center p-4">
-      <div className="relative w-full max-w-5xl transform overflow-hidden rounded-xl bg-white dark:bg-gray-900 shadow-2xl transition-all">
-        <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-800 px-6 py-4">
-          <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-lg ${getTypeColor(selectedRapport.type).split(' ')[0]}`}>
-              <span className="text-xl">{getTypeIcon(selectedRapport.type)}</span>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Rapport {getTypeLabel(selectedRapport.type)}
-              </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Pour les parents • {selectedRapport.periode}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => handleExporterRapport(selectedRapport)}
-              className="px-3 py-1.5 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-1"
-            >
-              <DownloadIcon className="size-4" />
-              PDF
-            </button>
-            <button
-              onClick={() => setShowViewRapport(false)}
-              className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-300"
-            >
-              ✕
-            </button>
+      {/* -------------------- Modal : Consultation -------------------- */}
+      {showViewRapport && selectedRapport && (
+        <RapportViewModal
+          rapport={selectedRapport}
+          onClose={() => setShowViewRapport(false)}
+          onExport={() => handleExporterRapport(selectedRapport)}
+        />
+      )}
+
+      {/* -------------------- Section Export & résumé -------------------- */}
+ 
+<div className="mt-8 space-y-6">
+
+  {/* Carte principale en verre avec bordure dégradée */}
+  <section className="relative overflow-hidden rounded-3xl p-6 bg-white/70 dark:bg-slate-900/70 backdrop-blur shadow-xl">
+    {/* halos décoratifs */}
+    <span aria-hidden className="pointer-events-none absolute -top-20 -left-20 h-64 w-64 rounded-full bg-fuchsia-400/20 blur-3xl" />
+    <span aria-hidden className="pointer-events-none absolute -bottom-24 -right-24 h-72 w-72 rounded-full bg-blue-400/20 blur-3xl" />
+
+    {/* En-tête */}
+    <header className="relative z-10 mb-6 flex items-center justify-between">
+      <div>
+        <h3 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">
+          📤 Export & partage
+        </h3>
+        <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+          Partagez vos rapports en un clic, avec des formats propres et professionnels.
+        </p>
+      </div>
+
+      <span className="rounded-full bg-gradient-to-r from-blue-600/10 to-fuchsia-600/10 px-3 py-1 text-[11px] font-semibold text-blue-700 dark:text-blue-300 ring-1 ring-blue-400/20">
+        Recommandé
+      </span>
+    </header>
+
+    {/* Actions principales */}
+    <div className="relative z-10 grid grid-cols-1 gap-4 md:grid-cols-3">
+      {/* Carte Action */}
+      <button
+        onClick={() => {/* TODO: hook export PDF global ou dernier rapport */}}
+        className="group relative overflow-hidden rounded-2xl p-5 text-left
+                   bg-white dark:bg-slate-900
+                   border border-slate-200/80 dark:border-white/10
+                   hover:shadow-2xl transition-all duration-300 hover:-translate-y-0.5"
+      >
+        <div className="absolute -inset-0.5 rounded-2xl bg-gradient-to-br from-indigo-500/15 via-violet-500/10 to-fuchsia-500/15 opacity-0 group-hover:opacity-100 transition-opacity" />
+        <div className="relative flex items-center gap-4">
+          <div className="grid size-12 place-items-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 text-white text-2xl shadow-lg">📄</div>
+          <div className="min-w-0">
+            <div className="font-semibold text-slate-900 dark:text-white">Export PDF</div>
+            <div className="text-xs text-slate-500 dark:text-slate-400">Mise en page pro + en-tête</div>
           </div>
         </div>
+        <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
+          <div className="h-full w-0 rounded-full bg-gradient-to-r from-indigo-500 to-fuchsia-600 group-hover:w-full transition-[width] duration-700" />
+        </div>
+      </button>
 
-        <div className="px-6 py-4 space-y-6 max-h-[75vh] overflow-y-auto">
-          {/* En-tête élégant */}
-          <div className="text-center border-b pb-6 mb-6">
-            <div className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-              Rapport Pédagogique
-            </div>
-            <div className="text-xl text-blue-600 dark:text-blue-400 mb-4">
-              {selectedRapport.titre}
-            </div>
-            <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-600 dark:text-gray-400">
-              <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full">
-                <CalenderIcon className="size-4" />
-                {selectedRapport.periode}
-              </div>
-              <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full">
-                <UserIcon className="size-4" />
-                Éducateur: {selectedRapport.auteur}
-              </div>
-              <div className={`px-3 py-1 rounded-full text-xs font-medium ${getStatutColor(selectedRapport.statut)}`}>
-                {selectedRapport.statut === 'envoye' ? '✅ Envoyé aux parents' : '📝 En préparation'}
-              </div>
-            </div>
+      <button
+        onClick={() => {/* TODO: hook envoi email */}}
+        className="group relative overflow-hidden rounded-2xl p-5 text-left
+                   bg-white dark:bg-slate-900
+                   border border-slate-200/80 dark:border-white/10
+                   hover:shadow-2xl transition-all duration-300 hover:-translate-y-0.5"
+      >
+        <div className="absolute -inset-0.5 rounded-2xl bg-gradient-to-br from-emerald-500/15 via-teal-500/10 to-cyan-500/15 opacity-0 group-hover:opacity-100 transition-opacity" />
+        <div className="relative flex items-center gap-4">
+          <div className="grid size-12 place-items-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white text-2xl shadow-lg">📧</div>
+          <div className="min-w-0">
+            <div className="font-semibold text-slate-900 dark:text-white">Envoyer par email</div>
+            <div className="text-xs text-slate-500 dark:text-slate-400">Lien sécurisé pour les parents</div>
           </div>
+        </div>
+        <div className="mt-4 flex items-center gap-2">
+          <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">Tracking ouvertures</span>
+          <span className="rounded-full bg-cyan-50 px-2 py-0.5 text-[10px] font-semibold text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300">Journal d’envoi</span>
+        </div>
+      </button>
 
-          {/* Section spéciale pour les rapports individuels (pour les parents) */}
-          {(selectedRapport.type === 'individuel_hebdomadaire' || selectedRapport.type === 'individuel_quotidien') && (
-            <div className="space-y-6">
-              {/* Message personnalisé aux parents */}
-              <div className="p-5 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-xl border border-blue-200 dark:border-blue-800">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="p-2 bg-blue-100 dark:bg-blue-800 rounded-lg">
-                    <span className="text-xl">👨‍👩‍👧</span>
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-gray-900 dark:text-white">
-                      Message aux parents
-                    </h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Observations détaillées sur votre enfant
-                    </p>
-                  </div>
-                </div>
-                <div className="bg-white/50 dark:bg-gray-800/50 p-4 rounded-lg">
-                  <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                    <span className="font-medium">Cher(s) parent(s),</span><br/>
-                    Voici un rapport détaillé sur le développement et les progrès de votre enfant pendant cette période. 
-                    Nous souhaitons partager avec vous les observations positives, les compétences acquises et les domaines 
-                    où nous continuons à travailler ensemble pour soutenir sa croissance.
-                  </p>
-                </div>
+      <button
+        onClick={() => {/* TODO: hook impression */}}
+        className="group relative overflow-hidden rounded-2xl p-5 text-left
+                   bg-white dark:bg-slate-900
+                   border border-slate-200/80 dark:border-white/10
+                   hover:shadow-2xl transition-all duration-300 hover:-translate-y-0.5"
+      >
+        <div className="absolute -inset-0.5 rounded-2xl bg-gradient-to-br from-amber-500/15 via-orange-500/10 to-rose-500/15 opacity-0 group-hover:opacity-100 transition-opacity" />
+        <div className="relative flex items-center gap-4">
+          <div className="grid size-12 place-items-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white text-2xl shadow-lg">🖨️</div>
+          <div className="min-w-0">
+            <div className="font-semibold text-slate-900 dark:text-white">Imprimer</div>
+            <div className="text-xs text-slate-500 dark:text-slate-400">Version papier optimisée</div>
+          </div>
+        </div>
+        <div className="mt-4 flex items-center gap-2">
+          <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">Marges auto</span>
+          <span className="rounded-full bg-rose-50 px-2 py-0.5 text-[10px] font-semibold text-rose-700 dark:bg-rose-900/30 dark:text-rose-300">En-têtes de page</span>
+        </div>
+      </button>
+    </div>
+
+    {/* Ligne d’aide */}
+    <div className="relative z-10 mt-5 flex items-center justify-between rounded-2xl border border-slate-200/70 dark:border-white/10 bg-white/50 dark:bg-white/5 px-4 py-3">
+      <div className="text-xs text-slate-600 dark:text-slate-300">
+        Astuce : <span className="font-semibold">glissez</span> un rapport sur un bouton pour pré-remplir l’action.
+      </div>
+      <div className="hidden sm:flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+        Raccourcis : <kbd className="rounded bg-slate-100 px-1.5 py-0.5 dark:bg-white/10">E</kbd> Export · <kbd className="rounded bg-slate-100 px-1.5 py-0.5 dark:bg-white/10">M</kbd> Mail · <kbd className="rounded bg-slate-100 px-1.5 py-0.5 dark:bg-white/10">P</kbd> Print
+      </div>
+    </div>
+  </section>
+
+  {/* Barre récap & actions globales */}
+  <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white/70 dark:bg-slate-900/70 backdrop-blur p-5">
+    <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
+      <div>
+        <p className="text-sm text-slate-600 dark:text-slate-300">
+          <span className="font-semibold text-slate-900 dark:text-white">{rapports.length} rapports</span> gérés dans le système
+        </p>
+        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+          Dernière mise à jour : {new Date().toLocaleDateString("fr-FR")}
+        </p>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <button
+          onClick={() => {/* TODO: exporter tous les rapports */}}
+          className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 dark:border-white/10 dark:bg-white/10 dark:text-white/90 dark:hover:bg-white/15"
+        >
+          <svg className="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeWidth="2" d="M12 3v12m0 0l3.5-3.5M12 15l-3.5-3.5M3 21h18"/></svg>
+          Exporter tout
+        </button>
+
+        <button
+          onClick={() => {/* TODO: générer rapport mensuel */}}
+          className="group relative overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg hover:from-blue-700 hover:to-purple-700"
+        >
+          <span className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-r from-sky-400/10 via-white/10 to-fuchsia-400/10" />
+          <span className="relative z-10">Générer rapport mensuel</span>
+        </button>
+
+        <button
+          onClick={() => {/* TODO: planifier envoi */}}
+          className="rounded-xl px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 border border-slate-300 dark:text-slate-200 dark:border-white/10 dark:hover:bg-white/10"
+        >
+          Planifier un envoi
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+    </>
+  );
+}
+
+/* -------------------- Modal “Consulter” -------------------- */
+function RapportViewModal({
+  rapport,
+  onClose,
+  onExport,
+}: {
+  rapport: Rapport;
+  onClose: () => void;
+  onExport: () => void;
+}) {
+  const tone = typeTone(rapport.type);
+  return (
+    <div className="fixed inset-0 z-[100000] overflow-y-auto">
+      <div
+        className="fixed inset-0 bg-black/50"
+        onClick={onClose}
+      />
+      <div className="relative z-[100001] mx-auto my-8 w-full max-w-5xl px-4">
+        <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-gray-800 dark:bg-gray-900">
+          {/* Header */}
+          <div
+            className={`flex items-center justify-between bg-gradient-to-r ${toneBg(
+              tone
+            )} px-6 py-4 text-white`}
+          >
+            <div className="flex items-center gap-3">
+              <div className="grid h-11 w-11 place-items-center  text-xl">
+                {typeIcon(rapport.type)}
               </div>
-
-              {/* Tableau de développement */}
-              <div className="p-5 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
-                <h4 className="font-medium text-gray-900 dark:text-white mb-4">
-                  📊 Tableau de Développement
-                </h4>
-                <div className="space-y-4">
-                  <div>
-                    <div className="flex justify-between mb-1">
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Développement Social</span>
-                      <span className="text-sm font-medium text-green-600 dark:text-green-500">Excellent</span>
-                    </div>
-                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                      <div className="bg-green-500 h-2 rounded-full" style={{ width: '90%' }}></div>
-                    </div>
-                    <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                      Interagit bien avec les autres, partage volontiers, montre de l'empathie
-                    </p>
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between mb-1">
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Compétences Cognitives</span>
-                      <span className="text-sm font-medium text-blue-600 dark:text-blue-500">Très bon</span>
-                    </div>
-                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                      <div className="bg-blue-500 h-2 rounded-full" style={{ width: '85%' }}></div>
-                    </div>
-                    <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                      Bonne mémoire, résolution de problèmes, curiosité intellectuelle
-                    </p>
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between mb-1">
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Expression Émotionnelle</span>
-                      <span className="text-sm font-medium text-amber-600 dark:text-amber-500">En progression</span>
-                    </div>
-                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                      <div className="bg-amber-500 h-2 rounded-full" style={{ width: '75%' }}></div>
-                    </div>
-                    <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                      Apprend à identifier et exprimer ses émotions de manière appropriée
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Moments forts de la semaine */}
-              <div className="p-5 bg-amber-50 dark:bg-amber-900/20 rounded-xl">
-                <h4 className="font-medium text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                  <span className="text-xl">⭐</span>
-                  Moments Forts de la Période
-                </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div className="bg-white dark:bg-gray-800 p-3 rounded-lg">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      <span className="font-medium text-gray-800 dark:text-gray-300">Succès académique</span>
-                    </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      A réussi à compter jusqu'à 20 sans erreur lors de l'activité mathématique
-                    </p>
-                  </div>
-                  <div className="bg-white dark:bg-gray-800 p-3 rounded-lg">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                      <span className="font-medium text-gray-800 dark:text-gray-300">Progrès social</span>
-                    </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      A aidé un camarade qui avait du mal à mettre son manteau
-                    </p>
-                  </div>
-                  <div className="bg-white dark:bg-gray-800 p-3 rounded-lg">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                      <span className="font-medium text-gray-800 dark:text-gray-300">Créativité</span>
-                    </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      A créé un dessin très original lors de l'atelier peinture
-                    </p>
-                  </div>
-                  <div className="bg-white dark:bg-gray-800 p-3 rounded-lg">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-2 h-2 bg-indigo-500 rounded-full"></div>
-                      <span className="font-medium text-gray-800 dark:text-gray-300">Autonomie</span>
-                    </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Range maintenant systématiquement ses affaires sans rappel
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Observations détaillées par domaine */}
-              <div className="p-5 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl">
-                <h4 className="font-medium text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                  <span className="text-xl">🔍</span>
-                  Observations Détaillées
-                </h4>
-                <div className="space-y-4">
-                  <div>
-                    <h5 className="font-medium text-gray-800 dark:text-gray-300 mb-2">📚 Compétences Académiques</h5>
-                    <div className="bg-white/70 dark:bg-gray-800/70 p-3 rounded-lg">
-                      <ul className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
-                        <li className="flex items-start gap-2">
-                          <span className="text-green-500">✓</span>
-                          <span>Reconnaît et nomme les lettres de l'alphabet</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <span className="text-green-500">✓</span>
-                          <span>Compte jusqu'à 20 avec précision</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <span className="text-blue-500">↗</span>
-                          <span>Travaille la reconnaissance des formes géométriques</span>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-
-                  <div>
-                    <h5 className="font-medium text-gray-800 dark:text-gray-300 mb-2">🤝 Compétences Sociales</h5>
-                    <div className="bg-white/70 dark:bg-gray-800/70 p-3 rounded-lg">
-                      <ul className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
-                        <li className="flex items-start gap-2">
-                          <span className="text-green-500">✓</span>
-                          <span>Partage spontanément avec les autres enfants</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <span className="text-green-500">✓</span>
-                          <span>Utilise les formules de politesse systématiquement</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <span className="text-blue-500">↗</span>
-                          <span>Apprend à résoudre les petits conflits verbalement</span>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Recommandations pour les parents */}
-              <div className="p-5 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl">
-                <h4 className="font-medium text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                  <span className="text-xl">💡</span>
-                  Suggestions pour la Maison
-                </h4>
-                <div className="bg-white/70 dark:bg-gray-800/70 p-4 rounded-lg">
-                  <div className="space-y-3">
-                    <div className="flex items-start gap-3">
-                      <div className="p-2 bg-purple-100 dark:bg-purple-800 rounded-lg">
-                        <span className="text-purple-600 dark:text-purple-300">📚</span>
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-800 dark:text-gray-300">Lecture quotidienne</p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          Lire ensemble 15 minutes par jour pour renforcer le vocabulaire
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <div className="p-2 bg-blue-100 dark:bg-blue-800 rounded-lg">
-                        <span className="text-blue-600 dark:text-blue-300">🎮</span>
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-800 dark:text-gray-300">Jeux éducatifs</p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          Proposer des puzzles et jeux de construction pour la motricité fine
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <div className="p-2 bg-green-100 dark:bg-green-800 rounded-lg">
-                        <span className="text-green-600 dark:text-green-300">🗣️</span>
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-800 dark:text-gray-300">Dialoguer sur les émotions</p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          Nommer les émotions ressenties pendant la journée pour développer l'intelligence émotionnelle
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Activités préférées */}
-              <div className="p-5 bg-gradient-to-r from-cyan-50 to-blue-50 dark:from-cyan-900/20 dark:to-blue-900/20 rounded-xl">
-                <h4 className="font-medium text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                  <span className="text-xl">❤️</span>
-                  Activités Préférées
-                </h4>
-                <div className="flex flex-wrap gap-2">
-                  <span className="px-3 py-1 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full text-sm">
-                    Atelier peinture
-                  </span>
-                  <span className="px-3 py-1 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full text-sm">
-                    Jeux de construction
-                  </span>
-                  <span className="px-3 py-1 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full text-sm">
-                    Histoires en groupe
-                  </span>
-                  <span className="px-3 py-1 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full text-sm">
-                    Jeux dans la cour
-                  </span>
-                  <span className="px-3 py-1 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full text-sm">
-                    Activités musicales
-                  </span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Section pour les rapports de classe et trimestriels (garder l'ancien design) */}
-          {(selectedRapport.type === 'classe_hebdomadaire' || selectedRapport.type === 'trimestriel') && (
-            <div className="space-y-6">
-              {/* ... Garder le contenu existant pour les rapports de classe ... */}
-              <div className="p-5 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
-                <h4 className="font-medium text-gray-900 dark:text-white mb-3">
-                  📋 Résumé Exécutif
-                </h4>
-                <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                  {selectedRapport.resume}
-                </p>
-              </div>
-              
-              {/* ... Autres sections existantes ... */}
-            </div>
-          )}
-
-          {/* Signature et contacts */}
-          <div className="p-5 border-t border-gray-200 dark:border-gray-800">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <h5 className="font-medium text-gray-900 dark:text-white mb-3">📞 Contact</h5>
-                <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-                  <p>Éducateur/Éducatrice: <span className="font-medium text-gray-900 dark:text-white">{selectedRapport.auteur}</span></p>
-                  <p>Disponible pour échanger: Lundi et jeudi de 16h30 à 17h30</p>
-                  <p>Email: educateur@ecole-exemple.fr</p>
+                <div className="text-lg font-semibold">{rapport.titre}</div>
+                <div className="text-xs opacity-90">
+                  {rapport.periode} • {rapport.enfantsConcernes} enfant
+                  {rapport.enfantsConcernes > 1 ? "s" : ""}
                 </div>
               </div>
-              <div className="text-right">
-                <div className="inline-block border-t border-gray-300 dark:border-gray-700 pt-4">
-                  <p className="font-medium text-gray-900 dark:text-white">{selectedRapport.auteur}</p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Éducateur/Éducatrice</p>
-                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
-                    Établi le {new Date().toLocaleDateString('fr-FR', { 
-                      weekday: 'long', 
-                      year: 'numeric', 
-                      month: 'long', 
-                      day: 'numeric' 
-                    })}
-                  </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <StatusPill statut={rapport.statut} />
+              <TypePill type={rapport.type} />
+              <button
+                onClick={onClose}
+                className="ml-1 rounded-lg bg-white/15 px-3 py-1.5 text-sm hover:bg-white/25"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+
+          {/* Body */}
+          <div className="max-h-[75vh] space-y-6 overflow-y-auto px-6 py-5">
+            {/* En-tête centré */}
+            <div className="mb-2 border-b pb-5 text-center">
+              <div className="mb-1 text-3xl font-bold text-gray-900 dark:text-white">
+                Rapport Pédagogique
+              </div>
+              <div className="mb-4 text-xl text-blue-600 dark:text-blue-400">
+                {rapport.titre}
+              </div>
+              <div className="flex flex-wrap justify-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-3 py-1 dark:bg-gray-800">
+                  <CalenderIcon className="size-4" />
+                  {rapport.periode}
+                </span>
+                <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-3 py-1 dark:bg-gray-800">
+                  <UserIcon className="size-4" /> Éducateur : {rapport.auteur}
+                </span>
+              </div>
+            </div>
+
+            {/* Spécifique individuels : message + tableau progression */}
+            {(rapport.type === "individuel_hebdomadaire" ||
+              rapport.type === "individuel_quotidien") && (
+              <div className="space-y-6">
+                <div className="rounded-xl border border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 p-5 dark:border-blue-800 dark:from-blue-900/30 dark:to-indigo-900/30">
+                  <div className="mb-3 flex items-center gap-3">
+                    <div className="rounded-lg bg-blue-100 p-2 dark:bg-blue-800">
+                      <span className="text-xl">👨‍👩‍👧</span>
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-gray-900 dark:text-white">
+                        Message aux parents
+                      </h4>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        Observations détaillées sur votre enfant
+                      </p>
+                    </div>
+                  </div>
+                  <div className="rounded-lg bg-white/60 p-4 dark:bg-gray-800/60">
+                    <p className="leading-relaxed text-gray-700 dark:text-gray-300">
+                      <span className="font-medium">Cher(s) parent(s),</span>{" "}
+                      voici un aperçu des progrès et points d’appui
+                      constatés durant la période.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-gray-200 p-5 dark:border-gray-700">
+                  <h4 className="mb-3 font-medium text-gray-900 dark:text-white">
+                    📊 Tableau de développement
+                  </h4>
+                  <ProgressRow label="Développement social" color="green" pct={90} note="Excellent" />
+                  <ProgressRow label="Compétences cognitives" color="blue" pct={85} note="Très bon" />
+                  <ProgressRow label="Expression émotionnelle" color="amber" pct={75} note="En progression" />
+                </div>
+              </div>
+            )}
+
+            {/* Résumé / Observations */}
+            {rapport.resume && (
+              <div className="rounded-xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-green-50 p-5 dark:border-emerald-800 dark:from-emerald-900/20 dark:to-green-900/20">
+                <h4 className="mb-2 font-medium text-gray-900 dark:text-white">
+                  🔍 Résumé & Observations
+                </h4>
+                <p className="text-gray-700 dark:text-gray-300">{rapport.resume}</p>
+              </div>
+            )}
+
+            {/* Actions recommandées */}
+            {!!rapport.actionsRecommandees?.length && (
+              <div className="rounded-xl border border-gray-200 p-5 dark:border-gray-700">
+                <h4 className="mb-3 font-medium text-gray-900 dark:text-white">
+                  💡 Recommandations
+                </h4>
+                <ul className="grid grid-cols-1 gap-2 md:grid-cols-2">
+                  {rapport.actionsRecommandees.map((a, i) => (
+                    <li
+                      key={i}
+                      className="rounded-lg bg-gray-50 p-3 text-sm text-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                    >
+                      {a}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Mots clés */}
+            {!!rapport.motsCles?.length && (
+              <div className="rounded-xl border border-gray-200 p-5 dark:border-gray-700">
+                <h4 className="mb-3 font-medium text-gray-900 dark:text-white">
+                  🔖 Mots-clés
+                </h4>
+                <div className="flex flex-wrap gap-1">
+                  {rapport.motsCles.map((m, i) => (
+                    <span
+                      key={i}
+                      className="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                    >
+                      #{m}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Signature */}
+            <div className="border-t border-gray-200 pt-5 dark:border-gray-800">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <div>
+                  <h5 className="mb-2 font-medium text-gray-900 dark:text-white">
+                    📞 Contact
+                  </h5>
+                  <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                    <p>
+                      Éducateur :{" "}
+                      <span className="font-medium text-gray-900 dark:text-white">
+                        {rapport.auteur}
+                      </span>
+                    </p>
+                    <p>Disponibilités : Lundi & Jeudi 16h30–17h30</p>
+                    <p>Email : educateur@ecole-exemple.fr</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="inline-block border-t border-gray-300 pt-4 dark:border-gray-700">
+                    <p className="font-medium text-gray-900 dark:text-white">
+                      {rapport.auteur}
+                    </p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Éducateur/Éducatrice
+                    </p>
+                    <p className="mt-2 text-xs text-gray-400 dark:text-gray-500">
+                      Établi le{" "}
+                      {new Date().toLocaleDateString("fr-FR", {
+                        weekday: "long",
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <div className="flex justify-between items-center border-t border-gray-200 dark:border-gray-800 px-6 py-4 bg-gray-50 dark:bg-gray-800/50">
-          <div className="text-sm text-gray-500 dark:text-gray-400">
-            Rapport #{selectedRapport.id} • Créé le {new Date(selectedRapport.dateCreation).toLocaleDateString('fr-FR')}
-          </div>
-          <div className="flex gap-3">
-            <button
-              onClick={() => setShowViewRapport(false)}
-              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
-            >
-              Fermer
-            </button>
-            <button
-              onClick={() => handleExporterRapport(selectedRapport)}
-              className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg hover:from-blue-700 hover:to-purple-700 flex items-center gap-2"
-            >
-              <DownloadIcon className="size-4" />
-              Télécharger pour les parents
-            </button>
+          {/* Footer actions */}
+          <div className="flex items-center justify-between border-t border-gray-200 bg-gray-50 px-6 py-4 dark:border-gray-800 dark:bg-gray-800/50">
+            <div className="text-sm text-gray-500 dark:text-gray-400">
+              Rapport #{rapport.id} • Créé le{" "}
+              {new Date(rapport.dateCreation).toLocaleDateString("fr-FR")}
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={onClose}
+                className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700"
+              >
+                Fermer
+              </button>
+              <button
+                onClick={onExport}
+                className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-2 text-sm font-medium text-white hover:from-blue-700 hover:to-purple-700"
+              >
+                <DownloadIcon className="size-4" />
+                Télécharger pour les parents
+              </button>
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
-)}
-      {/* Section Export et partage */}
-      <div className="mt-8 space-y-6">
-        <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/10 rounded-2xl border border-purple-200 dark:border-purple-800 p-6">
-          <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
-            📤 Export et partage
-          </h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <button className="p-4 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 hover:border-blue-500 dark:hover:border-blue-500 transition-colors text-center">
-              <div className="text-2xl mb-2">📄</div>
-              <div className="font-medium text-gray-900 dark:text-white">Exporter en PDF</div>
-              <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">Format professionnel</div>
-            </button>
-            
-            <button className="p-4 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 hover:border-green-500 dark:hover:border-green-500 transition-colors text-center">
-              <div className="text-2xl mb-2">📧</div>
-              <div className="font-medium text-gray-900 dark:text-white">Envoyer par email</div>
-              <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">Directement aux parents</div>
-            </button>
-            
-            <button className="p-4 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 hover:border-purple-500 dark:hover:border-purple-500 transition-colors text-center">
-              <div className="text-2xl mb-2">🖨️</div>
-              <div className="font-medium text-gray-900 dark:text-white">Imprimer</div>
-              <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">Version physique</div>
-            </button>
-          </div>
-        </div>
-      </div>
+  );
+}
 
-      {/* Pied de page avec résumé */}
-      <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-800">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-          <div>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              <span className="font-medium text-gray-900 dark:text-white">{rapports.length} rapports</span> 
-              {' '}gérés dans le système
-            </p>
-            <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-              Dernière mise à jour: {new Date().toLocaleDateString('fr-FR')}
-            </p>
-          </div>
-          
-          <div className="flex items-center gap-3">
-            <button className="px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-sm">
-              <DownloadIcon className="size-4 inline mr-2" />
-              Exporter tout
-            </button>
-            <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm">
-              Générer rapport mensuel
-            </button>
-          </div>
-        </div>
+/* -------------------- Ligne de progression (modal) -------------------- */
+function ProgressRow({
+  label,
+  pct,
+  note,
+  color,
+}: {
+  label: string;
+  pct: number;
+  note: string;
+  color: "green" | "blue" | "amber";
+}) {
+  const tone =
+    color === "green"
+      ? "from-green-500 to-emerald-600"
+      : color === "amber"
+      ? "from-amber-500 to-orange-600"
+      : "from-sky-500 to-blue-600";
+  const noteColor =
+    color === "green"
+      ? "text-green-600 dark:text-green-500"
+      : color === "amber"
+      ? "text-amber-600 dark:text-amber-500"
+      : "text-blue-600 dark:text-blue-500";
+  return (
+    <div className="mb-3">
+      <div className="mb-1 flex items-center justify-between text-sm">
+        <span className="font-medium text-gray-700 dark:text-gray-300">
+          {label}
+        </span>
+        <span className={`font-medium ${noteColor}`}>{note}</span>
       </div>
-    </>
+      <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+        <div
+          className={`h-2 rounded-full bg-gradient-to-r ${tone} transition-[width] duration-700`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+    </div>
   );
 }

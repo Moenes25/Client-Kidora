@@ -1,73 +1,42 @@
+import { CalendarDays } from "lucide-react";
+
+const days = ["Lun","Mar","Mer","Jeu","Ven"];
+const slots = [
+  { day: "Lun", time: "09:00", label: "Peinture", color: "bg-rose-100 text-rose-700" },
+  { day: "Lun", time: "11:00", label: "Motricité", color: "bg-emerald-100 text-emerald-700" },
+  { day: "Mar", time: "10:00", label: "Lecture", color: "bg-indigo-100 text-indigo-700" },
+  { day: "Jeu", time: "14:00", label: "Musique", color: "bg-amber-100 text-amber-800" },
+  { day: "Ven", time: "09:30", label: "Jeu libre", color: "bg-sky-100 text-sky-700" },
+];
+
 export default function WeeklySchedule() {
-  const days = [
-    { name: 'Lun', date: '17', activities: 3, isToday: true },
-    { name: 'Mar', date: '18', activities: 2, isToday: false },
-    { name: 'Mer', date: '19', activities: 4, isToday: false },
-    { name: 'Jeu', date: '20', activities: 3, isToday: false },
-    { name: 'Ven', date: '21', activities: 5, isToday: false },
-    { name: 'Sam', date: '22', activities: 1, isToday: false },
-  ];
-  
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900 shadow-sm h-full">
-      <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
-        Planning de la semaine
-      </h3>
-      
-      {/* Version HORIZONTALE */}
-      <div className="flex flex-col">
-        {/* Ligne des jours en horizontal */}
-        <div className="flex space-x-4 mb-4">
-          {days.map((day, index) => (
-            <div 
-              key={index} 
-              className={`flex-1 p-3 rounded-xl border ${day.isToday ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800'}`}
-            >
-              <div className="text-center">
-                <div className={`text-sm font-medium ${day.isToday ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`}>
-                  {day.name}
-                </div>
-                <div className={`text-xl font-bold mt-1 ${day.isToday ? 'text-blue-700 dark:text-blue-300' : 'text-gray-800 dark:text-white'}`}>
-                  {day.date}
-                </div>
-                <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                  {day.activities} act.
-                </div>
+    <section className="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 overflow-hidden">
+      <div className="bg-gradient-to-r from-teal-500 to-cyan-500 text-white px-5 pt-5 pb-4 flex items-center gap-2">
+        <CalendarDays className="h-5 w-5" />
+        <h3 className="text-lg font-semibold">Planning de la semaine</h3>
+      </div>
+
+      <div className="p-4">
+        <div className="grid grid-cols-5 gap-3">
+          {days.map(d => (
+            <div key={d} className="rounded-lg border border-gray-200 dark:border-gray-800 p-3">
+              <div className="text-sm font-semibold mb-2 dark:text-gray-400">{d}</div>
+              <div className="space-y-2">
+                {slots.filter(s => s.day === d).map((s, i) => (
+                  <div key={i} className={`rounded-md px-2 py-1 text-xs ${s.color} border border-black/5`}>
+                    <div className="font-semibold">{s.label}</div>
+                    <div className="opacity-70">{s.time}</div>
+                  </div>
+                ))}
+                {slots.filter(s => s.day === d).length === 0 && (
+                  <div className="text-xs text-gray-400">—</div>
+                )}
               </div>
             </div>
           ))}
         </div>
-        
-        {/* Ligne des heures/activités en dessous */}
-        <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-          <div className="flex items-center justify-between">
-            <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Aujourd'hui (17 Mars)
-            </div>
-            <button className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
-              Voir détails →
-            </button>
-          </div>
-          
-          <div className="mt-3 space-y-2">
-            <div className="flex items-center p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-              <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
-              <div className="flex-1">
-                <div className="text-sm font-medium text-gray-800 dark:text-white">Activité matinale</div>
-                <div className="text-xs text-gray-500 dark:text-gray-400">9:00 - 10:30</div>
-              </div>
-            </div>
-            
-            <div className="flex items-center p-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
-              <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
-              <div className="flex-1">
-                <div className="text-sm font-medium text-gray-800 dark:text-white">Atelier créatif</div>
-                <div className="text-xs text-gray-500 dark:text-gray-400">11:00 - 12:30</div>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
-    </div>
+    </section>
   );
 }

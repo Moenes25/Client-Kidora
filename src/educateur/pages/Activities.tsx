@@ -1,24 +1,24 @@
-// src/educateur/pages/Activities.tsx
 import PageMeta from "../../components/common/PageMeta";
-import { useState } from "react";
-import { 
+import { useMemo, useState } from "react";
+import {
   UserIcon,
   CalenderIcon,
-  DownloadIcon,
   EyeIcon,
   PlusIcon,
   CloseIcon,
-  CheckCircleIcon
+  CheckCircleIcon,
+  MailIcon,
 } from "../../icons";
 
+/* -------------------- Types -------------------- */
 interface Activite {
   id: number;
   titre: string;
   description: string;
-  type: 'creatif' | 'sportif' | 'educatif' | 'musical' | 'nature' | 'social';
-  duree: number; // en minutes
-  date: string;
-  heure: string;
+  type: "creatif" | "sportif" | "educatif" | "musical" | "nature" | "social";
+  duree: number; // minutes
+  date: string;  // YYYY-MM-DD
+  heure: string; // HH:mm
   classe: string;
   enfantsInscrits: number;
   enfantsMax: number;
@@ -26,7 +26,7 @@ interface Activite {
   objectifs: string[];
   observation?: string;
   photo?: string;
-  statut: 'planifie' | 'en_cours' | 'termine' | 'annule';
+  statut: "planifie" | "en_cours" | "termine" | "annule";
   evaluations?: EvaluationEnfant[];
 }
 
@@ -34,45 +34,168 @@ interface EvaluationEnfant {
   enfantId: number;
   nom: string;
   photo?: string;
-  participation: 'excellente' | 'bonne' | 'moyenne' | 'faible' | 'absente';
+  participation: "excellente" | "bonne" | "moyenne" | "faible" | "absente";
   observations: string;
   competencesAcquises: string[];
   besoinAide: boolean;
   note: number; // 1-5
 }
 
+/* -------------------- Helpers visuels -------------------- */
+const typeIcon = (t: Activite["type"]) =>
+  t === "creatif" ? "🎨" :
+  t === "sportif" ? "⚽" :
+  t === "educatif" ? "📚" :
+  t === "musical" ? "🎵" :
+  t === "nature" ? "🌱" : "👥";
 
+const typeTone = (t: Activite["type"]) =>
+  t === "creatif" ? "purple" :
+  t === "sportif" ? "emerald" :
+  t === "educatif" ? "indigo" :
+  t === "musical" ? "amber" :
+  t === "nature" ? "green" : "pink";
 
+const toneBg = (tone: string) =>
+  ({
+    purple: "from-purple-500 to-fuchsia-600",
+    emerald: "from-emerald-500 to-teal-600",
+    indigo: "from-indigo-500 to-violet-600",
+    amber: "from-amber-500 to-orange-600",
+    green: "from-green-500 to-emerald-600",
+    pink: "from-pink-500 to-rose-600",
+  }[tone] || "from-slate-500 to-slate-600");
+
+const chipByType = (t: Activite["type"]) =>
+  ({
+    creatif: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
+    sportif: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300",
+    educatif: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300",
+    musical: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
+    nature: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
+    social: "bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-300",
+  }[t]);
+
+const chipByStatut = (s: Activite["statut"]) =>
+  ({
+    planifie: "text-blue-700 dark:text-blue-300",
+    en_cours: "text-amber-700 dark:text-amber-300",
+    termine: "text-green-700 dark:text-green-300",
+    annule: "text-rose-700 dark:text-rose-300",
+  }[s]);
+
+/* Petites puces “pills” lisibles sur un header dégradé */
+function StatusPill({ statut }: { statut: Activite["statut"] }) {
+  const label = statut === "planifie" ? "Planifié" : statut === "en_cours" ? "En cours" : statut === "termine" ? "Terminé" : "Annulé";
+  return (
+    <span className={`inline-flex items-center gap-2 dark:text-slate-800  rounded-full bg-white/85 px-3 py-1 text-[11px] font-semibold shadow-sm ring-1 ring-black/5 ${chipByStatut(statut)}`}>
+      <span className={`inline-block h-2.5 w-2.5 rounded-full ${
+        statut==="planifie" ? "bg-blue-500" : statut==="en_cours" ? "bg-amber-500" : statut==="termine" ? "bg-green-500" : "bg-rose-500"
+      }`} />
+      {label}
+    </span>
+  );
+}
+
+function TypePill({ type }: { type: Activite["type"] }) {
+  return (
+    <span className={`rounded-full bg-white/85 px-3 py-1 text-[11px] font-semibold shadow-sm ring-1 ring-black/5 capitalize ${chipByType(type)}`}>
+      {type}
+    </span>
+  );
+}
+
+function GlassStat({
+  icon,
+  label,
+  value,
+  tone = "indigo",
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: number | string;
+  tone?: "indigo" | "green" | "amber" | "pink";
+}) {
+  const ring =
+    tone === "green"
+      ? "ring-green-300/50 dark:ring-green-400/20"
+      : tone === "amber"
+      ? "ring-amber-300/50 dark:ring-amber-400/20"
+      : tone === "pink"
+      ? "ring-pink-300/50 dark:ring-pink-400/20"
+      : "ring-indigo-300/50 dark:ring-indigo-400/20";
+  return (
+    <div className={`rounded-2xl bg-white/10 p-4 backdrop-blur ring-1 ${ring} shadow-[inset_0_1px_0_rgba(255,255,255,.25)]`}>
+      <div className="flex items-center gap-3">
+        <div className="grid h-10 w-10 place-items-center rounded-xl bg-white/20">{icon}</div>
+        <div className="min-w-0">
+          <div className="text-xs text-white/80">{label}</div>
+          <div className="truncate text-2xl font-extrabold text-white">{value}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CapacityBar({ value, max }: { value: number; max: number }) {
+  const pct = Math.min(100, Math.round((value / Math.max(1, max)) * 100));
+  return (
+    <div className="mt-2">
+      <div className="mb-1 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+        <span>Capacité</span>
+        <span>{value}/{max} ({pct}%)</span>
+      </div>
+      <div className="h-2 rounded-full bg-gray-100 dark:bg-gray-800">
+        <div
+          className="h-2 rounded-full bg-gradient-to-r from-sky-500 to-blue-600 dark:from-sky-400 dark:to-blue-500 transition-[width]"
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function Tag({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="rounded-lg bg-gray-100 px-2 py-0.5 text-xs text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+      {children}
+    </span>
+  );
+}
+
+/* -------------------- Page -------------------- */
 export default function ActivitiesPage() {
   const [showAjouterActivite, setShowAjouterActivite] = useState(false);
-const [nouvelleActivite, setNouvelleActivite] = useState({
-  titre: '',
-  description: '',
-  type: 'creatif' as const,
-  duree: 60,
-  date: new Date().toISOString().split('T')[0],
-  heure: '09:00',
-  classe: '(3-4) ans',
-  enfantsMax: 12,
-  materiel: [] as string[],
-  objectifs: [] as string[],
-  statut: 'planifie' as const
-});
+  const [detailActivite, setDetailActivite] = useState<Activite | null>(null); // NEW: modal détails
+  const [nouvelleActivite, setNouvelleActivite] = useState({
+    titre: "",
+    description: "",
+    type: "creatif" as const,
+    duree: 60,
+    date: new Date().toISOString().split("T")[0],
+    heure: "09:00",
+    classe: "(3-4) ans",
+    enfantsMax: 12,
+    materiel: [] as string[],
+    objectifs: [] as string[],
+    statut: "planifie" as const,
+  });
+
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [filterStatut, setFilterStatut] = useState("all");
-  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
+  const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
 
   const [showEvaluationModal, setShowEvaluationModal] = useState(false);
   const [activiteEnCours, setActiviteEnCours] = useState<Activite | null>(null);
   const [evaluations, setEvaluations] = useState<EvaluationEnfant[]>([]);
-  
+
   const [activites, setActivites] = useState<Activite[]>([
-    { 
-      id: 1, 
-      titre: "Atelier Peinture Libre", 
+    {
+      id: 1,
+      titre: "Atelier Peinture Libre",
       description: "Expression artistique libre avec différentes techniques de peinture",
-      type: 'creatif',
+      type: "creatif",
       duree: 90,
       date: "2024-01-15",
       heure: "09:30",
@@ -80,15 +203,15 @@ const [nouvelleActivite, setNouvelleActivite] = useState({
       enfantsInscrits: 8,
       enfantsMax: 10,
       materiel: ["Peinture", "Pinceaux", "Toiles", "Tabliers"],
-      objectifs: ["Développer la créativité", "Coordination main-œil", "Expression des émotions"],
+      objectifs: ["Créativité", "Coordination main-œil", "Expression des émotions"],
       observation: "Les enfants étaient très enthousiastes, Emma a créé une œuvre remarquable",
-      statut: 'termine'
+      statut: "termine",
     },
-    { 
-      id: 2, 
-      titre: "Jeux Collectifs au Parc", 
+    {
+      id: 2,
+      titre: "Jeux Collectifs au Parc",
       description: "Activités sportives et jeux d'équipe pour développer la coopération",
-      type: 'sportif',
+      type: "sportif",
       duree: 120,
       date: "2024-01-16",
       heure: "10:00",
@@ -97,13 +220,13 @@ const [nouvelleActivite, setNouvelleActivite] = useState({
       enfantsMax: 18,
       materiel: ["Ballons", "Cônes", "Certificats médicaux"],
       objectifs: ["Travail d'équipe", "Motricité globale", "Respect des règles"],
-      statut: 'planifie'
+      statut: "planifie",
     },
-    { 
-      id: 3, 
-      titre: "Découverte des Instruments", 
+    {
+      id: 3,
+      titre: "Découverte des Instruments",
       description: "Initiation aux différents instruments de musique",
-      type: 'musical',
+      type: "musical",
       duree: 60,
       date: "2024-01-15",
       heure: "14:00",
@@ -113,13 +236,13 @@ const [nouvelleActivite, setNouvelleActivite] = useState({
       materiel: ["Tambourins", "Maracas", "Xylophone", "Enregistrements"],
       objectifs: ["Sensibilisation musicale", "Rythme", "Écoute active"],
       observation: "Lucas a montré un intérêt particulier pour le xylophone",
-      statut: 'en_cours'
+      statut: "en_cours",
     },
-    { 
-      id: 4, 
-      titre: "Jardinage Éducatif", 
+    {
+      id: 4,
+      titre: "Jardinage Éducatif",
       description: "Planter et observer la croissance des plantes",
-      type: 'nature',
+      type: "nature",
       duree: 75,
       date: "2024-01-17",
       heure: "11:00",
@@ -128,13 +251,13 @@ const [nouvelleActivite, setNouvelleActivite] = useState({
       enfantsMax: 25,
       materiel: ["Graines", "Pots", "Terre", "Arrosoirs"],
       objectifs: ["Patience", "Responsabilité", "Cycle de vie des plantes"],
-      statut: 'planifie'
+      statut: "planifie",
     },
-    { 
-      id: 5, 
-      titre: "Expériences Scientifiques Simples", 
+    {
+      id: 5,
+      titre: "Expériences Scientifiques Simples",
       description: "Découverte des sciences par l'expérimentation",
-      type: 'educatif',
+      type: "educatif",
       duree: 80,
       date: "2024-01-14",
       heure: "13:30",
@@ -144,13 +267,13 @@ const [nouvelleActivite, setNouvelleActivite] = useState({
       materiel: ["Loupes", "Éprouvettes", "Colorants", "Documents"],
       objectifs: ["Curiosité scientifique", "Observation", "Hypothèses"],
       observation: "Fatima a posé des questions très pertinentes",
-      statut: 'termine'
+      statut: "termine",
     },
-    { 
-      id: 6, 
-      titre: "Atelier Conte et Imagination", 
+    {
+      id: 6,
+      titre: "Atelier Conte et Imagination",
       description: "Création d'histoires et développement du langage",
-      type: 'social',
+      type: "social",
       duree: 45,
       date: "2024-01-18",
       heure: "10:30",
@@ -158,451 +281,134 @@ const [nouvelleActivite, setNouvelleActivite] = useState({
       enfantsInscrits: 9,
       enfantsMax: 10,
       materiel: ["Livres", "Marionnettes", "Accessoires"],
-      objectifs: ["Développement du langage", "Imagination", "Écoute"],
-      statut: 'planifie'
+      objectifs: ["Langage", "Imagination", "Écoute"],
+      statut: "planifie",
     },
   ]);
 
+  /* -------------------- Dérivés -------------------- */
+  const filteredActivites = useMemo(() => {
+    return activites.filter((a) => {
+      const q =
+        a.titre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        a.description.toLowerCase().includes(searchTerm.toLowerCase());
+      const t = filterType === "all" || a.type === (filterType as any);
+      const s = filterStatut === "all" || a.statut === (filterStatut as any);
+      return q && t && s;
+    });
+  }, [activites, searchTerm, filterType, filterStatut]);
+
+  const kpis = useMemo(() => {
+    const plan = activites.filter((a) => a.statut === "planifie").length;
+    const enCours = activites.filter((a) => a.statut === "en_cours").length;
+    const done = activites.filter((a) => a.statut === "termine").length;
+    const inscrits = activites.reduce((n, a) => n + a.enfantsInscrits, 0);
+    return { plan, enCours, done, inscrits };
+  }, [activites]);
+
+  /* -------------------- Actions -------------------- */
   const ajouterActivite = () => {
-  const newActivite: Activite = {
-    id: activites.length + 1,
-    titre: nouvelleActivite.titre,
-    description: nouvelleActivite.description,
-    type: nouvelleActivite.type,
-    duree: nouvelleActivite.duree,
-    date: nouvelleActivite.date,
-    heure: nouvelleActivite.heure,
-    classe: nouvelleActivite.classe,
-    enfantsInscrits: 0,
-    enfantsMax: nouvelleActivite.enfantsMax,
-    materiel: nouvelleActivite.materiel,
-    objectifs: nouvelleActivite.objectifs,
-    statut: nouvelleActivite.statut
+    const newActivite: Activite = {
+      id: activites.length + 1,
+      titre: nouvelleActivite.titre,
+      description: nouvelleActivite.description,
+      type: nouvelleActivite.type,
+      duree: nouvelleActivite.duree,
+      date: nouvelleActivite.date,
+      heure: nouvelleActivite.heure,
+      classe: nouvelleActivite.classe,
+      enfantsInscrits: 0,
+      enfantsMax: nouvelleActivite.enfantsMax,
+      materiel: nouvelleActivite.materiel,
+      objectifs: nouvelleActivite.objectifs,
+      statut: nouvelleActivite.statut,
+    };
+    setActivites((prev) => [...prev, newActivite]);
+    setShowAjouterActivite(false);
+    setNouvelleActivite({
+      titre: "",
+      description: "",
+      type: "creatif",
+      duree: 60,
+      date: new Date().toISOString().split("T")[0],
+      heure: "09:00",
+      classe: "(3-4) ans",
+      enfantsMax: 12,
+      materiel: [],
+      objectifs: [],
+      statut: "planifie",
+    });
+    alert("Activité ajoutée avec succès !");
   };
 
-  setActivites([...activites, newActivite]);
-  setShowAjouterActivite(false);
-  setNouvelleActivite({
-    titre: '',
-    description: '',
-    type: 'creatif',
-    duree: 60,
-    date: new Date().toISOString().split('T')[0],
-    heure: '09:00',
-    classe: '(3-4) ans',
-    enfantsMax: 12,
-    materiel: [],
-    objectifs: [],
-    statut: 'planifie'
-  });
-  alert("Activité ajoutée avec succès !");
-};
-
-  const filteredActivites = activites.filter(activite => {
-    const matchesSearch = 
-      activite.titre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      activite.description.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesType = filterType === "all" || activite.type === filterType;
-    const matchesStatut = filterStatut === "all" || activite.statut === filterStatut;
-    
-    return matchesSearch && matchesType && matchesStatut;
-  });
-
-  const getTypeIcon = (type: string) => {
-    switch(type) {
-      case 'creatif': return "🎨";
-      case 'sportif': return "⚽";
-      case 'educatif': return "📚";
-      case 'musical': return "🎵";
-      case 'nature': return "🌱";
-      case 'social': return "👥";
-      default: return "⭐";
-    }
-  };
-
-  const getTypeColor = (type: string) => {
-    switch(type) {
-      case 'creatif': return "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400";
-      case 'sportif': return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400";
-      case 'educatif': return "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400";
-      case 'musical': return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400";
-      case 'nature': return "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400";
-      case 'social': return "bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-400";
-      default: return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300";
-    }
-  };
-
-  const getStatutColor = (statut: string) => {
-    switch(statut) {
-      case 'planifie': return "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400";
-      case 'en_cours': return "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400";
-      case 'termine': return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400";
-      case 'annule': return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400";
-      default: return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300";
-    }
-  };
   const demarrerEvaluation = (activite: Activite) => {
-  setActiviteEnCours(activite);
-  
-  // Créer des évaluations vides pour chaque enfant
-  const evaluationsInitiales: EvaluationEnfant[] = [
-    { enfantId: 1, nom: "Emma Dubois", participation: 'bonne' as const, observations: '', competencesAcquises: [], besoinAide: false, note: 3 },
-    { enfantId: 2, nom: "Lucas Martin", participation: 'bonne' as const, observations: '', competencesAcquises: [], besoinAide: false, note: 3 },
-    { enfantId: 3, nom: "Fatima Zahra", participation: 'bonne' as const, observations: '', competencesAcquises: [], besoinAide: false, note: 3 },
-    { enfantId: 4, nom: "Voussez Alain", participation: 'bonne' as const, observations: '', competencesAcquises: [], besoinAide: false, note: 3 },
-    { enfantId: 5, nom: "Chloé Petit", participation: 'bonne' as const, observations: '', competencesAcquises: [], besoinAide: false, note: 3 },
-    { enfantId: 6, nom: "Mohamed Ali", participation: 'bonne' as const, observations: '', competencesAcquises: [], besoinAide: false, note: 3 },
-    { enfantId: 7, nom: "Léa Bernard", participation: 'bonne' as const, observations: '', competencesAcquises: [], besoinAide: false, note: 3 },
-    { enfantId: 8, nom: "Thomas Leroy", participation: 'bonne' as const, observations: '', competencesAcquises: [], besoinAide: false, note: 3 },
-  ].slice(0, activite.enfantsInscrits); // Limiter aux enfants inscrits
+    setActiviteEnCours(activite);
+    const ev: EvaluationEnfant[] = [
+      { enfantId: 1, nom: "Emma Dubois", participation: "bonne", observations: "", competencesAcquises: [], besoinAide: false, note: 3 },
+      { enfantId: 2, nom: "Lucas Martin", participation: "bonne", observations: "", competencesAcquises: [], besoinAide: false, note: 3 },
+      { enfantId: 3, nom: "Fatima Zahra", participation: "bonne", observations: "", competencesAcquises: [], besoinAide: false, note: 3 },
+      { enfantId: 4, nom: "Voussez Alain", participation: "bonne", observations: "", competencesAcquises: [], besoinAide: false, note: 3 },
+      { enfantId: 5, nom: "Chloé Petit", participation: "bonne", observations: "", competencesAcquises: [], besoinAide: false, note: 3 },
+      { enfantId: 6, nom: "Mohamed Ali", participation: "bonne", observations: "", competencesAcquises: [], besoinAide: false, note: 3 },
+      { enfantId: 7, nom: "Léa Bernard", participation: "bonne", observations: "", competencesAcquises: [], besoinAide: false, note: 3 },
+      { enfantId: 8, nom: "Thomas Leroy", participation: "bonne", observations: "", competencesAcquises: [], besoinAide: false, note: 3 },
+    ].slice(0, activite.enfantsInscrits);
+    setEvaluations(ev);
+    setShowEvaluationModal(true);
+  };
 
-  setEvaluations(evaluationsInitiales);
-  setShowEvaluationModal(true);
-};
-
-const sauvegarderEvaluations = () => {
-  if (activiteEnCours) {
-    console.log("Évaluations sauvegardées pour", activiteEnCours.titre, evaluations);
-    
-    // Mettre à jour l'activité avec les évaluations
-    const activitesMaj = activites.map(a => 
-      a.id === activiteEnCours.id 
-        ? { ...a, evaluations: [...evaluations] }
-        : a
+  const sauvegarderEvaluations = () => {
+    if (!activiteEnCours) return;
+    const maj = activites.map((a) =>
+      a.id === activiteEnCours.id ? { ...a, statut: "termine", evaluations: [...evaluations] } : a
     );
-    
-    setActivites(activitesMaj);
+    setActivites(maj);
     setShowEvaluationModal(false);
     setActiviteEnCours(null);
-    
     alert("Évaluations sauvegardées avec succès !");
-  }
-};
+  };
 
+  /* -------------------- Render -------------------- */
   return (
     <>
-      <PageMeta
-        title="Gestion des Activités | Système de Gestion"
-        description="Planifiez, gérez et suivez les activités éducatives"
-      />
-      
-      <div className="mb-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              Gestion des Activités
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">
-              Planifiez, gérez et suivez les activités éducatives
-            </p>
-          </div>
-          
-          <div className="flex flex-wrap gap-3">
-            <button 
-            onClick={() => setShowAjouterActivite(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
-              <PlusIcon className="size-5" />
+      <PageMeta title="Gestion des Activités | Système de Gestion" description="Planifiez, gérez et suivez les activités éducatives" />
 
-              Nouvelle activité
-            </button>
+      {/* HERO créatif */}
+      <section className="relative mb-6 overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 text-white shadow-lg">
+        <span aria-hidden className="pointer-events-none absolute -top-24 -left-16 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
+        <span aria-hidden className="pointer-events-none absolute -bottom-28 -right-10 h-80 w-80 rounded-full bg-fuchsia-400/20 blur-3xl" />
+        <div className="relative z-10 p-6">
+          <h1 className="text-2xl font-bold tracking-tight">Activités ✨</h1>
+          <p className="mt-1 text-white/90">Planifiez, animez et suivez les progrès des enfants.</p>
 
-            {showAjouterActivite && (
-  <div className="fixed inset-0 flex items-center justify-center p-4 z-[100000]">
-    <div className="bg-white dark:bg-gray-900 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200 dark:border-gray-800 mt-16">
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-              Ajouter une nouvelle activité
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400">
-              Créez une nouvelle activité éducative
-            </p>
+          <div className="mt-4 grid max-w-full grid-cols-2 gap-3 sm:grid-cols-4">
+            <GlassStat icon={<CalenderIcon className="size-5 text-white" />} label="Planifiées" value={kpis.plan} />
+            <GlassStat icon={<span>⏳</span>} label="En cours" value={kpis.enCours} tone="amber" />
+            <GlassStat icon={<CheckCircleIcon className="size-5 text-white" />} label="Terminées" value={kpis.done} tone="green" />
+            <GlassStat icon={<UserIcon className="size-5 text-white" />} label="Total enfants" value={kpis.inscrits} tone="pink" />
           </div>
-          <button 
-            onClick={() => setShowAjouterActivite(false)}
-            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
-          >
-            <CloseIcon className="size-6" />
-          </button>
         </div>
+      </section>
 
-        <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); ajouterActivite(); }}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Titre de l'activité *
-              </label>
+      {/* Barre sticky : recherche & filtres + actions */}
+      <div className="sticky top-2 z-[5] mb-6 rounded-2xl border border-gray-200 bg-white/70 p-4 backdrop-blur dark:border-gray-800 dark:bg-gray-900/70">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-1 items-center gap-3">
+            <div className="relative flex-1">
               <input
                 type="text"
-                required
-                value={nouvelleActivite.titre}
-                onChange={(e) => setNouvelleActivite({...nouvelleActivite, titre: e.target.value})}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800"
-                placeholder="Ex: Atelier Peinture Libre"
+                placeholder="Rechercher une activité (titre, description)…"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="dark:text-white w-full rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 pl-10 text-sm outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800"
               />
+              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔎</span>
             </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Type d'activité *
-              </label>
-              <select
-                required
-                value={nouvelleActivite.type}
-                onChange={(e) => setNouvelleActivite({...nouvelleActivite, type: e.target.value as any})}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800"
-              >
-                <option value="creatif">Créatif</option>
-                <option value="sportif">Sportif</option>
-                <option value="educatif">Éducatif</option>
-                <option value="musical">Musical</option>
-                <option value="nature">Nature</option>
-                <option value="social">Social</option>
-              </select>
-            </div>
-          </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Description *
-            </label>
-            <textarea
-              required
-              value={nouvelleActivite.description}
-              onChange={(e) => setNouvelleActivite({...nouvelleActivite, description: e.target.value})}
-              rows={3}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800"
-              placeholder="Décrivez l'activité..."
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Date *
-              </label>
-              <input
-                type="date"
-                required
-                value={nouvelleActivite.date}
-                onChange={(e) => setNouvelleActivite({...nouvelleActivite, date: e.target.value})}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Heure *
-              </label>
-              <input
-                type="time"
-                required
-                value={nouvelleActivite.heure}
-                onChange={(e) => setNouvelleActivite({...nouvelleActivite, heure: e.target.value})}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Durée (minutes) *
-              </label>
-              <input
-                type="number"
-                required
-                min="15"
-                max="240"
-                value={nouvelleActivite.duree}
-                onChange={(e) => setNouvelleActivite({...nouvelleActivite, duree: parseInt(e.target.value)})}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Classe *
-              </label>
-              <select
-                required
-                value={nouvelleActivite.classe}
-                onChange={(e) => setNouvelleActivite({...nouvelleActivite, classe: e.target.value})}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800"
-              >
-                <option value="(3-4) ans">(3-4) ans</option>
-                <option value="(4-5) ans">(4-5) ans</option>
-                <option value="(6-7) ans">(6-7) ans</option>
-                <option value="(8-9) ans">(8-9) ans</option>
-                <option value="(10-11) ans">(10-11) ans</option>
-                <option value="12 ans">12 ans</option>
-                <option value="Toutes classes">Toutes classes</option>
-              </select>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Nombre maximum d'enfants *
-              </label>
-              <input
-                type="number"
-                required
-                min="1"
-                max="30"
-                value={nouvelleActivite.enfantsMax}
-                onChange={(e) => setNouvelleActivite({...nouvelleActivite, enfantsMax: parseInt(e.target.value)})}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Objectifs (séparés par des virgules)
-            </label>
-            <input
-              type="text"
-              value={nouvelleActivite.objectifs.join(', ')}
-              onChange={(e) => setNouvelleActivite({...nouvelleActivite, objectifs: e.target.value.split(',').map(o => o.trim()).filter(o => o)})}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800"
-              placeholder="Ex: Développer la créativité, Coordination main-œil, Expression des émotions"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Matériel nécessaire (séparés par des virgules)
-            </label>
-            <input
-              type="text"
-              value={nouvelleActivite.materiel.join(', ')}
-              onChange={(e) => setNouvelleActivite({...nouvelleActivite, materiel: e.target.value.split(',').map(m => m.trim()).filter(m => m)})}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800"
-              placeholder="Ex: Peinture, Pinceaux, Toiles, Tabliers"
-            />
-          </div>
-
-          <div className="flex gap-3 pt-4">
-            <button
-              type="submit"
-              className="flex-1 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-            >
-              Créer l'activité
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowAjouterActivite(false)}
-              className="px-6 py-3 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-            >
-              Annuler
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-)}
-            
-            <div className="flex gap-2 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
-              <button 
-                onClick={() => setViewMode('list')}
-                className={`px-3 py-1.5 rounded-md transition-colors ${viewMode === 'list' ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-900 dark:text-white' : 'hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'}`}
-              >
-                Liste
-              </button>
-              <button 
-                onClick={() => setViewMode('calendar')}
-                className={`px-3 py-1.5 rounded-md transition-colors ${viewMode === 'calendar' ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-900 dark:text-white' : 'hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'}`}
-              >
-                Calendrier
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Statistiques rapides */}
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-  {/* <div className="bg-gradient-to-br from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 p-4 rounded-2xl border border-blue-400/20 dark:border-blue-700 shadow-md"> */}
-       <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 p-5 shadow-md transition-all duration-200 hover:shadow-lg dark:from-blue-600 dark:to-blue-700">
-
-    <div className="flex items-start justify-between">
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-wide text-blue-100 dark:text-blue-200"> Total Enfants
-              </p>
-         <h3 className="mt-2 text-2xl font-bold text-white">
-          {activites.filter(a => a.statut === 'planifie').length}
-        </h3>
-      </div>
-      <CalenderIcon className="size-6 text-white dark:text-white" />
-    </div>
-  </div>
-  
-  <div className="bg-gradient-to-br from-amber-400 to-amber-500 dark:from-amber-500 dark:to-amber-600 p-4 rounded-2xl border border-amber-400/20 dark:border-amber-700 shadow-md">
-    <div className="flex items-center justify-between">
-      <div>
-       <p className="text-xs font-semibold uppercase tracking-wide text-amber-900 dark:text-amber-950">
-                Absents
-              </p>
-       <h3 className="mt-2 text-2xl font-bold text-gray-900 dark:text-gray-900">
-          {activites.filter(a => a.statut === 'en_cours').length}
-        </h3>
-      </div>
-      <span className="text-2xl text-gray-900 dark:text-gray-900">⏱️</span>
-    </div>
-  </div>
-  
-  <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 dark:from-emerald-600 dark:to-emerald-700 p-4 rounded-2xl border border-emerald-400/20 dark:border-emerald-700 shadow-md">
-    <div className="flex items-center justify-between">
-      <div>
-       <p className="text-xs font-semibold uppercase tracking-wide text-emerald-100 dark:text-emerald-200">Terminées</p>
-         <h3 className="mt-2 text-2xl font-bold text-white">
-          {activites.filter(a => a.statut === 'termine').length}
-        </h3>
-      </div>
-      
-              <CheckCircleIcon className="size-6 text-white dark:text-white"/>
- 
-    </div>
-  </div>
-  
-  <div className="bg-gradient-to-br from-cyan-500 to-cyan-600 dark:from-cyan-600 dark:to-cyan-700 p-4 rounded-2xl border border-cyan-400/20 dark:border-cyan-700 shadow-md">
-    <div className="flex items-center justify-between">
-      <div>
-       <p className="text-xs font-semibold uppercase tracking-wide text-cyan-100 dark:text-cyan-200">Total enfants</p>
-       <h3 className="mt-2 text-2xl font-bold text-white">
-          {activites.reduce((sum, a) => sum + a.enfantsInscrits, 0)}
-        </h3>
-      </div>
-      <UserIcon className="size-6 text-white dark:text-white" />
-    </div>
-  </div>
-</div>
-
-      {/* Barre de recherche et filtres */}
-      <div className="mb-6">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1 relative">
-            <svg xmlns="http://www.w3.org/2000/svg" className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="11" cy="11" r="8"/>
-              <path d="m21 21-4.35-4.35"/>
-            </svg>
-            <input
-              type="text"
-              placeholder="Rechercher une activité..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-500"
-            />
-          </div>
-          
-          <div className="flex flex-wrap gap-3">
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
-              className="px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-500"
+              className="dark:text-white rounded-xl border border-gray-300 bg-gray-50 px-3 py-3 text-sm focus:ring-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800"
             >
               <option value="all">Tous les types</option>
               <option value="creatif">Créatif</option>
@@ -612,384 +418,738 @@ const sauvegarderEvaluations = () => {
               <option value="nature">Nature</option>
               <option value="social">Social</option>
             </select>
-            
+
             <select
               value={filterStatut}
               onChange={(e) => setFilterStatut(e.target.value)}
-              className="px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-500"
+              className="dark:text-white rounded-xl border border-gray-300 bg-gray-50 px-3 py-3 text-sm focus:ring-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800"
             >
-              <option value="all">Tous les statuts</option>
+              <option value="all">Tous statuts</option>
               <option value="planifie">Planifié</option>
               <option value="en_cours">En cours</option>
               <option value="termine">Terminé</option>
               <option value="annule">Annulé</option>
             </select>
           </div>
+
+          <div className="flex items-center gap-2">
+            <div className="flex gap-1 rounded-xl bg-gray-100 p-1 dark:bg-gray-800">
+              <button
+                onClick={() => setViewMode("list")}
+                className={`rounded-lg px-3 py-2 text-sm ${viewMode === "list" ? "bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-white" : "text-gray-600 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-700"}`}
+              >
+                Liste
+              </button>
+              <button
+                onClick={() => setViewMode("calendar")}
+                className={`rounded-lg px-3 py-2 text-sm ${viewMode === "calendar" ? "bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-white" : "text-gray-600 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-700"}`}
+              >
+                Calendrier
+              </button>
+            </div>
+
+            <button
+              onClick={() => setShowAjouterActivite(true)}
+              className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            >
+              Nouvelle activité
+            </button>
+          </div>
         </div>
       </div>
 
-      {showEvaluationModal && activiteEnCours && (
-  <div className="fixed inset-0 z-[100000] overflow-y-auto">
-    <div className="fixed inset-0 bg-black/50 z-[100000]" onClick={() => setShowEvaluationModal(false)} />
-    <div className="relative z-[100001] flex min-h-full items-center justify-center p-4">
-      <div className="relative w-full max-w-4xl transform overflow-hidden rounded-xl bg-white dark:bg-gray-900 shadow-2xl transition-all">
-        <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-800 px-6 py-4">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Évaluation des enfants
-            </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              {activiteEnCours.titre} - {new Date(activiteEnCours.date).toLocaleDateString('fr-FR')}
-            </p>
-          </div>
-          <button
-            onClick={() => setShowEvaluationModal(false)}
-            className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-300"
-          >
-            ✕
-          </button>
-        </div>
-
-        <div className="px-6 py-4 space-y-6 max-h-[70vh] overflow-y-auto">
-          {/* Résumé de l'activité */}
-          <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
-            <div className="flex items-center gap-3">
-              <div className={`p-3 rounded-lg ${getTypeColor(activiteEnCours.type).split(' ')[0]} text-2xl`}>
-                {getTypeIcon(activiteEnCours.type)}
-              </div>
-              <div>
-                <h4 className="font-medium text-gray-900 dark:text-white">{activiteEnCours.titre}</h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400">{activiteEnCours.description}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Liste des évaluations */}
-          <div className="space-y-4">
-            {evaluations.map((evaluation, index) => (
-              <div key={evaluation.enfantId} className="p-4 border border-gray-200 dark:border-gray-700 rounded-xl">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
-                      <span className="text-gray-700 dark:text-gray-300 font-medium">
-                        {evaluation.nom.split(' ').map(n => n[0]).join('')}
-                      </span>
-                    </div>
+      {/* LISTE / CALENDRIER */}
+      {viewMode === "list" ? (
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3 auto-rows-[1fr]">
+          {filteredActivites.map((a) => {
+            const tone = typeTone(a.type);
+            return (
+              <div key={a.id} className="flex h-full flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition hover:shadow-lg dark:border-gray-800 dark:bg-gray-900">
+                {/* Header dégradé par type — FIX: pills lisibles */}
+                <div className={`flex items-center justify-between bg-gradient-to-r ${toneBg(tone)} px-5 py-4`}>
+                  <div className="flex items-center gap-3 text-white">
+                    <div className="grid h-10 w-10 place-items-center rounded-xl bg-white/20 text-xl">{typeIcon(a.type)}</div>
                     <div>
-                      <h5 className="font-medium text-gray-900 dark:text-white">{evaluation.nom}</h5>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">Enfant #{evaluation.enfantId}</p>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-base font-semibold leading-tight">{a.titre}</h3>
+                       
+                      </div>
+                      <div className="text-xs/5 opacity-90">{a.classe} • {a.heure} • {a.duree} min</div>
+                       <StatusPill statut={a.statut} />
                     </div>
                   </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Note :</span>
-                    <div className="flex">
-                      {[1, 2, 3, 4, 5].map(star => (
+                  <TypePill type={a.type} />
+                </div>
+
+                {/* Body + Footer collé en bas */}
+                <div className="flex grow flex-col p-5">
+                  <p className="line-clamp-3 text-sm text-gray-600 dark:text-gray-300">{a.description}</p>
+
+                  <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
+                    <span className="inline-flex items-center gap-1">
+                      <CalenderIcon className="size-4" />
+                      {new Date(a.date).toLocaleDateString("fr-FR")}
+                    </span>
+                    <span className="inline-flex items-center gap-1">🕐 {a.heure}</span>
+                    <span className="inline-flex items-center gap-1">👥 {a.enfantsInscrits}/{a.enfantsMax}</span>
+                  </div>
+
+                  <CapacityBar value={a.enfantsInscrits} max={a.enfantsMax} />
+
+                  {!!a.objectifs.length && (
+                    <div className="mt-3">
+                      <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Objectifs</div>
+                      <div className="flex flex-wrap gap-1">
+                        {a.objectifs.slice(0, 3).map((o, i) => <Tag key={i}>{o}</Tag>)}
+                      </div>
+                    </div>
+                  )}
+                 {a.observation && (
+                      <div className="mt-3 rounded-lg bg-gray-200 p-3 text-sm text-gray-600 dark:bg-gray-800/60 dark:text-gray-300">
+                        <span className="font-medium">Observation :</span> {a.observation}
+                      </div>
+                    )}
+                  {/* Footer */}
+                  <div className="mt-auto border-t border-gray-200 pt-4 dark:border-gray-800">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="rounded-md bg-gray-100 px-2 py-0.5 text-xs text-gray-700 dark:bg-gray-800 dark:text-gray-300">{a.classe}</span>
+                        <span className="rounded-md bg-gray-100 px-2 py-0.5 text-xs text-gray-700 dark:bg-gray-800 dark:text-gray-300">{a.duree} min</span>
+                      </div>
+                      <div className="flex items-center gap-2">
                         <button
-                          key={star}
-                          onClick={() => {
-                            const newEvaluations = [...evaluations];
-                            newEvaluations[index].note = star;
-                            setEvaluations(newEvaluations);
-                          }}
-                          className={`text-xl ${star <= evaluation.note ? 'text-yellow-500' : 'text-gray-300 dark:text-gray-600'}`}
+                          onClick={() => setDetailActivite(a)}
+                          className="inline-flex items-center gap-2 rounded-lg bg-blue-50 px-3 py-2 text-sm font-medium text-blue-600 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-300 dark:hover:bg-blue-900/50"
                         >
-                          ★
+                          <EyeIcon className="size-4" />
+                          Détails
                         </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Participation
-                    </label>
-                    <select
-                      value={evaluation.participation}
-                      onChange={(e) => {
-                        const newEvaluations = [...evaluations];
-                        newEvaluations[index].participation = e.target.value as any;
-                        setEvaluations(newEvaluations);
-                      }}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-800"
-                    >
-                      <option value="excellente">⭐ Excellente</option>
-                      <option value="bonne">👍 Bonne</option>
-                      <option value="moyenne">⚪ Moyenne</option>
-                      <option value="faible">⚠️ Faible</option>
-                      <option value="absente">❌ Absente</option>
-                    </select>
-                  </div>
+                        {a.statut === "planifie" && (
+                          <button
+                            onClick={() =>
+                              setActivites((prev) =>
+                                prev.map((x) => (x.id === a.id ? { ...x, statut: "en_cours" } : x))
+                              )
+                            }
+                            className="rounded-lg bg-green-600 px-3 py-2 text-sm font-medium text-white hover:bg-green-700"
+                          >
+                            Démarrer
+                          </button>
+                        )}
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Besoin d'aide supplémentaire ?
-                    </label>
-                    <div className="flex gap-3">
-                      <button
-                        onClick={() => {
-                          const newEvaluations = [...evaluations];
-                          newEvaluations[index].besoinAide = true;
-                          setEvaluations(newEvaluations);
-                        }}
-                        className={`flex-1 py-2 rounded-lg ${evaluation.besoinAide ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-red-300 dark:border-red-700' : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border-gray-300 dark:border-gray-700'} border`}
-                      >
-                        Oui
-                      </button>
-                      <button
-                        onClick={() => {
-                          const newEvaluations = [...evaluations];
-                          newEvaluations[index].besoinAide = false;
-                          setEvaluations(newEvaluations);
-                        }}
-                        className={`flex-1 py-2 rounded-lg ${!evaluation.besoinAide ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-green-300 dark:border-green-700' : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border-gray-300 dark:border-gray-700'} border`}
-                      >
-                        Non
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-4">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Observations
-                  </label>
-                  <textarea
-                    value={evaluation.observations}
-                    onChange={(e) => {
-                      const newEvaluations = [...evaluations];
-                      newEvaluations[index].observations = e.target.value;
-                      setEvaluations(newEvaluations);
-                    }}
-                    rows={2}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-800"
-                    placeholder="Notes sur la participation de l'enfant..."
-                  />
-                </div>
-
-                <div className="mt-4">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Compétences acquises (séparées par des virgules)
-                  </label>
-                  <input
-                    type="text"
-                    value={evaluation.competencesAcquises.join(', ')}
-                    onChange={(e) => {
-                      const newEvaluations = [...evaluations];
-                      newEvaluations[index].competencesAcquises = e.target.value.split(',').map(c => c.trim()).filter(c => c);
-                      setEvaluations(newEvaluations);
-                    }}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-800"
-                    placeholder="Ex: a appris à découper, a compris les consignes..."
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Résumé des évaluations */}
-          <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
-            <h4 className="font-medium text-gray-900 dark:text-white mb-3">Résumé des évaluations</h4>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-600 dark:text-green-500">
-                  {evaluations.filter(e => e.participation === 'excellente' || e.participation === 'bonne').length}
-                </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">Bonnes participations</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-500">
-                  {evaluations.filter(e => e.participation === 'moyenne').length}
-                </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">Participation moyenne</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-red-600 dark:text-red-500">
-                  {evaluations.filter(e => e.participation === 'faible' || e.participation === 'absente').length}
-                </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">Faible participation</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600 dark:text-blue-500">
-                  {evaluations.filter(e => e.besoinAide).length}
-                </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">Besoin d'aide</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex justify-end gap-3 border-t border-gray-200 dark:border-gray-800 px-6 py-4">
-          <button
-            type="button"
-            onClick={() => setShowEvaluationModal(false)}
-            className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
-          >
-            Annuler
-          </button>
-          <button
-            type="button"
-            onClick={sauvegarderEvaluations}
-            className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700"
-          >
-            Terminer l'activité avec évaluations
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-)}
-
-      {viewMode === 'list' ? (
-        <div className="space-y-4">
-          {filteredActivites.map(activite => (
-            <div key={activite.id} className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5 hover:shadow-lg transition-shadow">
-              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                <div className="flex-1">
-                  <div className="flex items-start gap-3">
-                    <div className={`p-3 rounded-lg ${getTypeColor(activite.type).split(' ')[0]} text-2xl`}>
-                      {getTypeIcon(activite.type)}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex flex-wrap items-center gap-2 mb-2">
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                          {activite.titre}
-                        </h3>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatutColor(activite.statut)}`}>
-                          {activite.statut === 'planifie' ? 'Planifié' :
-                           activite.statut === 'en_cours' ? 'En cours' :
-                           activite.statut === 'termine' ? 'Terminé' : 'Annulé'}
-                        </span>
-                      </div>
-                      
-                      <p className="text-gray-600 dark:text-gray-400 mb-3">
-                        {activite.description}
-                      </p>
-                      
-                      <div className="flex flex-wrap gap-4 text-sm">
-                        <div className="flex items-center gap-1 text-gray-500 dark:text-gray-500">
-                          <CalenderIcon className="size-4" />
-                          {new Date(activite.date).toLocaleDateString('fr-FR')}
-                        </div>
-                        <div className="flex items-center gap-1 text-gray-500 dark:text-gray-500">
-                          <span className="text-lg">🕐</span>
-                          {activite.heure} ({activite.duree} min)
-                        </div>
-                        <div className="flex items-center gap-1 text-gray-500 dark:text-gray-500">
-                          <span className="text-lg">👥</span>
-                          {activite.classe} • {activite.enfantsInscrits}/{activite.enfantsMax} enfants
-                        </div>
-                      </div>
-                      
-                      <div className="mt-3">
-                        <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          Objectifs :
-                        </div>
-                        <div className="flex flex-wrap gap-1">
-                          {activite.objectifs.slice(0, 2).map((objectif, idx) => (
-                            <span key={idx} className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded">
-                              {objectif}
-                            </span>
-                          ))}
-                        </div>
+                        {a.statut === "en_cours" && (
+                          <button
+                            onClick={() => demarrerEvaluation(a)}
+                            className="rounded-lg bg-amber-500 px-3 py-2 text-sm font-medium text-white hover:bg-amber-600"
+                          >
+                            Évaluer & terminer
+                          </button>
+                        )}
                       </div>
                     </div>
+
+                  
                   </div>
                 </div>
-                
-                <div className="flex flex-col gap-2">
-                  <button 
-                    className="px-4 py-2 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors text-sm font-medium flex items-center gap-2"
-                  >
-                    <EyeIcon className="size-4" />
-                    Voir détails
-                  </button>
-                  {activite.statut === 'planifie' && (
-                    <button className="px-4 py-2 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/50 transition-colors text-sm font-medium">
-                      Démarrer
-                    </button>
-                  )}
-                  {activite.statut === 'en_cours' && (
-                   <button 
-                  onClick={() => demarrerEvaluation(activite)}
-                  className="px-4 py-2 bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-lg hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-colors text-sm font-medium"
-                >
-                  Évaluer et terminer
-                </button>
-                  )}
-                </div>
               </div>
-              
-              {activite.observation && (
-                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-800">
-                  <div className="text-sm text-gray-600 dark:text-gray-400">
-                    <strong>Observation :</strong> {activite.observation}
-                  </div>
-                </div>
-              )}
-              {activite.evaluations && activite.evaluations.length > 0 && (
-            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-800">
-              <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                📊 Évaluations des enfants :
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                {activite.evaluations.slice(0, 4).map(evaluation => (
-                  <div key={evaluation.enfantId} className="text-xs bg-gray-50 dark:bg-gray-800 p-2 rounded">
-                    <div className="font-medium dark:text-white">{evaluation.nom}</div>
-                    <div className="dark:text-gray-400">Participation: {evaluation.participation}</div>
-                    <div className="flex items-center dark:text-gray-400">
-                      Note: 
-                      <span className="ml-1 text-yellow-500">
-                        {'★'.repeat(evaluation.note)}
-                        <span className="text-gray-300 dark:text-gray-600">{'★'.repeat(5 - evaluation.note)}</span>
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              {activite.evaluations.length > 4 && (
-                <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                  + {activite.evaluations.length - 4} autres évaluations...
-                </div>
-              )}
+            );
+          })}
+          {filteredActivites.length === 0 && (
+            <div className="col-span-full rounded-2xl border border-dashed border-gray-300 p-10 text-center text-gray-500 dark:border-gray-700 dark:text-gray-400">
+              Aucune activité ne correspond aux filtres.
             </div>
           )}
-            </div>
-          ))}
         </div>
       ) : (
-        // Mode calendrier
-        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5">
-          <div className="text-center mb-6">
+        /* ---------------- Calendrier hebdo amélioré ---------------- */
+        <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900">
+          <div className="mb-4 flex items-center justify-between">
             <h3 className="text-lg font-semibold text-gray-800 dark:text-white">
-              Calendrier des activités - Semaine du 15 Janvier 2024
+              Calendrier des activités (semaine)
             </h3>
+            <div className="text-xs text-gray-500 dark:text-gray-400">
+              * Cliquez sur un événement pour voir les détails
+            </div>
           </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-7 gap-2">
-            {['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map((jour, index) => (
-              <div key={jour} className="text-center">
-                <div className="font-medium text-gray-700 dark:text-gray-300 mb-2">{jour}</div>
-                <div className="min-h-32 p-2 border border-gray-200 dark:border-gray-800 rounded-lg">
-                  {filteredActivites
-                    .filter(a => new Date(a.date).getDay() === (index + 1) % 7)
-                    .map(activite => (
-                      <div 
-                        key={activite.id}
-                        className={`mb-2 p-2 rounded text-xs ${getStatutColor(activite.statut)}`}
-                      >
-                        <div className="font-medium truncate">{activite.titre}</div>
-                        <div>{activite.heure}</div>
-                      </div>
-                    ))}
+
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-7">
+            {["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"].map((jour, i) => {
+              const todayIdx = (new Date().getDay() + 6) % 7; // 0=Lun
+              return (
+                <div key={jour} className={`rounded-xl border p-2 ${todayIdx===i ? "border-indigo-400 ring-2 ring-indigo-200 dark:ring-indigo-900/40" : "border-gray-200 dark:border-gray-800"}`}>
+                  <div className="mb-2 flex items-center justify-between">
+                    <div className="font-medium text-gray-700 dark:text-gray-300">{jour}</div>
+                    {todayIdx===i && <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-semibold text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">Aujourd’hui</span>}
+                  </div>
+
+                  <div className="space-y-2">
+                    {filteredActivites
+                      .filter((a) => new Date(a.date).getDay() === ((i + 1) % 7)) // 0=Dim
+                      .sort((a,b)=>a.heure.localeCompare(b.heure))
+                      .map((a) => (
+                        <button
+                          key={a.id}
+                          onClick={() => setDetailActivite(a)}
+                          className={`group w-full rounded-lg p-2 text-left text-xs transition hover:shadow ${chipByType(a.type)} ring-1 ring-black/5 dark:ring-white/10`}
+                          title={`${a.titre} — ${a.heure}`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="truncate font-semibold text-gray-900 dark:text-white">{a.titre}</div>
+                            <span className={` dark:text-slate-800 ml-2 rounded-full bg-white/80 px-2 py-0.5 text-[10px] font-semibold shadow-sm ring-1 ring-black/5 ${chipByStatut(a.statut)}`}>
+                              {a.statut === "planifie" ? "Planifié" : a.statut === "en_cours" ? "En cours" : a.statut === "termine" ? "Terminé" : "Annulé"}
+                            </span>
+                          </div>
+                          <div className="mt-0.5 text-gray-700 dark:text-gray-300">{a.heure} • {a.classe}</div>
+                        </button>
+                      ))}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
+
+      {/* -------------------- Modale: Ajouter une activité -------------------- */}
+      {showAjouterActivite && (
+        <div className="fixed inset-0 z-[100000]">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowAjouterActivite(false)} />
+          <div className="relative mx-auto mt-2 w-full max-w-3xl px-4">
+            <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-gray-800 dark:bg-gray-900">
+              <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4 dark:border-gray-800">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Nouvelle activité</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Créez une activité et visualisez-la en direct</p>
+                </div>
+                <button onClick={() => setShowAjouterActivite(false)} className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800">
+                  <CloseIcon className="size-5" />
+                </button>
+              </div>
+
+              <div className="grid max-h-[80vh] gap-6 overflow-y-auto p-6 md:grid-cols-[1.2fr,1fr]">
+                {/* Form */}
+                <form
+                  onSubmit={(e) => { e.preventDefault(); ajouterActivite(); }}
+                  className="space-y-4"
+                >
+                  <div>
+                    <label className="mb-1 block text-sm font-medium">Titre *</label>
+                    <input
+                      value={nouvelleActivite.titre}
+                      onChange={(e) => setNouvelleActivite({ ...nouvelleActivite, titre: e.target.value })}
+                      required
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
+                      placeholder="Ex : Atelier Peinture Libre"
+                    />
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div>
+                      <label className="mb-1 block text-sm font-medium">Type *</label>
+                      <select
+                        value={nouvelleActivite.type}
+                        onChange={(e) => setNouvelleActivite({ ...nouvelleActivite, type: e.target.value as any })}
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
+                      >
+                        <option value="creatif">Créatif</option>
+                        <option value="sportif">Sportif</option>
+                        <option value="educatif">Éducatif</option>
+                        <option value="musical">Musical</option>
+                        <option value="nature">Nature</option>
+                        <option value="social">Social</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-sm font-medium">Classe *</label>
+                      <select
+                        value={nouvelleActivite.classe}
+                        onChange={(e) => setNouvelleActivite({ ...nouvelleActivite, classe: e.target.value })}
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
+                      >
+                        {["(3-4) ans","(4-5) ans","(6-7) ans","(8-9) ans","(10-11) ans","12 ans","Toutes classes"].map((c) => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block text-sm font-medium">Description *</label>
+                    <textarea
+                      value={nouvelleActivite.description}
+                      onChange={(e) => setNouvelleActivite({ ...nouvelleActivite, description: e.target.value })}
+                      rows={3}
+                      required
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
+                      placeholder="Décrivez l’activité…"
+                    />
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-3">
+                    <div>
+                      <label className="mb-1 block text-sm font-medium">Date *</label>
+                      <input
+                        type="date"
+                        value={nouvelleActivite.date}
+                        onChange={(e) => setNouvelleActivite({ ...nouvelleActivite, date: e.target.value })}
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-sm font-medium">Heure *</label>
+                      <input
+                        type="time"
+                        value={nouvelleActivite.heure}
+                        onChange={(e) => setNouvelleActivite({ ...nouvelleActivite, heure: e.target.value })}
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-sm font-medium">Durée (min) *</label>
+                      <input
+                        type="range"
+                        min={15}
+                        max={240}
+                        step={15}
+                        value={nouvelleActivite.duree}
+                        onChange={(e) => setNouvelleActivite({ ...nouvelleActivite, duree: parseInt(e.target.value) || 0 })}
+                        className="w-full"
+                      />
+                      <div className="mt-1 text-sm text-gray-600 dark:text-gray-300">{nouvelleActivite.duree} min</div>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div>
+                      <label className="mb-1 block text-sm font-medium">Objectifs</label>
+                      <TagEditor
+                        value={nouvelleActivite.objectifs}
+                        onChange={(v) => setNouvelleActivite({ ...nouvelleActivite, objectifs: v })}
+                        placeholder="ex: écoute, coopération…"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-sm font-medium">Matériel</label>
+                      <TagEditor
+                        value={nouvelleActivite.materiel}
+                        onChange={(v) => setNouvelleActivite({ ...nouvelleActivite, materiel: v })}
+                        placeholder="ex: peinture, ciseaux…"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="mb-1 block text-sm font-medium">Capacité max *</label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={30}
+                        value={nouvelleActivite.enfantsMax}
+                        onChange={(e) => setNouvelleActivite({ ...nouvelleActivite, enfantsMax: parseInt(e.target.value) || 0 })}
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-sm font-medium">Statut</label>
+                      <select
+                        value={nouvelleActivite.statut}
+                        onChange={(e) => setNouvelleActivite({ ...nouvelleActivite, statut: e.target.value as any })}
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
+                      >
+                        <option value="planifie">Planifié</option>
+                        <option value="en_cours">En cours</option>
+                        <option value="termine">Terminé</option>
+                        <option value="annule">Annulé</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3 pt-2">
+                    <button type="submit" className="flex-1 rounded-lg bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700">
+                      Créer l’activité
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowAjouterActivite(false)}
+                      className="rounded-lg border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                    >
+                      Annuler
+                    </button>
+                  </div>
+                </form>
+
+                {/* Preview */}
+                <div className="space-y-3">
+                  <div className={`rounded-xl border p-4 dark:border-gray-800 ${chipByType(nouvelleActivite.type)}`}>
+                    <div className="mb-1 text-sm font-semibold">Prévisualisation</div>
+                    <div className="rounded-lg border border-white/40 bg-white/60 p-4 shadow-sm backdrop-blur dark:border-white/10 dark:bg-gray-900/60">
+                      <div className="text-xs text-gray-500">
+                        {nouvelleActivite.date} • {nouvelleActivite.heure} • {nouvelleActivite.duree} min
+                      </div>
+                      <div className="text-lg font-bold text-gray-900 dark:text-white">
+                        {nouvelleActivite.titre || "Titre de l’activité"}
+                      </div>
+                      <div className="text-sm text-gray-600 dark:text-gray-300">
+                        {nouvelleActivite.description || "Description…"}
+                      </div>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-xs text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">
+                          {nouvelleActivite.type}
+                        </span>
+                        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
+                          {nouvelleActivite.classe}
+                        </span>
+                      </div>
+                      {!!nouvelleActivite.objectifs.length && (
+                        <div className="mt-3">
+                          <div className="text-xs font-medium text-gray-500">Objectifs</div>
+                          <ul className="mt-1 list-inside list-disc text-sm text-gray-700 dark:text-gray-200">
+                            {nouvelleActivite.objectifs.map((o, i) => (
+                              <li key={i}>{o}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
+                    Astuce : limitez à 2–3 objectifs pour rester focalisé.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* -------------------- Modale: Évaluation -------------------- */}
+      {showEvaluationModal && activiteEnCours && (
+        <div className="fixed inset-0 z-[100000] overflow-y-auto">
+          <div className="fixed inset-0 bg-black/50" onClick={() => setShowEvaluationModal(false)} />
+          <div className="relative z-[100001] mx-auto my-8 w-full max-w-4xl px-4">
+            <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-gray-800 dark:bg-gray-900">
+              <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4 dark:border-gray-800">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Évaluation des enfants</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {activiteEnCours.titre} — {new Date(activiteEnCours.date).toLocaleDateString("fr-FR")}
+                  </p>
+                </div>
+                <button onClick={() => setShowEvaluationModal(false)} className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800">
+                  ✕
+                </button>
+              </div>
+
+              <div className="max-h-[70vh] space-y-6 overflow-y-auto px-6 py-4">
+                {/* résumé */}
+                <div className="rounded-xl bg-blue-50 p-4 dark:bg-blue-900/20">
+                  <div className="flex items-center gap-3">
+                    <div className={`grid h-11 w-11 place-items-center rounded-xl text-2xl ${chipByType(activiteEnCours.type)}`}>{typeIcon(activiteEnCours.type)}</div>
+                    <div>
+                      <div className="font-medium text-gray-900 dark:text-white">{activiteEnCours.titre}</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">{activiteEnCours.description}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* items */}
+                <div className="space-y-4">
+                  {evaluations.map((ev, idx) => (
+                    <div key={ev.enfantId} className="rounded-xl border border-gray-200 p-4 dark:border-gray-700">
+                      <div className="mb-3 flex items-start justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="grid h-10 w-10 place-items-center rounded-full bg-gray-200 text-sm font-semibold dark:bg-gray-700">
+                            {ev.nom.split(" ").map((n) => n[0]).join("")}
+                          </div>
+                          <div>
+                            <div className="font-medium text-gray-900 dark:text-white">{ev.nom}</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400"># {ev.enfantId}</div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          {[1, 2, 3, 4, 5].map((s) => (
+                            <button
+                              key={s}
+                              onClick={() => {
+                                const cp = [...evaluations];
+                                cp[idx].note = s;
+                                setEvaluations(cp);
+                              }}
+                              className={`text-xl leading-none ${s <= ev.note ? "text-yellow-500" : "text-gray-300 dark:text-gray-600"}`}
+                            >
+                              ★
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="grid gap-4 md:grid-cols-2">
+                        <div>
+                          <label className="mb-2 block text-sm font-medium">Participation</label>
+                          <select
+                            value={ev.participation}
+                            onChange={(e) => {
+                              const cp = [...evaluations];
+                              cp[idx].participation = e.target.value as any;
+                              setEvaluations(cp);
+                            }}
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
+                          >
+                            <option value="excellente">⭐ Excellente</option>
+                            <option value="bonne">👍 Bonne</option>
+                            <option value="moyenne">⚪ Moyenne</option>
+                            <option value="faible">⚠️ Faible</option>
+                            <option value="absente">❌ Absente</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="mb-2 block text-sm font-medium">Besoin d'aide ?</label>
+                          <div className="flex gap-3">
+                            <button
+                              onClick={() => {
+                                const cp = [...evaluations];
+                                cp[idx].besoinAide = true;
+                                setEvaluations(cp);
+                              }}
+                              className={`flex-1 rounded-lg border px-3 py-2 ${ev.besoinAide ? "border-rose-300 bg-rose-50 text-rose-700 dark:border-rose-700 dark:bg-rose-900/30 dark:text-rose-300" : "border-gray-300 bg-gray-100 text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"}`}
+                            >
+                              Oui
+                            </button>
+                            <button
+                              onClick={() => {
+                                const cp = [...evaluations];
+                                cp[idx].besoinAide = false;
+                                setEvaluations(cp);
+                              }}
+                              className={`flex-1 rounded-lg border px-3 py-2 ${!ev.besoinAide ? "border-green-300 bg-green-50 text-green-700 dark:border-green-700 dark:bg-green-900/30 dark:text-green-300" : "border-gray-300 bg-gray-100 text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"}`}
+                            >
+                              Non
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mt-4">
+                        <label className="mb-2 block text-sm font-medium">Observations</label>
+                        <textarea
+                          value={ev.observations}
+                          onChange={(e) => {
+                            const cp = [...evaluations];
+                            cp[idx].observations = e.target.value;
+                            setEvaluations(cp);
+                          }}
+                          rows={2}
+                          className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
+                          placeholder="Notes sur la participation…"
+                        />
+                      </div>
+
+                      <div className="mt-4">
+                        <label className="mb-2 block text-sm font-medium">Compétences acquises (séparées par virgules)</label>
+                        <input
+                          type="text"
+                          value={ev.competencesAcquises.join(", ")}
+                          onChange={(e) => {
+                            const cp = [...evaluations];
+                            cp[idx].competencesAcquises = e.target.value.split(",").map((x) => x.trim()).filter(Boolean);
+                            setEvaluations(cp);
+                          }}
+                          className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
+                          placeholder="ex: découper, suivre une consigne…"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Résumé */}
+                <div className="rounded-xl bg-gray-50 p-4 dark:bg-gray-800/50">
+                  <h4 className="mb-3 font-medium text-gray-900 dark:text-white">Résumé</h4>
+                  <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+                    <Summary number={evaluations.filter((e) => ["excellente", "bonne"].includes(e.participation)).length} label="Bonnes participations" tone="green" />
+                    <Summary number={evaluations.filter((e) => e.participation === "moyenne").length} label="Participation moyenne" tone="amber" />
+                    <Summary number={evaluations.filter((e) => ["faible", "absente"].includes(e.participation)).length} label="Faible participation" tone="rose" />
+                    <Summary number={evaluations.filter((e) => e.besoinAide).length} label="Besoin d'aide" tone="indigo" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 border-t border-gray-200 px-6 py-4 dark:border-gray-800">
+                <button onClick={() => setShowEvaluationModal(false)} className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
+                  Annuler
+                </button>
+                <button onClick={sauvegarderEvaluations} className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700">
+                  Terminer l'activité avec évaluations
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* -------------------- Modale: Détails activité -------------------- */}
+      {detailActivite && (
+        <DetailsModal activite={detailActivite} onClose={() => setDetailActivite(null)} />
+      )}
     </>
+  );
+}
+
+/* -------------------- Petits composants -------------------- */
+function TagEditor({
+  value,
+  onChange,
+  placeholder,
+}: {
+  value: string[];
+  onChange: (v: string[]) => void;
+  placeholder?: string;
+}) {
+  const [draft, setDraft] = useState("");
+  const add = (t: string) => {
+    const v = t.trim();
+    if (!v) return;
+    if (!value.includes(v)) onChange([...value, v]);
+    setDraft("");
+  };
+  return (
+    <div className="rounded-lg border border-gray-300 p-2 dark:border-gray-700 dark:bg-gray-800">
+      <div className="flex flex-wrap gap-2">
+        {value.map((t) => (
+          <span key={t} className="rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">
+            {t}
+            <button className="ml-1 text-indigo-500 hover:text-indigo-700" onClick={() => onChange(value.filter((x) => x !== t))} aria-label="Supprimer">
+              ×
+            </button>
+          </span>
+        ))}
+        <input
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === "," || e.key === "Tab") {
+              e.preventDefault();
+              add(draft);
+            } else if (e.key === "Backspace" && !draft && value.length) {
+              onChange(value.slice(0, -1));
+            }
+          }}
+          placeholder={placeholder}
+          className="min-w-[160px] flex-1 bg-transparent px-2 py-1 text-sm outline-none placeholder:text-gray-400"
+        />
+      </div>
+    </div>
+  );
+}
+
+function Summary({ number, label, tone }: { number: number; label: string; tone: "green" | "amber" | "rose" | "indigo" }) {
+  const map = {
+    green: "text-green-600 dark:text-green-400",
+    amber: "text-amber-600 dark:text-amber-400",
+    rose: "text-rose-600 dark:text-rose-400",
+    indigo: "text-indigo-600 dark:text-indigo-400",
+  } as const;
+  return (
+    <div className="text-center">
+      <div className={`text-2xl font-bold ${map[tone]}`}>{number}</div>
+      <div className="text-sm text-gray-600 dark:text-gray-400">{label}</div>
+    </div>
+  );
+}
+
+/* -------------------- Modal Détails -------------------- */
+function DetailsModal({ activite, onClose }: { activite: Activite; onClose: () => void }) {
+  const type = activite.type;
+  const tone = typeTone(type);
+  return (
+    <div className="fixed inset-0 z-[100000]">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative mx-auto mt-8 w-full max-w-3xl px-4">
+        <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-gray-800 dark:bg-gray-900">
+          {/* Header */}
+          <div className={`flex items-center justify-between bg-gradient-to-r ${toneBg(tone)} px-6 py-4 text-white`}>
+            <div className="flex items-center gap-3">
+              <div className="grid h-11 w-11 place-items-center rounded-xl bg-white/20 text-2xl">{typeIcon(type)}</div>
+              <div>
+                <div className="text-lg font-semibold">{activite.titre}</div>
+                <div className="text-xs opacity-90">{activite.classe} • {activite.heure} • {activite.duree} min</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <StatusPill statut={activite.statut} />
+              <TypePill type={activite.type} />
+              <button onClick={onClose} className="ml-1 rounded-lg bg-white/15 px-3 py-1.5 text-sm hover:bg-white/25">✕</button>
+            </div>
+          </div>
+
+          {/* Body */}
+          <div className="grid gap-6 p-6 md:grid-cols-2">
+            <div className="space-y-4">
+              <div className="rounded-xl border border-gray-200 p-4 dark:border-gray-800">
+                <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Description</div>
+                <div className="text-sm text-gray-700 dark:text-gray-300">{activite.description}</div>
+              </div>
+
+              <div className="rounded-xl border border-gray-200 p-4 dark:border-gray-800">
+                <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Informations</div>
+                <div className="text-sm text-gray-700 dark:text-gray-300">
+                  📅 {new Date(activite.date).toLocaleDateString("fr-FR")} • 🕐 {activite.heure}<br/>
+                  👥 {activite.enfantsInscrits}/{activite.enfantsMax}
+                </div>
+              </div>
+
+              {activite.observation && (
+                <div className="rounded-xl border border-gray-200 p-4 dark:border-gray-800">
+                  <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Observation</div>
+                  <div className="text-sm text-gray-700 dark:text-gray-300">{activite.observation}</div>
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-4">
+              {!!activite.objectifs.length && (
+                <div className="rounded-xl border border-gray-200 p-4 dark:border-gray-800">
+                  <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Objectifs</div>
+                  <div className="flex flex-wrap gap-1">
+                    {activite.objectifs.map((o, i) => <Tag key={i}>{o}</Tag>)}
+                  </div>
+                </div>
+              )}
+
+              {!!activite.materiel.length && (
+                <div className="rounded-xl border border-gray-200 p-4 dark:border-gray-800">
+                  <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Matériel</div>
+                  <div className="flex flex-wrap gap-1">
+                    {activite.materiel.map((m, i) => <Tag key={i}>{m}</Tag>)}
+                  </div>
+                </div>
+              )}
+
+              <div className="rounded-xl border border-gray-200 p-4 dark:border-gray-800">
+                <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Actions</div>
+                <div className="flex flex-wrap gap-2">
+                  <button className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700">
+                    Créer une observation
+                  </button>
+                  <button className="rounded-lg bg-gray-100 px-3 py-2 text-sm text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 inline-flex items-center gap-2">
+                    <MailIcon className="size-4" /> Contacter les parents
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="flex justify-end gap-2 border-t border-gray-200 px-6 py-4 dark:border-gray-800">
+            <button onClick={onClose} className="rounded-lg border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
+              Fermer
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
