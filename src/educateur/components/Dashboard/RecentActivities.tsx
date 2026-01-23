@@ -12,26 +12,36 @@ const activities = [
     time: "09:30",
     message: "Semble moins actif que d'habitude",
     type: "observation",
-    icon: <UserIcon className="size-5 text-orange-600 dark:text-orange-600" />,
+    icon: <UserIcon className="size-5 text-black dark:text-white" />,
     color: "bg-orange-50 dark:bg-orange-900/20"
   },
-  {
-    id: 2,
-    child: "Fatima Zahra",
-    time: "09:15",
-    message: "A bien progressé en dessin",
-    type: "progrès",
-    icon: <CheckCircleIcon className="size-5 text-blue-600 dark:text-blue-600" />,
-    color: "bg-blue-50 dark:bg-blue-900/20"
-  },
+{
+  id: 1,
+  child: "Voussez Alain",
+  time: "09:30",
+  message: "Semble moins actif que d'habitude",
+  type: "observation",
+  icon: (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 640 640"
+      className="size-5 text-black dark:text-white"
+      fill="currentColor"
+    >
+      <path d="M320 576C178.6 576 64 461.4 64 320C64 178.6 178.6 64 320 64C461.4 64 576 178.6 576 320C576 461.4 461.4 576 320 576zM320 112C205.1 112 112 205.1 112 320C112 434.9 205.1 528 320 528C434.9 528 528 434.9 528 320C528 205.1 434.9 112 320 112zM390.7 233.9C398.5 223.2 413.5 220.8 424.2 228.6C434.9 236.4 437.3 251.4 429.5 262.1L307.4 430.1C303.3 435.8 296.9 439.4 289.9 439.9C282.9 440.4 276 437.9 271.1 433L215.2 377.1C205.8 367.7 205.8 352.5 215.2 343.2C224.6 333.9 239.8 333.8 249.1 343.2L285.1 379.2L390.7 234z" />
+    </svg>
+  ),
+  color: "bg-orange-50 dark:bg-orange-900/20"
+},
+  
   {
     id: 3,
     child: "Lucas Martin",
     time: "08:45",
     message: "Nouveau mot appris : 'Chandelle'",
     type: "apprentissage",
-    icon: <ChatIcon className="size-5 text-gray-600 dark:text-gray-600" />,
-    color: "bg-gray-50 dark:bg-gray-800/50"
+    icon: <ChatIcon className="size-5 text-black dark:text-white" />,
+    color: "bg-orange-50 dark:bg-orange-900/20"
   },
   {
     id: 4,
@@ -39,8 +49,8 @@ const activities = [
     time: "Hier 16:30",
     message: "Absence justifiée - Visite médicale",
     type: "absence",
-    icon: <TimeIcon className="size-5 text-gray-600 dark:text-gray-600" />,
-    color: "bg-gray-50 dark:bg-gray-800/50"
+    icon: <TimeIcon className="size-5 text-black dark:text-white" />,
+    color: "bg-gray-50 dark:bg-gray-900/20"
   },
 ];
 
