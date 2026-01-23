@@ -8,6 +8,7 @@ import Swal from "sweetalert2";
 
 
 
+
 /* -------------------------------- Types -------------------------------- */
 interface Competence {
   nom: string;
@@ -410,244 +411,289 @@ const handleDownloadPDFVisual = async (fileBaseName: string) => {
   const currentChild = enfants.find(
     (e) => childId && e.id.toString() === childId
   );
+// Palette & thèmes par type (couleurs cohérentes avec l'UI)
+const TYPE_THEME: Record<TRapportType, {
+  label: string;
+  head: [number, number, number];   // bandeau supérieur
+  soft: [number, number, number];   // encarts doux
+  accent: [number, number, number]; // accents, puces, barres
+  emoji: string;
+}> = {
+  quotidien:    { label: "Quotidien",    head: [16,185,129],  soft: [209,250,229], accent: [13,148,136],  emoji: "📅" },
+  hebdomadaire: { label: "Hebdomadaire", head: [14,165,233],  soft: [219,234,254], accent: [59,130,246],  emoji: "📊" },
+  trimestriel:  { label: "Trimestriel",  head: [139,92,246],  soft: [243,232,255], accent: [217,70,239],  emoji: "📈" },
+  special:      { label: "Spécial",      head: [245,158,11],  soft: [254,243,199], accent: [234,88,12],   emoji: "⭐" },
+};
+
+// pour rester cohérent avec le parent + fallback
+const BRAND = {
+  slate: [15, 23, 42] as [number,number,number],
+  gray:  [100,116,139] as [number,number,number],
+  light: [248,250,252] as [number,number,number],
+};
+
+const KIDORA_LOGO_URL = "/logo.png";
+
+// récupère l’avatar s’il existe dans le tableau enfants (optionnel)
+function getAvatarUrl(enfantName: string): string | undefined {
+  const e = enfants.find(x => x.name === enfantName);
+  return e?.avatar;
+}
+
+// util: URL → dataURL (logo, avatar)
+async function toDataUrl(url: string) {
+  const res = await fetch(url, { cache: "force-cache" });
+  const blob = await res.blob();
+  return await new Promise<string>((resolve) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result));
+    r.readAsDataURL(blob);
+  });
+}
 
   /* ------------------------------ PDF export ------------------------------ */
 
 
-const KIDORA_LOGO_URL = "/logo.png";
 
 const handleDownloadPDF = async (rapport: Rapport) => {
   const { jsPDF } = await import("jspdf");
-
-  /* ------------------ util: logo ------------------ */
-  const toDataUrl = async (url: string) => {
-    const res = await fetch(url, { cache: "force-cache" });
-    const blob = await res.blob();
-    return await new Promise<string>((resolve) => {
-      const r = new FileReader();
-      r.onload = () => resolve(String(r.result));
-      r.readAsDataURL(blob);
-    });
-  };
-
-
   const doc = new jsPDF("p", "mm", "a4");
 
-  /* ------------------ Config globale ------------------ */
+  /* ------------------ Mise en page ------------------ */
   const margin = 18;
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const pageHeight = doc.internal.pageSize.getHeight();
-  const contentWidth = pageWidth - margin * 2;
-
-  const HEADER_H = 26;
+  const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
+  const contentW = pageW - margin * 2;
+  const HEADER_H = 28;
   const FOOTER_H = 14;
 
   let y = margin + HEADER_H;
   let pageNumber = 1;
 
-  const brand = {
-    violet: [109, 40, 217],
-    slate: [15, 23, 42],
-    gray: [100, 116, 139],
-    light: [248, 250, 252],
-  };
+  const theme = TYPE_THEME[rapport.type];
 
-  /* ------------------ helpers ------------------ */
+  /* ------------------ Helpers base ------------------ */
   const ensurePage = (need = 0) => {
-    if (y + need > pageHeight - margin - FOOTER_H) {
-      doc.addPage();
-      pageNumber++;
-      drawHeader();
-      drawFooter();
+    if (y + need > pageH - margin - FOOTER_H) {
+      doc.addPage(); pageNumber++;
+      drawHeader(); drawFooter();
       y = margin + HEADER_H;
     }
   };
+  const space = (h = 6) => { y += h; ensurePage(0); };
 
-  const space = (h = 6) => {
-    y += h;
-    ensurePage(0);
-  };
-
-  /* ------------------ UI helpers ------------------ */
+  // Encarts & titres
   const title = (text: string) => {
-    ensurePage(18);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(20);
-    doc.setTextColor(...brand.slate);
+    ensurePage(20);
+    doc.setFont("helvetica","bold"); doc.setFontSize(20); doc.setTextColor(...BRAND.slate);
     doc.text(text, margin, y);
-
-    doc.setDrawColor(226, 232, 240);
-    doc.setLineWidth(0.6);
-    doc.line(margin, y + 2, margin + 70, y + 2);
-
+    doc.setDrawColor(226,232,240); doc.setLineWidth(0.6);
+    doc.line(margin, y+2, margin+70, y+2);
     space(14);
   };
 
   const section = (text: string) => {
-    ensurePage(20);
-
-    doc.setFillColor(...brand.light);
-    doc.roundedRect(margin, y - 6, contentWidth, 14, 3, 3, "F");
-
-    doc.setFillColor(...brand.violet);
-    doc.roundedRect(margin, y - 6, 3, 14, 3, 3, "F");
-
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(13);
-    doc.setTextColor(...brand.slate);
-    doc.text(text.toUpperCase(), margin + 7, y + 3);
-
-    space(18);
+    ensurePage(18);
+    // fond doux
+    doc.setFillColor(...BRAND.light);
+    doc.roundedRect(margin, y-6, contentW, 14, 3,3, "F");
+    // barre colorée à gauche
+    doc.setFillColor(...theme.head);
+    doc.roundedRect(margin, y-6, 3, 14, 3,3, "F");
+    // titre
+    doc.setFont("helvetica","bold"); doc.setFontSize(13); doc.setTextColor(...BRAND.slate);
+    doc.text(text.toUpperCase(), margin+7, y+3);
+    space(16);
   };
 
   const kv = (label: string, value: string) => {
     ensurePage(8);
-
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(9);
-    doc.setTextColor(...brand.gray);
+    doc.setFont("helvetica","bold"); doc.setFontSize(9); doc.setTextColor(...BRAND.gray);
     doc.text(label.toUpperCase(), margin, y);
-
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(11);
-    doc.setTextColor(17, 24, 39);
-
-    const wrapped = doc.splitTextToSize(value, contentWidth - 60);
+    doc.setFont("helvetica","normal"); doc.setFontSize(11); doc.setTextColor(17,24,39);
+    const wrapped = doc.splitTextToSize(value, contentW - 60);
     doc.text(wrapped, margin + 60, y);
-
     space(8);
   };
 
-  const textBlock = (value: string) => {
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(11);
-    doc.setTextColor(51, 65, 85);
-
-    const wrapped = doc.splitTextToSize(value, contentWidth - 4);
-    ensurePage(wrapped.length * 6 + 6);
-    doc.text(wrapped, margin + 2, y);
-
-    y += wrapped.length * 6;
-    space(6);
+  const textBlock = (value: string, bg?: boolean) => {
+    const wrapped = doc.splitTextToSize(value, contentW - 6);
+    const h = wrapped.length * 6 + 10;
+    ensurePage(h);
+    if (bg) {
+      const [r,g,b] = theme.soft;
+      doc.setFillColor(r,g,b);
+      doc.roundedRect(margin, y-4, contentW, h, 3,3, "F");
+    }
+    doc.setFont("helvetica","normal"); doc.setFontSize(11); doc.setTextColor(51,65,85);
+    doc.text(wrapped, margin+3, y+2);
+    y += h - 6;
+    space(2);
   };
 
   const bullet = (items: string[]) => {
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(11);
-    doc.setTextColor(31, 41, 55);
-
-    items.forEach((it) => {
-      const wrapped = doc.splitTextToSize(it, contentWidth - 10);
-      ensurePage(wrapped.length * 6 + 2);
-
-      doc.circle(margin + 2, y - 1.5, 1, "F");
-      doc.text(wrapped, margin + 8, y);
-
-      y += wrapped.length * 6;
-      space(2);
+    if (!items?.length) return;
+    items.forEach(it => {
+      const wrapped = doc.splitTextToSize(it, contentW - 12);
+      const h = wrapped.length * 6 + 4;
+      ensurePage(h);
+      doc.setFillColor(...theme.accent);
+      doc.circle(margin + 2.5, y + 1.5, 1.2, "F");
+      doc.setFont("helvetica","normal"); doc.setFontSize(11); doc.setTextColor(31,41,55);
+      doc.text(wrapped, margin + 8, y + 4);
+      y += h;
     });
+    space(2);
   };
 
-  const progressBar = (label: string, value: number) => {
+  const bar = (label: string, value: number) => {
     ensurePage(14);
-
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(11);
-    doc.setTextColor(30, 41, 59);
+    const v = Math.max(0, Math.min(100, value));
+    doc.setFont("helvetica","bold"); doc.setFontSize(11); doc.setTextColor(30,41,59);
     doc.text(label, margin, y);
-
-    doc.setFont("helvetica", "normal");
-    doc.text(`${value}%`, pageWidth - margin, y, { align: "right" });
-
+    doc.setFont("helvetica","normal"); doc.text(`${v}%`, pageW - margin, y, { align: "right" });
     space(3);
-
-    const barW = contentWidth;
-    const filled = (barW * value) / 100;
-
-    doc.setFillColor(226, 232, 240);
-    doc.roundedRect(margin, y, barW, 4, 2, 2, "F");
-
-    doc.setFillColor(
-      value >= 85 ? 34 : value >= 70 ? 245 : 244,
-      value >= 85 ? 197 : value >= 70 ? 158 : 63,
-      value >= 85 ? 94 : value >= 70 ? 11 : 94
-    );
-    doc.roundedRect(margin, y, Math.max(3, filled), 4, 2, 2, "F");
-
+    const w = contentW, filled = (w * v) / 100;
+    doc.setFillColor(226,232,240); doc.roundedRect(margin, y, w, 4, 2,2, "F");
+    doc.setFillColor(...theme.accent); doc.roundedRect(margin, y, Math.max(3, filled), 4, 2,2, "F");
     space(10);
   };
 
+  // Pastille “chip”
+  const chip = (text: string, x: number, y0: number, fill: [number,number,number]) => {
+    doc.setFont("helvetica","bold"); doc.setFontSize(9);
+    const padX = 3.5, padY = 3;
+    const tw = doc.getTextWidth(text);
+    doc.setFillColor(...fill);
+    doc.roundedRect(x, y0-5, tw + padX*2, 9, 2,2, "F");
+    doc.setTextColor(255,255,255);
+    doc.text(text, x + padX, y0+1);
+    doc.setTextColor(...BRAND.slate);
+  };
+
   /* ------------------ Header / Footer ------------------ */
-  const drawHeader = (logo?: string) => {
-    doc.setFillColor(...brand.violet);
-    doc.rect(0, 0, pageWidth, 10, "F");
+  let logo: string | undefined;
+  let avatar: string | undefined;
+  try { logo = await toDataUrl(KIDORA_LOGO_URL); } catch {}
+  const avatarUrl = getAvatarUrl(rapport.enfant);
+  if (avatarUrl) {
+    try { avatar = await toDataUrl(avatarUrl); } catch {}
+  }
 
-    doc.setFillColor(255, 255, 255);
-    doc.roundedRect(margin - 4, 10, pageWidth - (margin - 4) * 2, HEADER_H - 6, 3, 3, "F");
+  const drawHeader = () => {
+    // bandeau couleur (dégradé simulé par deux bandes)
+    doc.setFillColor(...theme.head); doc.rect(0, 0, pageW, 10, "F");
+    doc.setFillColor(255,255,255);
+    doc.roundedRect(margin-4, 10, pageW-(margin-4)*2, HEADER_H-6, 3,3, "F");
 
+    // logo
     if (logo) doc.addImage(logo, "PNG", margin, 13, 14, 14);
 
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(14);
-    doc.setTextColor(17, 24, 39);
+    // avatar enfant
+    if (avatar) {
+      doc.addImage(avatar, "JPEG", pageW - margin - 14, 12.5, 14, 14);
+      // cercle doux autour
+      doc.setDrawColor(226,232,240);
+      doc.circle(pageW - margin - 7, 19.5, 8, "S");
+    }
+
+    // brand & sous-titre
+    doc.setFont("helvetica","bold"); doc.setFontSize(14); doc.setTextColor(17,24,39);
     doc.text("KIDORA", margin + 20, 19);
 
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    doc.setTextColor(100, 116, 139);
-    doc.text("Rapport pédagogique", margin + 20, 24);
+    doc.setFont("helvetica","normal"); doc.setFontSize(10); doc.setTextColor(100,116,139);
+    doc.text("Rapport pédagogique (Parents)", margin + 20, 24);
 
-    doc.text(`Rapport #${rapport.id}`, pageWidth - margin, 18, { align: "right" });
-    doc.text(rapport.date, pageWidth - margin, 24, { align: "right" });
+    // à droite : ID + date + type chip
+    doc.setFont("helvetica","normal"); doc.setFontSize(10); doc.setTextColor(100,116,139);
+    doc.text(`Rapport #${rapport.id}`, pageW - margin - 16, 16, { align: "right" });
+    doc.text(rapport.date, pageW - margin - 16, 21, { align: "right" });
+
   };
 
   const drawFooter = () => {
-    doc.setDrawColor(226, 232, 240);
-    doc.line(margin, pageHeight - FOOTER_H, pageWidth - margin, pageHeight - FOOTER_H);
-
-    doc.setFontSize(9);
-    doc.setTextColor(100, 116, 139);
-    doc.text(`Rapport pédagogique • ${rapport.enfant}`, margin, pageHeight - 6);
-    doc.text(`Page ${pageNumber}`, pageWidth - margin, pageHeight - 6, { align: "right" });
+    doc.setDrawColor(226,232,240);
+    doc.line(margin, pageH - FOOTER_H, pageW - margin, pageH - FOOTER_H);
+    doc.setFontSize(9); doc.setTextColor(100,116,139);
+    doc.text(`${rapport.enfant} • ${rapport.educateur}`, margin, pageH - 6);
+    // bulle numéro de page
+    const txt = `Page ${pageNumber}`;
+    const tw = doc.getTextWidth(txt);
+    doc.setFillColor(241,245,249);
+    doc.roundedRect(pageW - margin - tw - 10, pageH - 10, tw + 8, 8, 3,3, "F");
+    doc.setTextColor(51,65,85);
+    doc.text(txt, pageW - margin - 5, pageH - 4, { align: "right" });
+    doc.setTextColor(...BRAND.slate);
   };
 
-  /* ------------------ Init ------------------ */
-  let logo;
-  try { logo = await toDataUrl(KIDORA_LOGO_URL); } catch {}
-  drawHeader(logo);
-  drawFooter();
+  drawHeader(); drawFooter();
 
-  /* ------------------ Contenu ------------------ */
+  /* ------------------ Watermark subtil (optionnel) ------------------ */
+  doc.setTextColor(226,232,240);
+  doc.setFont("helvetica","bold"); doc.setFontSize(56);
+  doc.text("PARENTS", pageW/2, pageH/2, { align: "center", angle: -25 });
+  doc.setTextColor(...BRAND.slate);
+
+  /* ------------------ CONTENU ------------------ */
   title("Rapport Pédagogique");
+  // sous-titre coloré
+  doc.setFontSize(13); doc.setTextColor(...theme.head);
+  doc.text(rapport.titre, margin, y); space(8);
+  doc.setTextColor(...BRAND.slate);
 
-  doc.setFontSize(13);
-  doc.setTextColor(67, 56, 202);
-  doc.text(rapport.titre, margin, y);
-  space(10);
-
+  // Infos générales en 2 colonnes légères
   section("Informations générales");
   kv("Enfant", rapport.enfant);
-  kv("Type", typeMeta[rapport.type].label);
+  kv("Type", TYPE_THEME[rapport.type].label);
   kv("Date", rapport.date);
   kv("Éducateur", rapport.educateur);
 
+  // Pastilles statut/tonalité
+  const statutLabel = rapport.statut === "nouveau" ? "Nouveau" : rapport.statut === "lu" ? "Lu" : "Archivé";
+  chip(`Statut: ${statutLabel}`, margin, y + 6, theme.accent);
+  chip("Espace Parents", margin + 64, y + 6, [30,41,59]);
+  space(16);
+
+  // Résumé
   section("Résumé exécutif");
-  textBlock(rapport.resume);
+  textBlock(rapport.resume, true);
 
+  // Compétences (barres)
   section("Compétences évaluées");
-  rapport.competences.forEach(c => progressBar(c.nom, c.niveau));
+  rapport.competences.forEach(c => bar(c.nom, c.niveau));
 
+  // Points forts & Recommandations (deux encarts)
   section("Points forts");
   bullet(rapport.pointsForts);
 
   section("Recommandations pour la maison");
   bullet(rapport.recommandations);
 
-  /* ------------------ Save ------------------ */
-  doc.save(
-    `Rapport_${rapport.enfant.replace(/\s+/g, "_")}_${rapport.date.replace(/\//g, "-")}.pdf`
-  );
+  // Signature / Contact
+  section("Signature & contact");
+  const signH = 24;
+  ensurePage(signH);
+  // cadre signature
+  doc.setDrawColor(226,232,240);
+  doc.roundedRect(margin, y, (contentW/3)*2 - 6, signH, 3,3, "S");
+  doc.setFont("helvetica","normal"); doc.setFontSize(10); doc.setTextColor(100,116,139);
+  doc.text("Signature de l'éducateur", margin + 4, y + 6);
+  // bloc contact
+  doc.roundedRect(margin + (contentW/3)*2, y, (contentW/3), signH, 3,3, "S");
+  doc.text("Contact", margin + (contentW/3)*2 + 4, y + 6);
+  doc.setTextColor(51,65,85); doc.setFontSize(11);
+  doc.text([
+    `Éducateur : ${rapport.educateur}`,
+    `Email : parents@kidora.school`,
+    `Date : ${rapport.date}`
+  ], margin + (contentW/3)*2 + 4, y + 12);
+  space(signH + 2);
+
+  // Enregistrement
+  const fname = `Rapport_${rapport.enfant.replace(/\s+/g,"_")}_${rapport.date.replace(/\//g,"-")}.pdf`;
+  doc.save(fname);
 };
+
 
 
 

@@ -13,6 +13,191 @@ import {
   ArrowDownIcon,
 } from "../../icons";
 
+
+
+// ========= PDF EDU – thème par type =========
+const PDF_THEME: Record<Rapport["type"], {
+  label: string; head: [number, number, number]; bar: [number, number, number];
+}> = {
+  individuel_hebdomadaire: { label: "Individuel Hebdomadaire", head: [99, 102, 241], bar: [79, 70, 229] },     // indigo
+  individuel_quotidien:    { label: "Individuel Quotidien",    head: [16, 185, 129], bar: [13, 148, 136] },     // emerald/teal
+  classe_hebdomadaire:     { label: "Classe Hebdomadaire",     head: [168, 85, 247], bar: [192, 38, 211] },     // purple/fuchsia
+  trimestriel:             { label: "Trimestriel",             head: [245, 158, 11], bar: [234, 88, 12] },       // amber/orange
+};
+
+const BRAND = {
+  violet: [109, 40, 217] as [number, number, number],
+  slate:  [15, 23, 42]   as [number, number, number],
+  gray:   [100,116,139]  as [number, number, number],
+  light:  [248,250,252]  as [number, number, number],
+};
+
+const KIDORA_LOGO_URL = "/logo.png";
+
+// util pour charger le logo en dataURL (même pattern que parent)
+async function toDataUrl(url: string) {
+  const res = await fetch(url, { cache: "force-cache" });
+  const blob = await res.blob();
+  return await new Promise<string>((resolve) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result));
+    r.readAsDataURL(blob);
+  });
+}
+
+// ========= Générateur PDF (vectoriel, comme côté Parent) =========
+async function buildEducatorPDF(rapport: Rapport) {
+  const { jsPDF } = await import("jspdf");
+  const doc = new jsPDF("p", "mm", "a4");
+
+  // géométrie & couleurs
+  const margin = 18, HEADER_H = 26, FOOTER_H = 14;
+  const pageWidth  = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const contentW   = pageWidth - margin * 2;
+  let y = margin + HEADER_H;
+  let pageNumber = 1;
+
+  const theme = PDF_THEME[rapport.type];
+
+  // helpers pagination
+  const ensurePage = (need = 0) => {
+    if (y + need > pageHeight - margin - FOOTER_H) {
+      doc.addPage(); pageNumber++; drawHeader(); drawFooter(); y = margin + HEADER_H;
+    }
+  };
+  const space = (h = 6) => { y += h; ensurePage(0); };
+
+  // blocs UI
+  const title = (t: string) => {
+    ensurePage(18);
+    doc.setFont("helvetica","bold"); doc.setFontSize(20); doc.setTextColor(...BRAND.slate);
+    doc.text(t, margin, y);
+    doc.setDrawColor(226,232,240); doc.setLineWidth(0.6);
+    doc.line(margin, y+2, margin+70, y+2);
+    space(14);
+  };
+
+  const section = (t: string) => {
+    ensurePage(20);
+    doc.setFillColor(...BRAND.light);
+    doc.roundedRect(margin, y-6, contentW, 14, 3,3, "F");
+    doc.setFillColor(...theme.head);
+    doc.roundedRect(margin, y-6, 3, 14, 3,3, "F");
+    doc.setFont("helvetica","bold"); doc.setFontSize(13); doc.setTextColor(...BRAND.slate);
+    doc.text(t.toUpperCase(), margin+7, y+3);
+    space(18);
+  };
+
+  const kv = (label: string, value: string) => {
+    ensurePage(8);
+    doc.setFont("helvetica","bold"); doc.setFontSize(9); doc.setTextColor(...BRAND.gray);
+    doc.text(label.toUpperCase(), margin, y);
+    doc.setFont("helvetica","normal"); doc.setFontSize(11); doc.setTextColor(17,24,39);
+    const wrapped = doc.splitTextToSize(value, contentW - 60);
+    doc.text(wrapped, margin + 60, y);
+    space(8);
+  };
+
+  const textBlock = (value: string) => {
+    doc.setFont("helvetica","normal"); doc.setFontSize(11); doc.setTextColor(51,65,85);
+    const wrapped = doc.splitTextToSize(value, contentW - 4);
+    ensurePage(wrapped.length * 6 + 6);
+    doc.text(wrapped, margin + 2, y);
+    y += wrapped.length * 6; space(6);
+  };
+
+  const bullet = (items?: string[]) => {
+    if (!items || !items.length) return;
+    doc.setFont("helvetica","normal"); doc.setFontSize(11); doc.setTextColor(31,41,55);
+    items.forEach((it) => {
+      const wrapped = doc.splitTextToSize(it, contentW - 10);
+      ensurePage(wrapped.length * 6 + 2);
+      doc.setFillColor(...theme.bar);
+      doc.circle(margin + 2, y - 1.5, 1, "F");
+      doc.text(wrapped, margin + 8, y);
+      y += wrapped.length * 6; space(2);
+    });
+  };
+
+  const bar = (label: string, value: number) => {
+    ensurePage(14);
+    doc.setFont("helvetica","bold"); doc.setFontSize(11); doc.setTextColor(30,41,59);
+    doc.text(label, margin, y);
+    doc.setFont("helvetica","normal"); doc.text(`${value}%`, pageWidth - margin, y, { align: "right" });
+    space(3);
+    const w = contentW, fill = (w * Math.max(0, Math.min(100, value))) / 100;
+    doc.setFillColor(226,232,240); doc.roundedRect(margin, y, w, 4, 2, 2, "F");
+    doc.setFillColor(...theme.bar); doc.roundedRect(margin, y, Math.max(3, fill), 4, 2, 2, "F");
+    space(10);
+  };
+
+  // header/footer
+  let logo: string | undefined; try { logo = await toDataUrl(KIDORA_LOGO_URL); } catch {}
+  const drawHeader = () => {
+    doc.setFillColor(...theme.head); doc.rect(0, 0, pageWidth, 10, "F");
+    doc.setFillColor(255,255,255);
+    doc.roundedRect(margin-4, 10, pageWidth-(margin-4)*2, HEADER_H-6, 3,3, "F");
+    if (logo) doc.addImage(logo, "PNG", margin, 13, 14, 14);
+    doc.setFont("helvetica","bold"); doc.setFontSize(14); doc.setTextColor(17,24,39);
+    doc.text("KIDORA", margin + 20, 19);
+    doc.setFont("helvetica","normal"); doc.setFontSize(10); doc.setTextColor(100,116,139);
+    doc.text("Rapport pédagogique (Éducateur)", margin + 20, 24);
+    doc.text(`Rapport #${rapport.id}`, pageWidth - margin, 18, { align: "right" });
+    doc.text(new Date(rapport.dateCreation).toLocaleDateString("fr-FR"), pageWidth - margin, 24, { align: "right" });
+  };
+  const drawFooter = () => {
+    doc.setDrawColor(226,232,240);
+    doc.line(margin, pageHeight - FOOTER_H, pageWidth - margin, pageHeight - FOOTER_H);
+    doc.setFontSize(9); doc.setTextColor(100,116,139);
+    doc.text(`${typeLabel(rapport.type)} • ${rapport.titre}`, margin, pageHeight - 6);
+    doc.text(`Page ${pageNumber}`, pageWidth - margin, pageHeight - 6, { align: "right" });
+  };
+
+  // init page
+  drawHeader(); drawFooter();
+
+  // ======== CONTENU ========
+  title("Rapport Pédagogique");
+
+  // sous-titre coloré
+  doc.setFontSize(13); doc.setTextColor(...theme.head);
+  doc.text(rapport.titre, margin, y); space(10);
+
+  section("Informations générales");
+  kv("Type", PDF_THEME[rapport.type].label);
+  kv("Période", rapport.periode);
+  kv("Éducateur", rapport.auteur);
+  kv("Créé le", new Date(rapport.dateCreation).toLocaleDateString("fr-FR"));
+  kv("Statut", rapport.statut === "brouillon" ? "Brouillon" : rapport.statut === "finalise" ? "Finalisé" : rapport.statut === "envoye" ? "Envoyé" : "Archivé");
+  kv("Importance", rapport.importance === "haute" ? "Haute priorité" : rapport.importance === "moyenne" ? "Priorité moyenne" : "Basse priorité");
+  kv("Enfants concernés", String(rapport.enfantsConcernes));
+
+  if (rapport.resume) {
+    section("Résumé exécutif");
+    textBlock(rapport.resume);
+  }
+
+  if (rapport.motsCles?.length) {
+    section("Mots-clés");
+    textBlock(rapport.motsCles.map(m => `#${m}`).join("   "));
+  }
+
+  if (rapport.actionsRecommandees?.length) {
+    section("Actions recommandées");
+    bullet(rapport.actionsRecommandees);
+  }
+
+  // petit indicateur visu (optionnel)
+  section("Indicateurs");
+  bar("Couverture d'objectifs", rapport.importance === "haute" ? 65 : rapport.importance === "moyenne" ? 78 : 90);
+  bar("Suivi & communication", 85);
+
+  // save
+  const fname = `Rapport_Educateur_${rapport.id}_${rapport.titre.replace(/\s+/g,"_")}.pdf`;
+  doc.save(fname);
+}
+
 /* -------------------- Types -------------------- */
 interface Rapport {
   id: number;
@@ -617,36 +802,11 @@ export default function ReportsPage() {
     console.log("Création d'un rapport avec le modèle:", modele.nom);
   };
 
-  const handleExporterRapport = (rapport: Rapport) => {
-    const contenu = `
-Rapport: ${rapport.titre}
-Type: ${typeLabel(rapport.type)}
-Période: ${rapport.periode}
-Éducateur: ${rapport.auteur}
-Enfants concernés: ${rapport.enfantsConcernes}
+ const handleExporterRapport = (rapport: Rapport) => {
+  // ↳ identique à l’expérience parent (PDF vectoriel jsPDF)
+  buildEducatorPDF(rapport);
+};
 
-Résumé:
-${rapport.resume || ""}
-
-Actions recommandées:
-${rapport.actionsRecommandees?.map((a) => "• " + a).join("\n") || ""}
-
-Mots-clés:
-${rapport.motsCles?.join(", ") || ""}
-
-Date: ${new Date().toLocaleDateString("fr-FR")}
-`;
-    const blob = new Blob([contenu], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `rapport_${rapport.id}_${rapport.titre.replace(/\s+/g, "_")}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    alert(`Rapport "${rapport.titre}" téléchargé !`);
-  };
 
   /* -------------------- Render -------------------- */
   return (
