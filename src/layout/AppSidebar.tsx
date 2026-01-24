@@ -98,7 +98,7 @@ const navItems: NavItem[] = [
 
 /* ===== Constantes d’UI ===== */
 const EXPANDED_W = 250;
-const COLLAPSED_W = 72;
+const COLLAPSED_W = 75;
 
 /* ===== Utils ===== */
 const useIsActive = () => {
@@ -141,7 +141,7 @@ export default function AppSidebar() {
   return (
     <aside
       className={[
-        "fixed top-0 left-0 z-50 h-screen border-r bg-white text-slate-900 transition-all duration-300 ease-in-out",
+        "fixed top-0 left-0 z-50 h-screen border-r bg-white text-slate-900 transition-all duration-300 ease-in-out overflow-hidden shadow-lg",
         "dark:bg-slate-900 dark:text-slate-100 dark:border-slate-800 border-slate-200",
         widthClass,
         isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
@@ -187,7 +187,7 @@ export default function AppSidebar() {
       <div className="my-1 h-px w-full bg-white  dark:bg-black" />
 
       {/* ===== Navigation ===== */}
-      <nav className="flex min-h-0 flex-1 flex-col overflow-y-auto pr-1">
+      <nav className="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden pr-1">
         <ul className="flex flex-col gap-1">
           {navItems.map((item, idx) => {
             const active = isActive(item.path);
