@@ -112,39 +112,10 @@ const AppHeader: React.FC = () => {
             <NotificationDropdown />
             <UserDropdown />
 
-            {/* bouton apps (mobile) */}
-            <button
-              onClick={toggleApplicationMenu}
-              className="flex h-10 w-10 items-center justify-center rounded-lg text-white/90 hover:bg-white/10 lg:hidden"
-              aria-expanded={isApplicationMenuOpen}
-              aria-controls="header-apps"
-              aria-label="Ouvrir le menu des applications"
-            >
-              <svg width="22" height="22" viewBox="0 0 24 24" className="fill-current">
-                <path d="M6 11a2 2 0 1 1 0 4 2 2 0 0 1 0-4Zm12 0a2 2 0 1 1 0 4 2 2 0 0 1 0-4ZM12 10a2 2 0 1 0 0 4 2 2 0 0 0 0-4Z" />
-              </svg>
-            </button>
           </div>
         </div>
 
-        {/* bande d’actions (mobile) */}
-        <div
-          id="header-apps"
-          className={[
-            "lg:hidden overflow-hidden transition-[grid-template-rows,opacity] duration-300",
-            isApplicationMenuOpen ? "grid grid-rows-[1fr] opacity-100" : "grid grid-rows-[0fr] opacity-0",
-          ].join(" ")}
-        >
-          <div className="min-h-0">
-            <div className="flex items-center justify-between gap-3 py-3">
-              <div className="flex items-center gap-2">
-                <ThemeToggleButton />
-                <NotificationDropdown />
-              </div>
-              <UserDropdown />
-            </div>
-          </div>
-        </div>
+   
       </div>
     </header>
   );
