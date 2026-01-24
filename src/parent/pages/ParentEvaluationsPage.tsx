@@ -389,39 +389,16 @@ async function handleDownloadPDF(enfantName: string, e: Evaluation) {
   doc.text(e.domaine, margin, y); space(6);
 
   // “score card”
- // ----- SCORE CARD (calé sur le haut) -----
-const CARD_H = 20;
-const top = y - CARD_H / 2;         // cadre centré autour de y
-needPage(CARD_H + 2);
-
-doc.setFillColor(255, 255, 255);
-doc.setDrawColor(...brand.border);
-doc.roundedRect(margin, top, contentW, CARD_H, 3, 3, "S");
-
-// score (gros chiffre)
-doc.setFont("helvetica", "bold");
-doc.setFontSize(28);
-doc.setTextColor(...typeRGB);
-doc.text(`${e.note}`, margin + 8, top + 12);
-
-// libellé sous le score
-doc.setFont("helvetica", "normal");
-doc.setFontSize(10);
-doc.setTextColor(...brand.gray);
-doc.text("Note globale /100", margin + 8, top + 17);
-
-// tag résultat, baseline bien À L’INTÉRIEUR du cadre
-tag(
-  RESULT_META[e.resultat].label.replace(/[⭐👍✅⚪⚠️]/g, "").trim(),
-  margin + 48,
-  top + 17,               // <- au lieu de y + 10
-  [30, 41, 59]
-);
-
-// avancer le curseur sous la carte
-y = top + CARD_H;
-space(6);
-
+  needPage(22);
+  doc.setFillColor(255, 255, 255); doc.setDrawColor(...brand.border);
+  doc.roundedRect(margin, y - 10, contentW, 22, 3, 3, "S");
+  doc.setFont("helvetica", "bold"); doc.setFontSize(28); doc.setTextColor(...typeRGB);
+  doc.text(`${e.note}`, margin + 8, y + 5);
+  doc.setFont("helvetica", "normal"); doc.setFontSize(10); doc.setTextColor(...brand.gray);
+  doc.text("Note globale /100", margin + 8, y + 10);
+  // résultat en tag (sans emoji)
+  tag(RESULT_META[e.resultat].label.replace(/[⭐👍✅⚪⚠️]/g, "").trim(), margin + 48, y + 10, [30, 41, 59]);
+  space(18);
 
   /* ---------- Infos générales ---------- */
   section("Informations générales");
