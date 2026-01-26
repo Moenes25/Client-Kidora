@@ -285,40 +285,67 @@ export default function ChildrenPage() {
           
           <div className="flex flex-wrap gap-3 ">
             <div className="relative">
-              <svg xmlns="http://www.w3.org/2000/svg" 
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 size-5 text-gray-500 dark:text-gray-400" 
-              viewBox="0 0 24 24" 
-              fill="none" 
-              stroke="currentColor" 
-              strokeWidth="2">
-                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
-              </svg>
-   <select
-  value={filterClass}
-  onChange={(e) => setFilterClass(e.target.value)}
-  className="
-    pl-10 pr-4 py-3
-    bg-gray-50 dark:bg-gray-800
-    border border-gray-300 dark:border-gray-700
-    rounded-lg
-    focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-500
-    text-gray-400 dark:text-gray
-  "
->
-  <option value="all" className="text-gray-500 dark:text-gray">
-    Toutes les classes
-  </option>
 
-  {classes.filter(c => c !== "all").map(classe => (
-    <option
-      key={classe}
-      value={classe}
-      className="text-gray-700 dark:text-gray-500"
+<div className="relative group hover:scale-105 focus-within:animate-pulse transition-transform duration-800 ease-out">
+  
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 size-5 dark:text-gray-400"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+  >
+    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+  </svg>
+
+  <select
+    value={filterClass}
+    onChange={(e) => setFilterClass(e.target.value)}
+    className="
+      w-full pl-10 pr-10 py-3
+      bg-gray-50 text-gray-400
+      border border-gray-300 rounded-lg shadow-sm
+      focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:shadow-lg
+      hover:border-gray-400 hover:bg-gray-50
+      transition-all duration-200
+      dark:bg-gray-800 dark:border-gray-700 dark:text-gray
+      dark:hover:border-blue-400
+      dark:hover:bg-gradient-to-r dark:from-blue-900/50 dark:to-purple-900/50
+      dark:focus:shadow-blue-500/50 dark:focus:ring-blue-400
+      appearance-none
+    "
+  >
+    <option value="all">Toutes les classes</option>
+    {classes.filter(c => c !== "all").map(classe => (
+      <option key={classe} value={classe}>
+        Classe {classe}
+      </option>
+    ))}
+  </select>
+
+  <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+    <svg
+      className="
+        w-4 h-4 text-gray-400 dark:text-gray
+        transition-transform duration-300
+        group-focus-within:animate-bounce
+        group-focus-within:rotate-180
+        group-focus-within:scale-110
+        group-hover:scale-110
+        group-hover:text-blue-500 dark:group-hover:text-blue-400
+      "
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
     >
-      Classe {classe}
-    </option>
-  ))}
-</select>
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+    </svg>
+  </div>
+
+</div>
+
+
 
             </div>
             
@@ -338,7 +365,6 @@ export default function ChildrenPage() {
         </div>
       </div>
 
-      {/* Affichage selon le mode sélectionné */}
       {viewMode === 'list' ? (
         <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
           <div className="overflow-x-auto">
