@@ -1,51 +1,55 @@
-// GestionUsers.tsx - Version corrigée
 import { useState, useMemo, useEffect } from "react";
 import UsersTable from "./UsersTable";
 import UserDetails from "./UserDetails";
 import DeleteConfirmation from "./DeleteConfirmation";
 import { Utilisateur, converUserToUtilisateur } from "./types";
-import { RoleUsers, StatutClient, User } from "../../../types/auth.types";
+import { RoleUsers, StatutClient } from "../../../types/auth.types";
 import { authApi } from "../../../services/api/authApi";
+import {
+  RefreshCw,
+  Search,
+  Filter,
+  X,
+  Check,
+  Ban,
+  Trash2,
+  UserPlus,
+  ArrowUpRight,
+} from "lucide-react";
 
 export default function GestionUsers() {
-  // États pour les filtres
+  // Filtres
   const [roleFilter, setRoleFilter] = useState<string>("Tous");
   const [statutFilter, setStatutFilter] = useState<string>("Tous");
+  const [query, setQuery] = useState("");
 
-  // États pour les données
+  // Données
   const [utilisateurs, setUtilisateurs] = useState<Utilisateur[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<Utilisateur[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  
-  // États pour la sélection multiple
+
+  // Sélection multiple
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [isSelectAll, setIsSelectAll] = useState(false);
   const [showSelectionHeader, setShowSelectionHeader] = useState(false);
-  
-  // États pour la visualisation d'utilisateur
+
+  // Modales
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [viewingUser, setViewingUser] = useState<Utilisateur | null>(null);
-
-  // États pour la suppression d'utilisateur
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deletingUser, setDeletingUser] = useState<Utilisateur | null>(null);
 
-  // États pour le changement de statut
+  // Changement de statut
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
 
-  // ÉTAPE 1: Charger les utilisateurs au montage du composant
-  useEffect(() => {
-    fetchUsers();
-  }, []);
+  useEffect(() => { fetchUsers(); }, []);
 
   const fetchUsers = async () => {
     try {
       setLoading(true);
       setError(null);
-      // Appel API pour récupérer tous les utilisateurs
       const usersData = await authApi.getAllUsers();
-      // Conversion des données API -> format frontend
       const usersDataConverted = usersData.map(converUserToUtilisateur);
       setUtilisateurs(usersDataConverted);
       setFilteredUsers(usersDataConverted);
@@ -57,103 +61,74 @@ export default function GestionUsers() {
     }
   };
 
-  // ÉTAPE 2: Préparer les options de filtres basées sur les données réelles
+  // Options filtres
   const roleOptions = useMemo(() => {
-    // Extraire les rôles uniques des utilisateurs
-    const roles = Array.from(new Set(utilisateurs.map(user => user.role)));
-    // Convertir en format lisible pour l'affichage
-    const readableRoles = roles.map(role => {
-      switch(role) {
-        case RoleUsers.PARENT: return 'Parent';
-        case RoleUsers.EDUCATEUR: return 'Éducateur';
-        case RoleUsers.ADMIN: return 'Administrateur';
-        default: return role;
-      }
-    });
-    return ["Tous", ...readableRoles];
-  }, [utilisateurs]); // Se recalcule quand `utilisateurs` change
-
-  const statutOptions = useMemo(() => {
-    // Extraire les statuts uniques des utilisateurs
-    const statuts = Array.from(new Set(utilisateurs.map(user => user.statut)));
-    // Convertir en format lisible pour l'affichage
-    const readableStatuts = statuts.map(statut => {
-      switch(statut) {
-        case StatutClient.ACTIF: return 'Actif';
-        case StatutClient.INACTIF: return 'Inactif';
-        case StatutClient.EN_ATTENTE: return 'En attente';
-        default: return statut;
-      }
-    });
-    return ["Tous", ...readableStatuts];
+    const roles = Array.from(new Set(utilisateurs.map(u => u.role)));
+    const readable = roles.map(role =>
+      role === RoleUsers.PARENT ? "Parent" :
+      role === RoleUsers.EDUCATEUR ? "Éducateur" :
+      role === RoleUsers.ADMIN ? "Administrateur" : role
+    );
+    return ["Tous", ...readable];
   }, [utilisateurs]);
 
-  // ÉTAPE 3: Filtrer les utilisateurs quand les filtres ou données changent
+  const statutOptions = useMemo(() => {
+    const statuts = Array.from(new Set(utilisateurs.map(u => u.statut)));
+    const readable = statuts.map(s =>
+      s === StatutClient.ACTIF ? "Actif" :
+      s === StatutClient.INACTIF ? "Inactif" :
+      s === StatutClient.EN_ATTENTE ? "En attente" : s
+    );
+    return ["Tous", ...readable];
+  }, [utilisateurs]);
+
+  // Filtrage
   useEffect(() => {
-    let filtered = utilisateurs;
-    
-    // Filtre par rôle
-    if (roleFilter && roleFilter !== "Tous") {
-      // Mapping des options d'affichage vers les valeurs internes
-      const roleMap: Record<string, string> = {
-        'Parent': RoleUsers.PARENT,
-        'Éducateur': RoleUsers.EDUCATEUR,
-        'Administrateur': RoleUsers.ADMIN
-      };
-      const roleKey = roleMap[roleFilter];
-      filtered = filtered.filter(user => user.role === roleKey);
+    const roleMap: Record<string, string> = {
+      Parent: RoleUsers.PARENT, Éducateur: RoleUsers.EDUCATEUR, Administrateur: RoleUsers.ADMIN
+    };
+    const statutMap: Record<string, string> = {
+      Actif: StatutClient.ACTIF, Inactif: StatutClient.INACTIF, "En attente": StatutClient.EN_ATTENTE
+    };
+
+    let base = [...utilisateurs];
+
+    if (roleFilter !== "Tous") base = base.filter(u => u.role === roleMap[roleFilter]);
+    if (statutFilter !== "Tous") base = base.filter(u => u.statut === statutMap[statutFilter]);
+
+    const q = query.trim().toLowerCase();
+    if (q) {
+      base = base.filter(u =>
+        u.nomPrenom.toLowerCase().includes(q) ||
+        u.email?.toLowerCase().includes(q) ||
+        u.telephone?.toLowerCase().includes(q)
+      );
     }
-    
-    // Filtre par statut
-    if (statutFilter && statutFilter !== "Tous") {
-      // Mapping des options d'affichage vers les valeurs d'enum
-      const statutMap: Record<string, string> = {
-        'Actif': StatutClient.ACTIF,
-        'Inactif': StatutClient.INACTIF,
-        'En attente': StatutClient.EN_ATTENTE
-      };
-      const statutKey = statutMap[statutFilter] || statutFilter;
-      filtered = filtered.filter(user => user.statut === statutKey);
-    }
-    
-    setFilteredUsers(filtered);
-    // Réinitialiser la sélection quand les filtres changent
+
+    setFilteredUsers(base);
     setSelectedUsers([]);
     setIsSelectAll(false);
     setShowSelectionHeader(false);
-  }, [utilisateurs, roleFilter, statutFilter]);
+  }, [utilisateurs, roleFilter, statutFilter, query]);
 
-  // ÉTAPE 4: Gestion de la sélection des utilisateurs
-  const handleSelectUser = (userId: string) => {
+  // Sélection
+  const handleSelectUser = (id: string) => {
     setSelectedUsers(prev => {
-      const newSelected = prev.includes(userId)
-        ? prev.filter(id => id !== userId)
-        : [...prev, userId];
-      
-      // Afficher/cacher le header de sélection
-      if (newSelected.length > 0 && !showSelectionHeader) {
-        setShowSelectionHeader(true);
-      } else if (newSelected.length === 0 && showSelectionHeader) {
-        setShowSelectionHeader(false);
-      }
-      
-      // Mettre à jour l'état "sélectionner tout"
-      setIsSelectAll(newSelected.length === filteredUsers.length && filteredUsers.length > 0);
-      
-      return newSelected;
+      const next = prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id];
+      setShowSelectionHeader(next.length > 0);
+      setIsSelectAll(next.length === filteredUsers.length && filteredUsers.length > 0);
+      return next;
     });
   };
 
   const handleSelectAll = () => {
     if (isSelectAll) {
-      // Désélectionner tout
       setSelectedUsers([]);
       setIsSelectAll(false);
       setShowSelectionHeader(false);
     } else {
-      // Sélectionner tout (utiliser filteredUsers, pas filteredData)
-      const allIds = filteredUsers.map(user => user.id);
-      setSelectedUsers(allIds);
+      const all = filteredUsers.map(u => u.id);
+      setSelectedUsers(all);
       setIsSelectAll(true);
       setShowSelectionHeader(true);
     }
@@ -165,241 +140,80 @@ export default function GestionUsers() {
     setShowSelectionHeader(false);
   };
 
-  // ÉTAPE 5: Actions multiples avec appels API
+  // Actions groupées (démo)
+  const namesOfSelected = () =>
+    filteredUsers.filter(u => selectedUsers.includes(u.id)).map(u => u.nomPrenom).join(", ");
+
   const handleActivateSelected = async () => {
-    if (selectedUsers.length === 0) return;
-     
-    
-    const usersNames = filteredUsers
-      .filter(user => selectedUsers.includes(user.id))
-      .map(user => user.nomPrenom)
-      .join(', ');
-    
-    console.log(`Activation des utilisateurs sélectionnés: ${usersNames}`);
-    alert(`${selectedUsers.length} utilisateur(s) activé(s) : ${usersNames}`);
-    
-    // Réinitialiser la sélection
+    if (!selectedUsers.length) return;
+    alert(`${selectedUsers.length} utilisateur(s) activé(s) : ${namesOfSelected()}`);
     handleCancelSelection();
-    // if (selectedUsers.length === 0) return;
-    
-    // try {
-    //   // Appeler l'API pour chaque utilisateur sélectionné
-    //   const promises = selectedUsers.map(userId => 
-    //     authApi.updateUserStatus(userId, StatutClient.ACTIF)
-    //   );
-    //   await Promise.all(promises);
-      
-    //   // Mettre à jour localement
-    //   setUtilisateurs(prev => prev.map(user => 
-    //     selectedUsers.includes(user.id) 
-    //       ? { ...user, statut: StatutClient.ACTIF }
-    //       : user
-    //   ));
-      
-    //   const usersNames = filteredUsers
-    //     .filter(user => selectedUsers.includes(user.id))
-    //     .map(user => user.nomPrenom)
-    //     .join(', ');
-      
-    //   alert(`${selectedUsers.length} utilisateur(s) activé(s) : ${usersNames}`);
-      
-    //   // Réinitialiser la sélection
-    //   handleCancelSelection();
-      
-    // } catch (error: any) {
-    //   console.error('Erreur lors de l\'activation multiple:', error);
-    //   alert(`Erreur: ${error.message}`);
-    // }
   };
 
   const handleDeactivateSelected = async () => {
-     if (selectedUsers.length === 0) return;
-    
-    const usersNames = filteredUsers
-      .filter(user => selectedUsers.includes(user.id))
-      .map(user => user.nomPrenom)
-      .join(', ');
-    
-    console.log(`Désactivation des utilisateurs sélectionnés: ${usersNames}`);
-    alert(`${selectedUsers.length} utilisateur(s) désactivé(s) : ${usersNames}`);
-    
-    // Réinitialiser la sélection
+    if (!selectedUsers.length) return;
+    alert(`${selectedUsers.length} utilisateur(s) désactivé(s) : ${namesOfSelected()}`);
     handleCancelSelection();
-    // if (selectedUsers.length === 0) return;
-    
-    // try {
-    //   // Appeler l'API pour chaque utilisateur sélectionné
-    //   const promises = selectedUsers.map(userId => 
-    //     authApi.updateUserStatus(userId, StatutClient.INACTIF)
-    //   );
-    //   await Promise.all(promises);
-      
-    //   // Mettre à jour localement
-    //   setUtilisateurs(prev => prev.map(user => 
-    //     selectedUsers.includes(user.id) 
-    //       ? { ...user, statut: StatutClient.INACTIF }
-    //       : user
-    //   ));
-      
-    //   const usersNames = filteredUsers
-    //     .filter(user => selectedUsers.includes(user.id))
-    //     .map(user => user.nomPrenom)
-    //     .join(', ');
-      
-    //   alert(`${selectedUsers.length} utilisateur(s) désactivé(s) : ${usersNames}`);
-      
-    //   // Réinitialiser la sélection
-    //   handleCancelSelection();
-      
-    // } catch (error: any) {
-    //   console.error('Erreur lors de la désactivation multiple:', error);
-    //   alert(`Erreur: ${error.message}`);
-    // }
   };
 
   const handleDeleteSelected = async () => {
-    if (selectedUsers.length === 0) return;
-    
-    if (!window.confirm(`Êtes-vous sûr de vouloir supprimer ${selectedUsers.length} utilisateur(s) ?`)) {
-      return;
-    }
-    
+    if (!selectedUsers.length) return;
+    if (!window.confirm(`Supprimer ${selectedUsers.length} utilisateur(s) ?`)) return;
     try {
-      // Appeler l'API pour chaque utilisateur sélectionné
-      const promises = selectedUsers.map(userId => 
-        authApi.deleteUser(userId)
-      );
-      await Promise.all(promises);
-      
-      // Mettre à jour localement
-      setUtilisateurs(prev => prev.filter(user => !selectedUsers.includes(user.id)));
-      
-      const usersNames = filteredUsers
-        .filter(user => selectedUsers.includes(user.id))
-        .map(user => user.nomPrenom)
-        .join(', ');
-      
-      alert(`${selectedUsers.length} utilisateur(s) supprimé(s) : ${usersNames}`);
-      
-      // Réinitialiser la sélection
+      await Promise.all(selectedUsers.map(id => authApi.deleteUser(id)));
+      setUtilisateurs(prev => prev.filter(u => !selectedUsers.includes(u.id)));
+      alert(`${selectedUsers.length} utilisateur(s) supprimé(s) : ${namesOfSelected()}`);
       handleCancelSelection();
-      
-    } catch (error: any) {
-      console.error('Erreur lors de la suppression multiple:', error);
-      alert(`Erreur: ${error.message}`);
+    } catch (e:any) {
+      alert(`Erreur: ${e.message}`);
     }
   };
 
-  // ÉTAPE 6: Actions individuelles sur les utilisateurs
-  const handleView = (utilisateur: Utilisateur) => {
-    setViewingUser(utilisateur);
-    setIsViewModalOpen(true);
-  };
+  // Individuel
+  const handleView = (u: Utilisateur) => { setViewingUser(u); setIsViewModalOpen(true); };
+  const handleCloseView = () => { setViewingUser(null); setIsViewModalOpen(false); };
 
-  const handleCloseView = () => {
-    setIsViewModalOpen(false);
-    setViewingUser(null);
-  };
-
-  const handleDelete = (utilisateur: Utilisateur) => {
-    setDeletingUser(utilisateur);
-    setIsDeleteModalOpen(true);
-  };
-
+  const handleDelete = (u: Utilisateur) => { setDeletingUser(u); setIsDeleteModalOpen(true); };
   const handleConfirmDelete = async () => {
     if (!deletingUser) return;
-    
-    try {
-      await authApi.deleteUser(deletingUser.id);
-      
-      // Mettre à jour localement
-      setUtilisateurs(prev => prev.filter(u => u.id !== deletingUser.id));
-      setSelectedUsers(prev => prev.filter(id => id !== deletingUser.id));
-      
-      alert(`Utilisateur "${deletingUser.nomPrenom}" supprimé avec succès !`);
-      setIsDeleteModalOpen(false);
-      setDeletingUser(null);
-      
-    } catch (error: any) {
-      alert(`Erreur: ${error.message}`);
-    }
-  };
-
-  const handleCancelDelete = () => {
+    await authApi.deleteUser(deletingUser.id);
+    setUtilisateurs(prev => prev.filter(x => x.id !== deletingUser.id));
+    setSelectedUsers(prev => prev.filter(id => id !== deletingUser.id));
+    alert(`Utilisateur "${deletingUser.nomPrenom}" supprimé`);
     setIsDeleteModalOpen(false);
     setDeletingUser(null);
   };
+  const handleCancelDelete = () => { setIsDeleteModalOpen(false); setDeletingUser(null); };
 
-  const handleToggleStatus = async (utilisateur: Utilisateur) => {
-     console.log("Changer le statut de l'utilisateur:", utilisateur);
-    
-    // Simulation de chargement
-    setUpdatingStatus(utilisateur.id);
-    
-    // Simuler une requête API avec setTimeout
+  const handleToggleStatus = async (u: Utilisateur) => {
+    setUpdatingStatus(u.id);
     setTimeout(() => {
-      const statutDisplay = utilisateur.statut === StatutClient.ACTIF ? 'Inactif' :
-                          utilisateur.statut === StatutClient.INACTIF ? 'En attente' :
-                          'Actif';
-      
-      alert(`Statut de "${utilisateur.nomPrenom}" changé à "${statutDisplay}"`);
-      
+      alert(`Statut de "${u.nomPrenom}" modifié`);
       setUpdatingStatus(null);
     }, 500);
-    // try {
-    //   setUpdatingStatus(utilisateur.id);
-      
-    //   // Déterminer le nouveau statut
-    //   const newStatus = utilisateur.statut === StatutClient.ACTIF 
-    //     ? StatutClient.INACTIF 
-    //     : StatutClient.ACTIF;
-      
-    //   // Appeler l'API pour changer le statut
-    //   await authApi.updateUserStatus(utilisateur.id, newStatus);
-      
-    //   // Mettre à jour localement
-    //   setUtilisateurs(prev => prev.map(u => 
-    //     u.id === utilisateur.id ? { ...u, statut: newStatus } : u
-    //   ));
-      
-    //   const statutDisplay = newStatus === StatutClient.ACTIF ? 'Actif' : 'Inactif';
-    //   alert(`Statut de "${utilisateur.nomPrenom}" changé à "${statutDisplay}"`);
-      
-    // } catch (error: any) {
-    //   alert(`Erreur: ${error.message}`);
-    // } finally {
-    //   setUpdatingStatus(null);
-    // }
   };
 
-  // ÉTAPE 7: Affichage des états de chargement et d'erreur
+  // Loading / Error
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex items-center justify-center min-h-[320px]">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Chargement des utilisateurs...</p>
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Chargement des utilisateurs…</p>
         </div>
       </div>
     );
   }
-
   if (error) {
     return (
       <div className="p-6">
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <div className="flex items-center">
-            <svg className="w-5 h-5 text-red-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-            </svg>
+          <div className="flex items-center justify-between">
             <span className="text-red-700 font-medium">{error}</span>
+            <button onClick={fetchUsers} className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-red-700">
+              <RefreshCw className="h-4 w-4" /> Réessayer
+            </button>
           </div>
-          <button 
-            onClick={fetchUsers}
-            className="mt-3 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-          >
-            Réessayer
-          </button>
         </div>
       </div>
     );
@@ -407,204 +221,120 @@ export default function GestionUsers() {
 
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
-      {/* En-tête avec titre et rafraîchissement */}
-      <div className="p-4 border-b border-gray-100 dark:border-white/[0.05] bg-gray-50 dark:bg-gray-900/50">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            {/* <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
-              Gestion des Utilisateurs
-            </h2> */}
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-              {utilisateurs.length} utilisateur(s) au total
-            </p>
+      {/* Toolbar principale */}
+      <div className="flex flex-col gap-3 border-b border-gray-100 p-4 dark:border-white/[0.05] bg-gray-50/60 dark:bg-gray-900/40">
+        <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between">
+          {/* Gauche: recherche + filtres */}
+          <div className="flex flex-1 flex-wrap items-center gap-2">
+            <div className="relative w-full sm:w-72">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Rechercher (nom, email, tél.)"
+                className="h-10 w-full rounded-lg border border-gray-300 bg-white pl-9 pr-3 text-sm text-gray-800 outline-none ring-0 placeholder:text-gray-400 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/10 dark:border-white/10 dark:bg-gray-900 dark:text-white"
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4 text-gray-400" />
+                <select
+                  value={roleFilter}
+                  onChange={(e) => setRoleFilter(e.target.value)}
+                  className="h-10 rounded-lg border border-gray-300 bg-white px-3 text-sm dark:border-white/10 dark:bg-gray-900 dark:text-white"
+                >
+                  {roleOptions.map(o => <option key={o}>{o}</option>)}
+                </select>
+                <select
+                  value={statutFilter}
+                  onChange={(e) => setStatutFilter(e.target.value)}
+                  className="h-10 rounded-lg border border-gray-300 bg-white px-3 text-sm dark:border-white/10 dark:bg-gray-900 dark:text-white"
+                >
+                  {statutOptions.map(o => <option key={o}>{o}</option>)}
+                </select>
+              </div>
+              <button
+                onClick={() => { setRoleFilter("Tous"); setStatutFilter("Tous"); setQuery(""); }}
+                className="inline-flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-white/10 dark:bg-gray-900 dark:text-gray-300"
+              >
+                <X className="h-4 w-4" /> Réinitialiser
+              </button>
+            </div>
           </div>
-          <div className="flex items-center gap-3">
+
+          {/* Droite: actions rapides */}
+          <div className="flex items-center gap-2">
             <button
               onClick={fetchUsers}
-              className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+              className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-white/10 dark:bg-gray-900 dark:text-gray-300"
               title="Rafraîchir"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              Rafraîchir
+              <RefreshCw className="h-4 w-4" /> Rafraîchir
             </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Header de sélection */}
-      {showSelectionHeader && (
-        <div className="bg-gradient-to-br from-emerald-500 to-emerald-600  border-b border-blue-100 dark:border-blue-800/30 p-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 flex items-center justify-center bg-blue-100 dark:bg-blue-800 rounded-full">
-                  <span className="text-sm font-semibold text-blue-600 dark:text-blue-300">
-                    {selectedUsers.length}
-                  </span>
-                </div>
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  utilisateur(s) sélectionné(s)
-                </span>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <button
-                onClick={handleActivateSelected}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-green-700 bg-green-50 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50 rounded-lg transition-colors"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                </svg>
-                Activer
-              </button>
-              
-              <button
-                onClick={handleDeactivateSelected}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-orange-700 bg-orange-50 hover:bg-orange-100 dark:bg-orange-900/30 dark:text-orange-400 dark:hover:bg-orange-900/50 rounded-lg transition-colors"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 12H6" />
-                </svg>
-                Désactiver
-              </button>
-              
-              <button
-                onClick={handleDeleteSelected}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 rounded-lg transition-colors"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-                Supprimer
-              </button>
-              
-              <button
-                onClick={handleCancelSelection}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 rounded-lg transition-colors"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-                Annuler
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Barre de filtres */}
-      <div className="p-4 border-b border-gray-100 dark:border-white/[0.05] bg-gray-50 dark:bg-gray-900/50">
-        <div className="flex flex-col sm:flex-row gap-4">
-          {/* Filtre par rôle */}
-          <div className="w-full sm:w-auto">
-            <label htmlFor="roleFilter" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Rôle
-            </label>
-            <select
-              id="roleFilter"
-              value={roleFilter}
-              onChange={(e) => setRoleFilter(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
-            >
-              {roleOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Filtre par statut */}
-          <div className="w-full sm:w-auto">
-            <label htmlFor="statutFilter" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Statut
-            </label>
-            <select
-              id="statutFilter"
-              value={statutFilter}
-              onChange={(e) => setStatutFilter(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
-            >
-              {statutOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Bouton pour réinitialiser les filtres */}
-          <div className="w-full sm:w-auto flex items-end">
             <button
-              onClick={() => {
-                setRoleFilter("Tous");
-                setStatutFilter("Tous");
-              }}
-              className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700"
+              className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-indigo-600 to-violet-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:from-indigo-700 hover:to-violet-700"
+              title="Inviter un utilisateur"
             >
-              Réinitialiser
+              <UserPlus className="h-4 w-4" /> Inviter
             </button>
           </div>
         </div>
-        
+
         {/* Compteur de résultats */}
-        <div className="mt-3 text-sm text-gray-600 dark:text-gray-400">
+        <div className="text-sm text-gray-600 dark:text-gray-400">
           {filteredUsers.length} utilisateur(s) trouvé(s)
           {selectedUsers.length > 0 && (
-            <span className="ml-2 font-medium text-blue-600 dark:text-blue-400">
+            <span className="ml-2 font-medium text-indigo-600 dark:text-indigo-400">
               • {selectedUsers.length} sélectionné(s)
             </span>
           )}
         </div>
       </div>
 
-      {/* Table des utilisateurs */}
-      {filteredUsers.length > 0 ? (
-        <UsersTable
-          users={filteredUsers} // Utiliser filteredUsers, pas filteredData
-          selectedUsers={selectedUsers}
-          onSelectUser={handleSelectUser}
-          onSelectAll={handleSelectAll}
-          isSelectAll={isSelectAll}
-          onView={handleView}
-          onDelete={handleDelete}
-          onToggleStatus={handleToggleStatus}
-          updatingStatus={updatingStatus}
-        />
-      ) : (
-        <div className="p-8 text-center">
-          <div className="text-gray-400 dark:text-gray-500">
-            <svg className="w-12 h-12 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-            </svg>
-            <p className="text-lg font-medium text-gray-600 dark:text-gray-400 mb-1">
-              Aucun utilisateur trouvé
-            </p>
-            <p className="text-sm text-gray-500 dark:text-gray-500">
-              {utilisateurs.length === 0 
-                ? "Aucun utilisateur dans le système" 
-                : "Essayez de modifier vos critères de filtrage"}
-            </p>
+      {/* Header de sélection sticky */}
+      {showSelectionHeader && (
+        <div className="sticky top-0 z-10 border-b border-emerald-600/20 bg-gradient-to-r from-emerald-500 to-emerald-600 p-3 text-white">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-sm font-medium">
+                {selectedUsers.length} sélectionné(s)
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button onClick={handleActivateSelected} className="inline-flex items-center gap-1 rounded-lg bg-white/15 px-3 py-1.5 text-sm hover:bg-white/25">
+                <Check className="h-4 w-4" /> Activer
+              </button>
+              <button onClick={handleDeactivateSelected} className="inline-flex items-center gap-1 rounded-lg bg-white/15 px-3 py-1.5 text-sm hover:bg-white/25">
+                <Ban className="h-4 w-4" /> Désactiver
+              </button>
+              <button onClick={handleDeleteSelected} className="inline-flex items-center gap-1 rounded-lg bg-white/15 px-3 py-1.5 text-sm hover:bg-white/25">
+                <Trash2 className="h-4 w-4" /> Supprimer
+              </button>
+              <button onClick={handleCancelSelection} className="inline-flex items-center gap-1 rounded-lg bg-white/15 px-3 py-1.5 text-sm hover:bg-white/25">
+                <X className="h-4 w-4" /> Annuler
+              </button>
+            </div>
           </div>
         </div>
       )}
-      
+
+      {/* Table */}
+      <UsersTable
+        users={filteredUsers}
+        selectedUsers={selectedUsers}
+        onSelectUser={handleSelectUser}
+        onSelectAll={handleSelectAll}
+        isSelectAll={isSelectAll}
+        onView={handleView}
+        onDelete={handleDelete}
+        onToggleStatus={handleToggleStatus}
+        updatingStatus={updatingStatus}
+      />
+
       {/* Modals */}
-      <UserDetails
-        user={viewingUser}
-        isOpen={isViewModalOpen}
-        onClose={handleCloseView}
-      />
-      
-      <DeleteConfirmation
-        user={deletingUser}
-        isOpen={isDeleteModalOpen}
-        onClose={handleCancelDelete}
-        onConfirm={handleConfirmDelete}
-      />
+      <UserDetails user={viewingUser} isOpen={isViewModalOpen} onClose={handleCloseView} />
+      <DeleteConfirmation user={deletingUser} isOpen={isDeleteModalOpen} onClose={handleCancelDelete} onConfirm={handleConfirmDelete} />
     </div>
   );
 }

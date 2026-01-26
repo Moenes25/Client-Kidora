@@ -1,20 +1,39 @@
-import { useState, useEffect } from "react";
+// src/components/classes/AddClassModal.tsx
+import { useEffect, useState } from "react";
+import { Sparkles } from "lucide-react";
 
 interface AddClassModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave?: (formData: ClassFormData) => void;
 }
-
 interface ClassFormData {
   className: string;
   ageRange: string;
   capacity: number;
   educator: string;
   room: string;
-  color: string;
+  color: "blue" | "green" | "purple" | "orange" | "pink" | "indigo";
   description?: string;
 }
+
+const COLOR_CHIPS: {value: ClassFormData["color"]; bg:string; ring:string}[] = [
+  { value: "blue",   bg: "bg-blue-500",   ring: "ring-blue-300" },
+  { value: "green",  bg: "bg-emerald-500",ring: "ring-emerald-300" },
+  { value: "purple", bg: "bg-violet-500", ring: "ring-violet-300" },
+  { value: "orange", bg: "bg-amber-500",  ring: "ring-amber-300" },
+  { value: "pink",   bg: "bg-pink-500",   ring: "ring-pink-300" },
+  { value: "indigo", bg: "bg-indigo-500", ring: "ring-indigo-300" },
+];
+
+const AGE_OPTS = [
+  { value: "2-3", label: "2-3 ans (Petits)" },
+  { value: "3-4", label: "3-4 ans (Moyens)" },
+  { value: "4-5", label: "4-5 ans (Grands)" },
+  { value: "5-6", label: "5-6 ans (Pré-scolaire)" },
+  { value: "6-7", label: "6-7 ans (CP)" },
+  { value: "7-8", label: "7-8 ans (CE1)" },
+];
 
 export default function AddClassModal({ isOpen, onClose, onSave }: AddClassModalProps) {
   const [formData, setFormData] = useState<ClassFormData>({
@@ -24,105 +43,56 @@ export default function AddClassModal({ isOpen, onClose, onSave }: AddClassModal
     educator: "",
     room: "",
     color: "blue",
-    description: ""
+    description: "",
   });
-
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-      setErrors({});
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
+    document.body.style.overflow = isOpen ? "hidden" : "unset";
+    return () => { document.body.style.overflow = "unset"; };
   }, [isOpen]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ 
-      ...prev, 
-      [name]: name === 'capacity' ? parseInt(value) || 0 : value 
-    }));
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: "" }));
-    }
-  };
-
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-    if (!formData.className.trim()) newErrors.className = "Le nom de la classe est requis";
-    if (!formData.educator.trim()) newErrors.educator = "Le nom de l'éducateur est requis";
-    if (formData.capacity < 1) newErrors.capacity = "La capacité doit être supérieure à 0";
-    if (formData.capacity > 50) newErrors.capacity = "La capacité maximale est de 50 enfants";
-    return newErrors;
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    const formErrors = validateForm();
-    if (Object.keys(formErrors).length === 0) {
-      console.log("Nouvelle classe créée:", formData);
-      
-      if (onSave) {
-        onSave(formData);
-      }
-      
-      // Réinitialiser le formulaire
-      setFormData({
-        className: "",
-        ageRange: "2-3",
-        capacity: 20,
-        educator: "",
-        room: "",
-        color: "blue",
-        description: ""
-      });
-      
-      onClose();
-    } else {
-      setErrors(formErrors);
-    }
-  };
-
-  const colorOptions = [
-    { value: "blue", label: "Bleu", bg: "bg-blue-100", text: "text-blue-600" },
-    { value: "green", label: "Vert", bg: "bg-green-100", text: "text-green-600" },
-    { value: "purple", label: "Violet", bg: "bg-purple-100", text: "text-purple-600" },
-    { value: "orange", label: "Orange", bg: "bg-orange-100", text: "text-orange-600" },
-    { value: "pink", label: "Rose", bg: "bg-pink-100", text: "text-pink-600" },
-    { value: "indigo", label: "Indigo", bg: "bg-indigo-100", text: "text-indigo-600" },
-  ];
-
-  const ageRangeOptions = [
-    { value: "2-3", label: "2-3 ans (Petits)" },
-    { value: "3-4", label: "3-4 ans (Moyens)" },
-    { value: "4-5", label: "4-5 ans (Grands)" },
-    { value: "5-6", label: "5-6 ans (Pré-scolaire)" },
-    { value: "6-7", label: "6-7 ans (CP)" },
-    { value: "7-8", label: "7-8 ans (CE1)" },
-  ];
 
   if (!isOpen) return null;
 
+  const onChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: name === "capacity" ? parseInt(value) || 0 : value }));
+    if (errors[name]) setErrors(prev => ({ ...prev, [name]: "" }));
+  };
+
+  const validate = () => {
+    const e: Record<string, string> = {};
+    if (!formData.className.trim()) e.className = "Le nom de la classe est requis";
+    if (!formData.educator.trim()) e.educator = "Le nom de l'éducateur est requis";
+    if (formData.capacity < 1) e.capacity = "Capacité > 0";
+    if (formData.capacity > 50) e.capacity = "Capacité max: 50";
+    return e;
+  };
+
+  const submit = (ev: React.FormEvent) => {
+    ev.preventDefault();
+    const v = validate();
+    if (Object.keys(v).length) return setErrors(v);
+    onSave?.(formData);
+    setFormData({ className: "", ageRange: "2-3", capacity: 20, educator: "", room: "", color: "blue", description: "" });
+    onClose();
+  };
+
   return (
-    <div className="fixed inset-0 z-[100000] overflow-y-auto">
-      <div className="fixed inset-0 bg-black/50 z-[100000]" onClick={onClose} />
-      <div className="relative z-[100001] flex min-h-full items-center justify-center p-4">
-        <div className="relative w-full max-w-2xl transform overflow-hidden rounded-xl bg-white dark:bg-gray-800 shadow-2xl transition-all">
-          <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 px-6 py-4">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Nouvelle Classe
-              </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Ajouter une nouvelle classe à la crèche
-              </p>
+    <div className="fixed inset-0 z-[100000]">
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div className="relative z-[100001] grid min-h-full place-items-center p-4">
+        <div className="relative w-full max-w-2xl overflow-hidden rounded-2xl border border-gray-200 bg-white/90 shadow-2xl backdrop-blur dark:border-white/10 dark:bg-gray-900/80">
+          {/* header */}
+          <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4 dark:border-white/10">
+            <div className="flex items-center gap-2">
+              <div className="grid h-9 w-9 place-items-center rounded-lg bg-indigo-600 text-white shadow">
+                <Sparkles className="h-4 w-4" />
+              </div>
+              <div>
+                <h3 className="text-base font-semibold text-gray-900 dark:text-white">Nouvelle Classe</h3>
+                <p className="text-xs text-gray-600 dark:text-gray-400">Ajoutez un groupe avec sa capacité et sa couleur</p>
+              </div>
             </div>
             <button
               onClick={onClose}
@@ -134,168 +104,141 @@ export default function AddClassModal({ isOpen, onClose, onSave }: AddClassModal
             </button>
           </div>
 
-          <form onSubmit={handleSubmit}>
-            <div className="px-6 py-4 space-y-6 max-h-[60vh] overflow-y-auto">
-              {/* Icône et nom */}
+          <form onSubmit={submit}>
+            <div className="max-h-[65vh] space-y-6 overflow-y-auto px-6 py-5">
+              {/* ligne 1 */}
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
+                <div className="grid h-16 w-16 place-items-center rounded-xl bg-indigo-100 dark:bg-indigo-900/30">
                   <span className="text-2xl">🏫</span>
                 </div>
                 <div className="flex-1">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Nom de la classe *
-                  </label>
+                  <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Nom de la classe *</label>
                   <input
-                    type="text"
                     name="className"
                     value={formData.className}
-                    onChange={handleChange}
-                    className={`w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.className 
-                        ? 'border-red-500 focus:border-red-500' 
-                        : 'border-gray-300 dark:border-gray-600 focus:border-blue-500'
-                    } dark:bg-gray-700 dark:text-white`}
+                    onChange={onChange}
                     placeholder="Ex: Petits, Moyens, Grands"
+                    className={[
+                      "w-full rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2",
+                      errors.className
+                        ? "border-rose-400 ring-rose-200"
+                        : "border-gray-300 focus:ring-indigo-300 dark:border-white/10",
+                      "dark:bg-gray-800 dark:text-white",
+                    ].join(" ")}
                   />
-                  {errors.className && (
-                    <p className="mt-1 text-sm text-red-600">{errors.className}</p>
-                  )}
+                  {errors.className && <p className="mt-1 text-xs text-rose-500">{errors.className}</p>}
                 </div>
               </div>
 
-              {/* Description */}
+              {/* description */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Description (optionnelle)
-                </label>
+                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Description (optionnelle)</label>
                 <textarea
                   name="description"
                   value={formData.description}
-                  onChange={handleChange}
+                  onChange={onChange}
                   rows={2}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                  placeholder="Brève description de la classe..."
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-300 dark:border-white/10 dark:bg-gray-800 dark:text-white"
+                  placeholder="Brève description de la classe…"
                 />
               </div>
 
-              {/* Tranche d'âge et Couleur */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* age / couleur */}
+              <div className="grid gap-6 md:grid-cols-2">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Tranche d'âge *
-                  </label>
+                  <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Tranche d'âge *</label>
                   <select
                     name="ageRange"
                     value={formData.ageRange}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                    onChange={onChange}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-300 dark:border-white/10 dark:bg-gray-800 dark:text-white"
                   >
-                    {ageRangeOptions.map(option => (
-                      <option key={option.value} value={option.value}>{option.label}</option>
+                    {AGE_OPTS.map((o) => (
+                      <option key={o.value} value={o.value}>{o.label}</option>
                     ))}
                   </select>
                 </div>
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Couleur de la classe *
-                  </label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {colorOptions.map(color => (
-                      <button
-                        key={color.value}
-                        type="button"
-                        onClick={() => setFormData(prev => ({ ...prev, color: color.value }))}
-                        className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg border ${
-                          formData.color === color.value
-                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                            : 'border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
-                        }`}
-                      >
-                        <div className={`w-4 h-4 rounded-full ${color.bg} ${color.text}`}></div>
-                        <span className="text-sm">{color.label}</span>
-                      </button>
-                    ))}
+                  <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Couleur de la classe *</label>
+                  <div className="grid grid-cols-6 gap-2">
+                    {COLOR_CHIPS.map((c) => {
+                      const active = formData.color === c.value;
+                      return (
+                        <button
+                          key={c.value}
+                          type="button"
+                          onClick={() => setFormData((p) => ({ ...p, color: c.value }))}
+                          className={[
+                            "h-9 rounded-lg ring-2 ring-transparent transition-shadow",
+                            c.bg,
+                            active ? c.ring : "ring-transparent hover:ring-white/40",
+                          ].join(" ")}
+                          title={c.value}
+                        />
+                      );
+                    })}
                   </div>
                 </div>
               </div>
 
-              {/* Capacité et Éducateur */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* capacité / éducateur */}
+              <div className="grid gap-6 md:grid-cols-2">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Capacité maximale *
-                  </label>
-                  <div className="space-y-2">
-                    <input
-                      type="range"
-                      name="capacity"
-                      min="5"
-                      max="50"
-                      step="5"
-                      value={formData.capacity}
-                      onChange={handleChange}
-                      className="w-full"
-                    />
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600 dark:text-gray-400">5</span>
-                      <span className="text-lg font-bold text-gray-900 dark:text-white">
-                        {formData.capacity} enfants
-                      </span>
-                      <span className="text-sm text-gray-600 dark:text-gray-400">50</span>
-                    </div>
+                  <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Capacité maximale *</label>
+                  <input
+                    type="range"
+                    name="capacity"
+                    min={5}
+                    max={50}
+                    step={5}
+                    value={formData.capacity}
+                    onChange={onChange}
+                    className="w-full"
+                  />
+                  <div className="mt-1 flex items-center justify-between text-sm">
+                    <span className="text-gray-500 dark:text-gray-400">5</span>
+                    <span className="font-semibold text-gray-900 dark:text-white">{formData.capacity} enfants</span>
+                    <span className="text-gray-500 dark:text-gray-400">50</span>
                   </div>
-                  {errors.capacity && (
-                    <p className="mt-1 text-sm text-red-600">{errors.capacity}</p>
-                  )}
+                  {errors.capacity && <p className="mt-1 text-xs text-rose-500">{errors.capacity}</p>}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Éducateur principal *
-                  </label>
+                  <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Éducateur principal *</label>
                   <input
-                    type="text"
                     name="educator"
                     value={formData.educator}
-                    onChange={handleChange}
-                    className={`w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.educator 
-                        ? 'border-red-500 focus:border-red-500' 
-                        : 'border-gray-300 dark:border-gray-600 focus:border-blue-500'
-                    } dark:bg-gray-700 dark:text-white`}
+                    onChange={onChange}
                     placeholder="Nom de l'éducateur"
+                    className={[
+                      "w-full rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2",
+                      errors.educator
+                        ? "border-rose-400 ring-rose-200"
+                        : "border-gray-300 focus:ring-indigo-300 dark:border-white/10",
+                      "dark:bg-gray-800 dark:text-white",
+                    ].join(" ")}
                   />
-                  {errors.educator && (
-                    <p className="mt-1 text-sm text-red-600">{errors.educator}</p>
-                  )}
+                  {errors.educator && <p className="mt-1 text-xs text-rose-500">{errors.educator}</p>}
                 </div>
               </div>
 
-              {/* Salle */}
+              {/* salle */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Salle / Local (optionnel)
-                </label>
+                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Salle / Local (optionnel)</label>
                 <input
-                  type="text"
                   name="room"
                   value={formData.room}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                  onChange={onChange}
                   placeholder="Ex: Salle 1, Bâtiment A"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-300 dark:border-white/10 dark:bg-gray-800 dark:text-white"
                 />
               </div>
 
-              {/* Aperçu */}
-              <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
-                <h4 className="font-medium text-gray-900 dark:text-white mb-3">Aperçu de la classe</h4>
+              {/* aperçu */}
+              <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-white/10 dark:bg-gray-800/50">
+                <h4 className="mb-3 font-medium text-gray-900 dark:text-white">Aperçu</h4>
                 <div className="flex items-center gap-3">
-                  <div className={`w-12 h-12 rounded-lg ${
-                    formData.color === 'blue' ? 'bg-blue-100' :
-                    formData.color === 'green' ? 'bg-green-100' :
-                    formData.color === 'purple' ? 'bg-purple-100' :
-                    formData.color === 'orange' ? 'bg-orange-100' :
-                    formData.color === 'pink' ? 'bg-pink-100' : 'bg-indigo-100'
-                  } flex items-center justify-center`}>
+                  <div className="grid h-12 w-12 place-items-center rounded-lg bg-white shadow-sm dark:bg-gray-900">
                     <span className="text-xl">👶</span>
                   </div>
                   <div>
@@ -303,24 +246,25 @@ export default function AddClassModal({ isOpen, onClose, onSave }: AddClassModal
                       {formData.className || "Nom de la classe"}
                     </p>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {ageRangeOptions.find(a => a.value === formData.ageRange)?.label || "2-3 ans"} • {formData.capacity} places
+                      {AGE_OPTS.find((a) => a.value === formData.ageRange)?.label} • {formData.capacity} places
                     </p>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700 px-6 py-4">
+            {/* actions */}
+            <div className="flex justify-end gap-3 border-t border-gray-200 px-6 py-4 dark:border-white/10">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600"
+                className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium hover:bg-gray-50 dark:border-white/10 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
               >
                 Annuler
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+                className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
               >
                 Créer la classe
               </button>

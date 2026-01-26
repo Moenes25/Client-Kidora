@@ -1,75 +1,78 @@
-import { CheckCircle, Clock, AlertCircle } from "lucide-react";
+// src/components/finance/PaymentStatus.tsx
+import { CheckCircle2, Clock, AlertTriangle } from "lucide-react";
 
 export default function PaymentStatus() {
-  const payments = [
-  { status: "paid", label: "Payés", count: 42, amount: "10,450 DT", 
-    bgColor: "bg-gradient-to-br from-green-500 to-emerald-600 border-green-400" },
-  { status: "pending", label: "En attente", count: 5, amount: "2,850 DT", 
-    bgColor: "bg-gradient-to-br from-amber-500 to-yellow-600 border-amber-400" },
-  { status: "overdue", label: "En retard", count: 1, amount: "350 DT", 
-    bgColor: "bg-gradient-to-br from-red-500 to-rose-600 border-red-400" }
-];
-
-
-  const getIcon = (status: string) => {
-    switch (status) {
-      case "paid": return <CheckCircle className="w-5 h-5" />;
-      case "pending": return <Clock className="w-5 h-5" />;
-      case "overdue": return <AlertCircle className="w-5 h-5" />;
-    }
-  };
+  const total = 48; // total dossiers
+  const groups = [
+    {
+      key: "paid",
+      label: "Payés",
+      count: 42,
+      amount: "10 450 DT",
+      grad: "from-emerald-500 to-emerald-600",
+      chip: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300",
+      icon: <CheckCircle2 className="h-5 w-5" />,
+      solid: "#10b981",
+    },
+    {
+      key: "pending",
+      label: "En attente",
+      count: 5,
+      amount: "2 850 DT",
+      grad: "from-amber-500 to-yellow-600",
+      chip: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300",
+      icon: <Clock className="h-5 w-5" />,
+      solid: "#f59e0b",
+    },
+    {
+      key: "overdue",
+      label: "En retard",
+      count: 1,
+      amount: "350 DT",
+      grad: "from-rose-500 to-red-600",
+      chip: "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300",
+      icon: <AlertTriangle className="h-5 w-5" />,
+      solid: "#ef4444",
+    },
+  ] as const;
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
-      <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-6">
-        Statut des paiements
-      </h3>
+    <div className="rounded-2xl border border-gray-200 bg-white/80 p-6 shadow-sm backdrop-blur dark:border-white/10 dark:bg-gray-900/60">
+      <h3 className="mb-6 text-lg font-semibold text-gray-900 dark:text-white">Statut des paiements</h3>
 
       <div className="space-y-4">
-        {payments.map((payment) => (
-          <div key={payment.status} className="p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-3">
-                {/* <div className={`p-2 rounded-lg bg-${payment.color}-100 dark:bg-${payment.color}-900/30 text-${payment.color}-600`}> */}
-                <div key={payment.status} className={`${payment.bgColor} rounded-xl p-5 border shadow-sm`}>
-                  {getIcon(payment.status)}
+        {groups.map((g) => {
+          const pct = Math.round((g.count / total) * 100);
+          return (
+            <div key={g.key} className="rounded-xl border border-gray-200 p-4 dark:border-white/10">
+              <div className="mb-2 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className={`grid h-10 w-10 place-items-center rounded-lg bg-gradient-to-br ${g.grad} text-white ring-1 ring-white/30`}>
+                    {g.icon}
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-gray-900 dark:text-white">{g.label}</h4>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">{g.count} paiements</p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="font-medium text-gray-800 dark:text-white">
-                    {payment.label}
-                  </h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {payment.count} paiements
-                  </p>
+                <div className="text-right">
+                  <p className="text-lg font-bold text-gray-900 dark:text-white">{g.amount}</p>
+                  <span className={`mt-0.5 inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold ${g.chip}`}>{pct}%</span>
                 </div>
               </div>
-              <div className="text-right">
-                <p className="text-lg font-bold text-gray-800 dark:text-white">
-                  {payment.amount}
-                </p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Total
-                </p>
+
+              <div className="mt-2">
+                <div className="mb-1 flex items-center justify-between text-xs">
+                  <span className="text-gray-600 dark:text-gray-400">Progression</span>
+                  <span className="font-medium text-gray-900 dark:text-white">{pct}%</span>
+                </div>
+                <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+                  <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: g.solid }} />
+                </div>
               </div>
             </div>
-            
-            {/* Barre de progression */}
-            <div className="mt-2">
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-gray-600 dark:text-gray-400">Pourcentage</span>
-                <span className="font-medium">
-                  {((payment.count / 48) * 100).toFixed(0)}%
-                </span>
-              </div>
-              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                <div 
-                  className={`bg-${payment.bgColor}-500 h-2 rounded-full`}
-                  style={{ width: `${(payment.count / 48) * 100}%` }}
-                />
-              </div>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

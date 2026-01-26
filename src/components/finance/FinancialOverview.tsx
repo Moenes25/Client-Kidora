@@ -1,60 +1,54 @@
+// src/components/finance/FinancialOverview.tsx
+import { PiggyBank, Hourglass, Wallet, LineChart } from "lucide-react";
+
 export default function FinancialOverview() {
-  const financialData = [
+  const cards = [
     {
-      id: 1,
       title: "Revenus Mensuels",
-      amount: "12,450 DT",
-      change: "+8.5%",
-      trend: "up",
-      icon: "💰",
-      bgColor: "bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-5 border border-green-400 shadow-sm",
-      iconBg: "bg-green-100/80 dark:bg-green-900/40"
+      amount: "12 450 DT",
+      change: "+8,5%",
+      trend: "up" as const,
+      icon: <PiggyBank className="h-5 w-5" />,
+      grad: "from-emerald-500 to-emerald-600",
+      chip: "bg-emerald-400/25 text-white",
     },
     {
-      id: 2,
-      title: "Paiements en Attente",
-      amount: "2,850 DT",
-      change: "-3.2%",
-      trend: "down",
-      icon: "⏳",
-      bgColor: "bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl border-amber-400 shadow-sm",
-      iconBg: "bg-amber-100/80 dark:bg-amber-900/40"
+      title: "Paiements en attente",
+      amount: "2 850 DT",
+      change: "-3,2%",
+      trend: "down" as const,
+      icon: <Hourglass className="h-5 w-5" />,
+      grad: "from-amber-500 to-orange-600",
+      chip: "bg-amber-400/25 text-white",
     },
-    // bg-gradient-to-br from-orange-500 to-red-500 rounded-xl p-5 border border-orange-400 shadow-sm
     {
-      id: 3,
       title: "Dépenses Mensuelles",
-      amount: "8,200 DT",
-      change: "+4.1%",
-      trend: "up",
-      icon: "💸",
-      bgColor: "bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl p-5 border border-emerald-400 shadow-sm",
-      iconBg: "bg-red-100/80 dark:bg-red-900/40"
+      amount: "8 200 DT",
+      change: "+4,1%",
+      trend: "up" as const,
+      icon: <Wallet className="h-5 w-5" />,
+      grad: "from-sky-500 to-blue-600",
+      chip: "bg-sky-400/25 text-white",
     },
     {
-      id: 4,
       title: "Bénéfice Net",
-      amount: "4,250 DT",
-      change: "+15.2%",
-      trend: "up",
-      icon: "📈",
-      bgColor: "bg-gradient-to-br from-indigo-500 to-purple-600  rounded-xl p-5 border border-indigo-400 shadow-sm ",
-      iconBg: "bg-blue-100/80 dark:bg-blue-900/40"
-    }
+      amount: "4 250 DT",
+      change: "+15,2%",
+      trend: "up" as const,
+      icon: <LineChart className="h-5 w-5" />,
+      grad: "from-indigo-500 to-violet-600",
+      chip: "bg-indigo-400/25 text-white",
+    },
   ];
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
-      <div className="flex justify-between items-center mb-6">
+    <div className="rounded-2xl border border-gray-200 bg-white/80 p-6 shadow-sm backdrop-blur dark:border-white/10 dark:bg-gray-900/60">
+      <div className="mb-6 flex items-center justify-between">
         <div>
-          <h3 className="text-xl font-bold text-gray-800 dark:text-white">
-            Aperçu Financier
-          </h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            Vue d'ensemble des finances du mois
-          </p>
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white">Aperçu financier</h3>
+          <p className="text-xs text-gray-600 dark:text-gray-400">Vue d’ensemble des finances du mois</p>
         </div>
-        <select className="px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg text-sm border border-gray-300 dark:border-gray-600">
+        <select className="rounded-lg border border-gray-300 bg-gray-100 px-3 py-2 text-sm dark:border-white/10 dark:bg-gray-800 dark:text-white">
           <option>Ce mois</option>
           <option>Le mois dernier</option>
           <option>Ce trimestre</option>
@@ -62,51 +56,48 @@ export default function FinancialOverview() {
         </select>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {financialData.map((item) => (
-          <div key={item.id} className={`${item.bgColor} rounded-xl p-5 border shadow-sm`}>
-            <div className="flex items-center justify-between mb-3">
-              <div className={`p-2.5 ${item.iconBg} rounded-lg backdrop-blur-sm`}>
-                <div className="text-2xl">{item.icon}</div>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {cards.map((c, i) => (
+          <div
+            key={i}
+            className={[
+              "relative overflow-hidden rounded-2xl border p-5 text-white shadow-sm",
+              "bg-gradient-to-br", c.grad, "border-white/20",
+            ].join(" ")}
+          >
+            <div className="absolute -right-10 -top-10 h-24 w-24 rounded-full bg-white/20 blur-2xl" />
+            <div className="relative z-[1]">
+              <div className="mb-3 flex items-center justify-between">
+                <div className="grid h-9 w-9 place-items-center rounded-lg bg-white/20 ring-1 ring-white/30">
+                  {c.icon}
+                </div>
+                <span className={`rounded-full px-2 py-1 text-xs font-semibold ${c.chip}`}>{c.change}</span>
               </div>
-              <span className={`text-xs font-medium px-2 py-1 rounded-full ${
-                item.trend === "up" 
-                  ? 'bg-white/30 text-white' 
-                  : 'bg-white/20 text-white'
-              }`}>
-                {item.change}
-              </span>
+              <h4 className="mb-1 text-2xl font-extrabold">{c.amount}</h4>
+              <p className="text-sm text-white/90">{c.title}</p>
             </div>
-            <h4 className="text-2xl font-bold text-white mb-1">
-              {item.amount}
-            </h4>
-            <p className="text-sm font-medium text-white/90">
-              {item.title}
-            </p>
           </div>
         ))}
       </div>
 
-      <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
-        <div className="flex justify-between items-center mb-3">
+      {/* objectif */}
+      <div className="mt-8 rounded-xl border border-gray-200 p-5 dark:border-white/10">
+        <div className="mb-3 flex items-center justify-between">
           <div>
-            <span className="font-medium text-gray-800 dark:text-white">Objectif de revenus mensuels</span>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Progression vers l'objectif de 15,000 DT</p>
+            <span className="font-medium text-gray-900 dark:text-white">Objectif de revenus mensuels</span>
+            <p className="text-xs text-gray-600 dark:text-gray-400">Progression vers 15 000 DT</p>
           </div>
-          <span className="text-xl font-bold text-gray-800 dark:text-white">15,000 DT</span>
+          <span className="text-lg font-bold text-gray-900 dark:text-white">15 000 DT</span>
         </div>
-        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
-          <div 
-            className="bg-gradient-to-r from-green-500 to-emerald-600 h-3 rounded-full transition-all duration-500" 
-            style={{ width: '83%' }}
-          />
+        <div className="h-3 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+          <div className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-emerald-600" style={{ width: "83%" }} />
         </div>
-        <div className="flex justify-between text-sm mt-2">
+        <div className="mt-2 flex items-center justify-between text-xs">
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-green-500"></div>
-            <span className="font-medium text-gray-800 dark:text-white">83% atteint</span>
+            <span className="inline-block h-3 w-3 rounded-full bg-emerald-500" />
+            <span className="font-medium text-gray-900 dark:text-white">83% atteint</span>
           </div>
-          <span className="text-gray-600 dark:text-gray-400">2,550 DT restants</span>
+          <span className="text-gray-600 dark:text-gray-400">2 550 DT restants</span>
         </div>
       </div>
     </div>
