@@ -481,94 +481,114 @@ export default function ChildrenPage() {
         </div>
       ) : (
         // Mode grille
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredEnfants.map(enfant => (
-            <div key={enfant.id} className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5 hover:shadow-lg transition-shadow">
-              <div className="flex flex-col items-center text-center">
-                <div className="relative mb-4">
-                  <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 border-4 border-white dark:border-gray-800">
-                    {enfant.photo ? (
-                      <img 
-                        src={enfant.photo} 
-                        alt={`${enfant.prenom} ${enfant.nom}`}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-800">
-                        <span className="font-medium text-gray-600 dark:text-gray-300 text-lg">
-                          {enfant.prenom[0]}{enfant.nom[0]}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                  <div className={`absolute -bottom-2 -right-2 w-6 h-6 rounded-full border-2 border-white dark:border-gray-800 flex items-center justify-center ${
-                    enfant.presence === 'present' ? 'bg-green-500 dark:bg-green-600' :
-                    enfant.presence === 'absent' ? 'bg-red-500 dark:bg-red-600' :
-                    'bg-amber-500 dark:bg-amber-600'
-                  }`}>
-                    {enfant.presence === 'present' ? '✓' : '✗'}
-                  </div>
-                </div>
-                
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  {enfant.prenom} {enfant.nom}
-                </h3>
-                
-                <div className="mt-2 flex items-center gap-2">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">{enfant.age} ans</span>
-                  <span className="text-sm text-gray-400 dark:text-gray-600">•</span>
-                  <span className={`text-xs font-medium px-2 py-0.5 rounded ${
-                    enfant.classe.includes("3-4") ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400" :
-                    "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400"
-                  }`}>
-                    {enfant.classe}
-                  </span>
-                </div>
-                
-                <div className="mt-4 w-full">
-                  <div className="text-sm text-gray-500 dark:text-gray-400 text-left mb-2">
-                    <strong>Points forts :</strong>
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {enfant.pointsFort?.slice(0, 2).map((point, idx) => (
-                        <span key={idx} className="text-xs bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400 px-2 py-0.5 rounded">
-                          {point}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <div className="text-sm text-gray-500 dark:text-gray-400 text-left mb-4">
-                    <strong>Activités préférées :</strong>
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {enfant.activitesPreferees?.slice(0, 2).map((activite, idx) => (
-                        <span key={idx} className="text-xs bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 px-2 py-0.5 rounded">
-                          {activite}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-800 w-full">
-                  <div className="flex justify-between gap-2">
-                    <button 
-                      onClick={() => setSelectedEnfant(enfant)}
-                      className="flex-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-                    >
-                      Voir profil
-                    </button>
-                    <button 
-                      className="px-3 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                      title="Contacter parents"
-                    >
-                      <MailIcon className="size-4" />
-                    </button>
-                  </div>
-                </div>
+<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+  {filteredEnfants.map(enfant => (
+    <div
+      key={enfant.id}
+      className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5 hover:shadow-lg transition-shadow h-full flex flex-col"
+    >
+      <div className="flex flex-col items-center text-center flex-1">
+        <div className="relative mb-4">
+          <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 border-4 border-white dark:border-gray-800">
+            {enfant.photo ? (
+              <img
+                src={enfant.photo}
+                alt={`${enfant.prenom} ${enfant.nom}`}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-800">
+                <span className="font-medium text-gray-600 dark:text-gray-300 text-lg">
+                  {enfant.prenom[0]}{enfant.nom[0]}
+                </span>
               </div>
-            </div>
-          ))}
+            )}
+          </div>
+
+          <div
+            className={`absolute -bottom-2 -right-2 w-6 h-6 rounded-full border-2 border-white dark:border-gray-800 flex items-center justify-center ${
+              enfant.presence === 'present'
+                ? 'bg-green-500 dark:bg-green-600'
+                : enfant.presence === 'absent'
+                ? 'bg-red-500 dark:bg-red-600'
+                : 'bg-amber-500 dark:bg-amber-600'
+            }`}
+          >
+            {enfant.presence === 'present' ? '✓' : '✗'}
+          </div>
         </div>
+
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+          {enfant.prenom} {enfant.nom}
+        </h3>
+
+        <div className="mt-2 flex items-center gap-2">
+          <span className="text-sm text-gray-600 dark:text-gray-400">
+            {enfant.age} ans
+          </span>
+          <span className="text-sm text-gray-400 dark:text-gray-600">•</span>
+          <span
+            className={`text-xs font-medium px-2 py-0.5 rounded ${
+              enfant.classe.includes("3-4")
+                ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"
+                : "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400"
+            }`}
+          >
+            {enfant.classe}
+          </span>
+        </div>
+
+        <div className="mt-4 w-full">
+          <div className="text-sm text-gray-500 dark:text-gray-400 text-left mb-2">
+            <strong>Points forts :</strong>
+            <div className="flex flex-wrap gap-1 mt-1">
+              {enfant.pointsFort?.slice(0, 2).map((point, idx) => (
+                <span
+                  key={idx}
+                  className="text-xs bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400 px-2 py-0.5 rounded line-clamp-1"
+                >
+                  {point}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="text-sm text-gray-500 dark:text-gray-400 text-left">
+            <strong>Activités préférées :</strong>
+            <div className="flex flex-wrap gap-1 mt-1">
+              {enfant.activitesPreferees?.slice(0, 2).map((activite, idx) => (
+                <span
+                  key={idx}
+                  className="text-xs bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 px-2 py-0.5 rounded line-clamp-1"
+                >
+                  {activite}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-auto pt-4 border-t border-gray-200 dark:border-gray-800 w-full">
+        <div className="flex justify-between gap-2">
+          <button
+            onClick={() => setSelectedEnfant(enfant)}
+            className="flex-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+          >
+            Voir profil
+          </button>
+          <button
+            className="px-3 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+            title="Contacter parents"
+          >
+            <MailIcon className="size-4" />
+          </button>
+        </div>
+      </div>
+    </div>
+  ))}
+</div>
+
       )}
     </>
   );
