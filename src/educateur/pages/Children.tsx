@@ -349,7 +349,7 @@ export default function ChildrenPage() {
                   <th className="py-3 px-4 text-left text-sm font-semibold text-white">Âge/Classe</th>
                   <th className="py-3 px-4 text-left text-sm font-semibold text-white">Contact parents</th>
                   <th className="py-3 px-4 text-left text-sm font-semibold text-white">Dernière observation</th>
-                  <th className="py-3 px-4 text-left text-sm font-semibold text-white">Actions</th>
+                  <th className="py-3 px-25 text-left text-sm font-semibold text-white">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
