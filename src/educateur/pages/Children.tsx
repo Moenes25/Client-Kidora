@@ -267,9 +267,10 @@ export default function ChildrenPage() {
 
       {/* Barre de recherche et filtres améliorée */}
       <div className="mb-6">
-        <div className="flex flex-col md:flex-row gap-4">
+        <div className="flex flex-col md:flex-row gap-4 text-gray-900 dark:text-gray-400">
           <div className="flex-1 relative">
-            <svg xmlns="http://www.w3.org/2000/svg" className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg xmlns="http://www.w3.org/2000/svg" 
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="11" cy="11" r="8"/>
               <path d="m21 21-4.35-4.35"/>
             </svg>
@@ -278,34 +279,54 @@ export default function ChildrenPage() {
               placeholder="Rechercher un enfant par nom, prénom ou classe..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-500"
+              className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-500 placeholder-gray-400 dark:placeholder-gray"
             />
           </div>
           
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-3 ">
             <div className="relative">
-              <svg xmlns="http://www.w3.org/2000/svg" className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg xmlns="http://www.w3.org/2000/svg" 
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 size-5 text-gray-500 dark:text-gray-400" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeWidth="2">
                 <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
               </svg>
-              <select
-                value={filterClass}
-                onChange={(e) => setFilterClass(e.target.value)}
-                className="pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-500"
-              >
-                <option value="all">Toutes les classes</option>
-                {classes.filter(c => c !== "all").map(classe => (
-                  <option key={classe} value={classe}>
-                    Classe {classe}
-                  </option>
-                ))}
-              </select>
+   <select
+  value={filterClass}
+  onChange={(e) => setFilterClass(e.target.value)}
+  className="
+    pl-10 pr-4 py-3
+    bg-gray-50 dark:bg-gray-800
+    border border-gray-300 dark:border-gray-700
+    rounded-lg
+    focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-500
+    text-gray-400 dark:text-gray
+  "
+>
+  <option value="all" className="text-gray-500 dark:text-gray">
+    Toutes les classes
+  </option>
+
+  {classes.filter(c => c !== "all").map(classe => (
+    <option
+      key={classe}
+      value={classe}
+      className="text-gray-700 dark:text-gray-500"
+    >
+      Classe {classe}
+    </option>
+  ))}
+</select>
+
             </div>
             
             <div className="relative">
               <select
                 value={filterPresence}
                 onChange={(e) => setFilterPresence(e.target.value)}
-                className="px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-500"
+                className="px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-500 text-gray-400 dark:text-gray"
               >
                 <option value="all">Tous les statuts</option>
                 <option value="present">Présents</option>
