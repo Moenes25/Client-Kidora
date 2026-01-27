@@ -1095,26 +1095,28 @@ function PresenceModal({
       }
     >
       {/* Toolbar filtre */}
-      <div className="mb-4 grid grid-cols-1 gap-3 md:grid-cols-4">
-        <div className="col-span-2">
-          <div className="relative">
-            <input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="Rechercher un enfant…"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 pl-9 dark:border-gray-700 dark:bg-gray-800"
-            />
-            <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400">🔎</span>
-          </div>
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+        {/* Recherche */}
+        <div className="relative flex-1 min-w-[200px] h-10">
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Rechercher…"
+            className="w-full h-full rounded-lg border border-gray-300 px-3 pl-9 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
+          />
+          <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400">🔎</span>
         </div>
-        <div className="flex items-center gap-2">
+
+        {/* Filtres boutons */}
+
+      <div className="flex gap-3 h-10 "> 
           {(["all", "present", "absent"] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
-              className={`flex-1 rounded-lg px-3 py-2 text-sm ${
+              className={`flex-1 min-w-[90px] h-full rounded-lg px-3 text-sm font-medium transition-all ${
                 tab === t
-                  ? "bg-indigo-600 font-medium text-white"
+                  ? "bg-indigo-600 text-white shadow-md ring-2 ring-indigo-300 dark:ring-indigo-700"
                   : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
               }`}
             >
@@ -1122,16 +1124,31 @@ function PresenceModal({
             </button>
           ))}
         </div>
-        <select
-          value={classe}
-          onChange={(e) => setClasse(e.target.value)}
-          className="rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
-        >
-          <option>Toutes</option>
-          {classes.map((c) => (
-            <option key={c}>{c}</option>
-          ))}
-        </select>
+
+        {/* Dropdown animée */}
+        <div className="relative group hover:scale-105 focus-within:animate-pulse transition-transform duration-300 ease-out h-10 ">          <select
+            value={classe}
+            onChange={(e) => setClasse(e.target.value)}
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 pr-10 shadow-sm appearance-none transition-all duration-200  hover:border-gray-400 hover:bg-gray-50  focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:shadow-lg dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-blue-400 dark:hover:bg-gradient-to-r dark:from-blue-900/50 dark:to-purple-900/50 dark:focus:ring-blue-400 dark:focus:shadow-blue-500/50" >
+            <option>Toutes</option>
+            {classes.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+
+            <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none">
+    <svg
+      className=" w-4 h-4 text-gray-400 dark:text-gray-500  transition-all duration-300 group-hover:text-blue-500 dark:group-hover:text-blue-400 group-hover:scale-110 group-focus-within:rotate-180 group-focus-within:animate-bounce"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
+        </div>
       </div>
 
       {/* Quick KPI + actions groupées */}
@@ -1153,7 +1170,7 @@ function PresenceModal({
       </div>
 
       {/* Liste */}
-      <ul className="space-y-2">
+      {/*<ul className="space-y-2">
         {filtered.map((enfant) => (
           <li
             key={enfant.id}
@@ -1201,6 +1218,62 @@ function PresenceModal({
           </li>
         )}
       </ul>
+ */}
+        { /*************************************************  Liste v2   ************************/}
+ <ul className="space-y-2">
+        {filtered.map((enfant) => (
+          <li
+            key={enfant.id}
+            className="flex items-center justify-between rounded-lg border border-gray-200 p-3 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
+          >
+            <div className="flex items-center gap-3">
+              <div
+                className={`grid h-10 w-10 place-items-center rounded-full text-sm font-semibold ${
+                  enfant.present
+                    ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+                    : "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300"
+                }`}
+              >
+                {enfant.nom.split(" ").map((n) => n[0]).join("")}
+              </div>
+              <div>
+                <div className="font-medium text-gray-900 dark:text-white">{enfant.nom}</div>
+                <div className="text-xs text-gray-500">{enfant.classe}</div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              {enfant.present && enfant.heureArrivee && (
+                <span className="text-xs text-green-600 dark:text-green-400">Arrivé·e à {enfant.heureArrivee}</span>
+              )}
+              {!enfant.present && enfant.raison && (
+                <span className="text-xs text-rose-600 dark:text-rose-400">{enfant.raison}</span>
+              )}
+
+              <button
+                onClick={() => onTogglePresence(enfant.id)}
+                className={`h-10 w-10 rounded-full font-bold text-white text-sm flex items-center justify-center transition-all ${
+                  enfant.present
+                    ? "bg-green-500 hover:bg-green-600 ring-2 ring-green-200"
+                    : "bg-red-500 hover:bg-red-600 ring-2 ring-red-200"
+                }`}
+                title={enfant.present ? "Cliquer pour marquer absent" : "Cliquer pour marquer présent"}
+              >
+                {enfant.present ? "P" : "A"}
+              </button>
+            </div>
+          </li>
+        ))}
+        {filtered.length === 0 && (
+          <li className="rounded-lg border border-dashed border-gray-300 p-6 text-center text-sm text-gray-500 dark:border-gray-700">
+            Aucun résultat
+          </li>
+        )}
+      </ul>
+
+
+
+
     </ModalShell>
   );
 }
