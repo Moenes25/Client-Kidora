@@ -98,11 +98,12 @@ export const AuthProvider : React.FC<AuthProviderProps> = ({ children }) => {
                         experience :  0,
                         disponibilite :  "",
                         classe : "",
-                        imageUrl :  "",
+                       imageUrl: undefined,
                         createdAt :  "",
                         updatedAt : ""
                     };
-                  
+                  console.log("imageUrl =", user?.imageUrl);
+
                 setAuthState({
                    user,
                    token: response.token,

@@ -2,10 +2,18 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
 import { Dropdown } from "../ui/dropdown/Dropdown";
+import { useAuth } from "../../context/AuthContext";
+
+const ROLE_LABEL: Record<string, string> = {
+  PARENT: "Parent",
+  EDUCATEUR: "Éducateur",
+  ADMIN: "Admin",
+};
 
 export default function UserDropdown() {
   const [isOpen, setIsOpen] = useState(false);
   const btnRef = useRef<HTMLButtonElement>(null);
+  const { user } = useAuth();
 
   function toggleDropdown() {
     setIsOpen((v) => !v);
@@ -48,7 +56,10 @@ export default function UserDropdown() {
           />
         </span>
 
-        <span className="hidden sm:block font-medium">Parent</span>
+        <span className="hidden sm:block font-medium">
+  {ROLE_LABEL[user?.role ?? ""] ?? "Utilisateur"}
+</span>
+
 
         <svg
           className={`h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""}`}
@@ -92,13 +103,13 @@ export default function UserDropdown() {
             <img src="/images/user/owner.jpg" alt="" className="h-full w-full object-cover" />
           </span>
           <div className="min-w-0">
-            <p className="truncate font-semibold">Ahmed</p>
-            <p className="truncate text-xs text-slate-500 dark:text-slate-400">parent@kidora.com</p>
+            <p className="truncate font-semibold"> {user?.prenom || user?.email?.split("@")[0]}</p>
+            <p className="truncate text-xs text-slate-500 dark:text-slate-400">{user?.email}</p>
           </div>
           <span className="ml-auto rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1
                            bg-indigo-50 text-indigo-700 ring-indigo-500/20
                            dark:bg-indigo-500/15 dark:text-indigo-300">
-            Rôle : Parent
+            Rôle : {ROLE_LABEL[user?.role ?? ""] ?? "—"}
           </span>
         </div>
 
