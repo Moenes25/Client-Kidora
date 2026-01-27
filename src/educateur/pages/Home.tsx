@@ -126,23 +126,23 @@ function ActiviteModal({
         {/* Form */}
         <div className="space-y-4">
           <div>
-            <label className="mb-1 block text-sm font-medium">Titre *</label>
+            <label className="mb-1 block text-sm font-medium dark:text-gray-300">Titre *</label>
             <input
               value={nouvelleActivite.titre}
               onChange={(e) => setNouvelleActivite({ ...nouvelleActivite, titre: e.target.value })}
               placeholder="Ex: Atelier Peinture Libre"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-500"
               required
             />
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <label className="mb-1 block text-sm font-medium">Type *</label>
+              <label className="mb-1 block text-sm font-medium dark:text-gray-300">Type *</label>
               <select
                 value={nouvelleActivite.type}
                 onChange={(e) => setNouvelleActivite({ ...nouvelleActivite, type: e.target.value })}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-500"
               >
                 <option value="creatif">Créatif</option>
                 <option value="sportif">Sportif</option>
@@ -153,11 +153,11 @@ function ActiviteModal({
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium">Classe *</label>
+              <label className="mb-1 block text-sm font-medium dark:text-gray-300">Classe *</label>
               <select
                 value={nouvelleActivite.classe}
                 onChange={(e) => setNouvelleActivite({ ...nouvelleActivite, classe: e.target.value })}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-500"
               >
                 {["(3-4) ans","(4-5) ans","(6-7) ans","(8-9) ans","(10-11) ans","12 ans","Toutes classes"].map((c)=>(
                   <option key={c} value={c}>{c}</option>
@@ -167,13 +167,13 @@ function ActiviteModal({
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium">Description *</label>
+            <label className="mb-1 block text-sm font-medium dark:text-gray-300">Description *</label>
             <textarea
               value={nouvelleActivite.description}
               maxLength={280}
               onChange={(e) => setNouvelleActivite({ ...nouvelleActivite, description: e.target.value })}
               rows={4}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-500"
               placeholder="Décrivez l'activité…"
             />
             <div className="mt-1 text-right text-xs text-gray-400">{char(nouvelleActivite.description.length)}</div>
@@ -181,25 +181,25 @@ function ActiviteModal({
 
           <div className="grid gap-4 md:grid-cols-3">
             <div>
-              <label className="mb-1 block text-sm font-medium">Date *</label>
+              <label className="mb-1 block text-sm font-medium dark:text-gray-300">Date *</label>
               <input
                 type="date"
                 value={nouvelleActivite.date}
                 onChange={(e) => setNouvelleActivite({ ...nouvelleActivite, date: e.target.value })}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-500"
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium">Heure *</label>
+              <label className="mb-1 block text-sm font-medium dark:text-gray-300">Heure *</label>
               <input
                 type="time"
                 value={nouvelleActivite.heure}
                 onChange={(e) => setNouvelleActivite({ ...nouvelleActivite, heure: e.target.value })}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-500"
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium">Durée (min) *</label>
+              <label className="mb-1 block text-sm font-medium dark:text-gray-300">Durée (min) *</label>
               <input
                 type="range"
                 min={15}
@@ -207,7 +207,7 @@ function ActiviteModal({
                 step={15}
                 value={nouvelleActivite.duree}
                 onChange={(e) => setNouvelleActivite({ ...nouvelleActivite, duree: parseInt(e.target.value) || 0 })}
-                className="w-full"
+                className="w-full dark:text-gray-300"
               />
               <div className="mt-1 text-sm text-gray-600 dark:text-gray-300">{nouvelleActivite.duree} min</div>
             </div>
@@ -215,33 +215,33 @@ function ActiviteModal({
 
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <label className="mb-1 block text-sm font-medium">Objectifs</label>
+              <label className="mb-1 block text-sm font-medium dark:text-gray-300">Objectifs</label>
               <TagInput
                 value={nouvelleActivite.objectifs}
                 onChange={(v) => setNouvelleActivite({ ...nouvelleActivite, objectifs: v })}
-                placeholder="ex: créativité, motricité… (Entrée)"
+                placeholder="Ex: créativité, motricité…"
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium">Matériel</label>
+              <label className="mb-1 block text-sm font-medium dark:text-gray-300">Matériel</label>
               <TagInput
                 value={nouvelleActivite.materiel}
                 onChange={(v) => setNouvelleActivite({ ...nouvelleActivite, materiel: v })}
-                placeholder="ex: peinture, pinceaux… (Entrée)"
+                placeholder="Ex: peinture, pinceaux…"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block text-sm font-medium">Capacité max *</label>
+              <label className="mb-1 block text-sm font-medium dark:text-gray-300">Capacité max *</label>
               <input
                 type="number"
                 min={1}
                 max={30}
                 value={nouvelleActivite.enfantsMax}
                 onChange={(e) => setNouvelleActivite({ ...nouvelleActivite, enfantsMax: parseInt(e.target.value) || 0 })}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-500"
               />
             </div>
             <div className="flex items-end">
@@ -258,7 +258,7 @@ function ActiviteModal({
             <h4 className="mb-1 text-sm font-semibold text-indigo-700 dark:text-indigo-300">Prévisualisation</h4>
             <div className="rounded-lg border border-white/50 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-gray-900">
               <div className="mb-1 text-xs text-gray-500">{nouvelleActivite.date} • {nouvelleActivite.heure} • {nouvelleActivite.duree} min</div>
-              <div className="text-lg font-bold">{nouvelleActivite.titre || "Titre de l’activité"}</div>
+              <div className="text-lg font-bold dark:text-gray-300">{nouvelleActivite.titre || "Titre de l’activité"}</div>
               <div className="text-sm text-gray-600 dark:text-gray-300">{nouvelleActivite.description || "Description…"}</div>
               <div className="mt-2 flex flex-wrap gap-2">
                 <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-xs text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">{nouvelleActivite.type}</span>
