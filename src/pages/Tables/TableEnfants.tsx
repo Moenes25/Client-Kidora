@@ -1,22 +1,37 @@
-import PageBreadcrumb from "../../components/common/PageBreadCrumb";
-import ComponentCard from "../../components/common/ComponentCard";
 import PageMeta from "../../components/common/PageMeta";
-import BasicTableOne from "../../components/tables/BasicTables/BasicTableOne";
-import BasicTablesUsers from "../../components/tables/BasicTableUsers";
-import BasicTableEnfant from "../../components/tables/BasicTableEnfant";
+import ComponentCard from "../../components/common/ComponentCard";
 import GestionEnfants from "../../components/tables/Enfants/GestionEnfants";
+import { Baby } from "lucide-react";
 
 export default function BasicTables() {
   return (
     <>
       <PageMeta
-        title="React.js Basic Tables Dashboard | TailAdmin - Next.js Admin Dashboard Template"
-        description="This is React.js Basic Tables Dashboard page for TailAdmin - React.js Tailwind CSS Admin Dashboard Template"
+        title="Enfants • KI DORA"
+        description="Gestion des enfants : recherche, filtres, sélection multiple et actions rapides"
       />
-      {/* <PageBreadcrumb pageTitle="Listes des Parents" /> */}
+      {/* Bandeau créatif */}
+      <div className="relative mb-6 overflow-hidden rounded-2xl border border-indigo-200/40 bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 p-6 text-white shadow">
+        <div className="pointer-events-none absolute -left-10 top-1/2 h-40 w-40 -translate-y-1/2 rounded-full bg-white/20 blur-3xl" />
+        <div className="pointer-events-none absolute -right-8 top-2 h-28 w-28 rounded-full bg-fuchsia-400/40 blur-3xl" />
+        <div className="relative z-10">
+          <h1 className="text-xl font-extrabold tracking-tight">Gestion des enfants</h1>
+          <p className="mt-1 text-sm text-white/90">Filtre par classe, statut et parent. Recherche plein texte.</p>
+          <div className="mt-4 flex flex-wrap gap-2 text-xs">
+            <span className="rounded-full bg-white/15 px-2 py-1 backdrop-blur">Sélection multiple</span>
+            <span className="rounded-full bg-white/15 px-2 py-1 backdrop-blur">Actions groupées</span>
+            <span className="rounded-full bg-white/15 px-2 py-1 backdrop-blur">Modales détaillées</span>
+          </div>
+        </div>
+      </div>
+
       <div className="space-y-6">
-        <ComponentCard title="Enfants" counterLabel="enfants" counterValue="8" 
-        icon={<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><path d="M256 128C256 92.7 284.7 64 320 64C355.3 64 384 92.7 384 128C384 163.3 355.3 192 320 192C284.7 192 256 163.3 256 128zM304 448L304 544C304 561.7 289.7 576 272 576C254.3 576 240 561.7 240 544L240 351.8L219.1 385C209.7 400 189.9 404.4 175 395C160.1 385.6 155.5 365.9 164.9 351L204.8 287.7C229.7 248 273.2 224 320 224C366.8 224 410.3 248 435.2 287.6L475.1 351C484.5 366 480 385.7 465.1 395.1C450.2 404.5 430.4 400 421 385.1L400 351.8L400 544C400 561.7 385.7 576 368 576C350.3 576 336 561.7 336 544L336 448L304 448z"/></svg>}
+        <ComponentCard
+          title="Enfants"
+          counterLabel="enfants"
+          counterValue="8"
+          icon={<Baby className="h-5 w-5" />}
+          className="backdrop-blur bg-white/70 dark:bg-white/[0.03]"
         >
           <GestionEnfants />
         </ComponentCard>

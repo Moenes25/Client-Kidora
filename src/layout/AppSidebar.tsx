@@ -1,25 +1,47 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
+import { useSidebar } from "../context/SidebarContext";
 
-// Assume these icons are imported from an icon library
+/* ===== Icônes ===== */
 import {
   BoxCubeIcon,
   CalenderIcon,
-  ChevronDownIcon,
   GridIcon,
   GroupIcon,
-  HorizontaLDots,
-  ListIcon,
-  PageIcon,
   PieChartIcon,
-  PlugInIcon,
-  TableIcon,
-  UserCircleIcon,
   UserGroup02Icon,
+  ChevronDownIcon,
 } from "../icons";
-// import { UserGroup02Icon } from '@hugeicons-pro/core-stroke-rounded';
-import { useSidebar } from "../context/SidebarContext";
 
+/* ===== Icône Enfants (stroke comme les autres) ===== */
+const ChildrenIcon = ({ className = "h-5 w-5" }: { className?: string }) => (
+  <svg
+    viewBox="0 0 24 24"
+    className={className}
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={1.8}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden
+  >
+    <circle cx="12" cy="6.5" r="3.25" />
+    <path d="M5 19.5c.6-3.2 3.5-5.5 7-5.5s6.4 2.3 7 5.5" />
+    <path d="M4 14c1.2 0 2 .4 3 1.4M20 14c-1.2 0-2 .4-3 1.4" />
+  </svg>
+);
+
+/* ===== Thème unique (change ici si tu veux une autre teinte) ===== */
+const THEME = {
+  railBar: "bg-indigo-500",
+  iconBg: "bg-indigo-500/15",
+  iconRing: "ring-indigo-500/30",
+  activeBg:
+    "bg-gradient-to-r from-indigo-600 to-purple-600 text-white dark:from-indigo-500 dark:to-purple-500",
+  hoverBg: "hover:bg-indigo-500/10",
+};
+
+/* ===== Types ===== */
 type NavItem = {
   name: string;
   icon: React.ReactNode;
@@ -27,310 +49,269 @@ type NavItem = {
   subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
 };
 
-const SettingsIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-  </svg>
-);
-
+/* ===== Menu ===== */
 const navItems: NavItem[] = [
+  { icon: <GridIcon />, name: "Dashboard", path: "/admin" },
+  { name: "Utilisateurs", icon: <UserGroup02Icon />, path: "/admin/users" },
+  { name: "Parents", icon: <GroupIcon />, path: "/admin/basic-tables" },
+  { name: "Educateurs", icon: <GroupIcon />, path: "/admin/educateurs" },
+  { name: "Enfants", icon: <ChildrenIcon />, path: "/admin/enfants" },
+  { name: "Classes", icon: <BoxCubeIcon />, path: "/admin/classes" },
+  { name: "Finance", icon: <PieChartIcon />, path: "/admin/finance" },
+  { icon: <CalenderIcon />, name: "Calendar", path: "/admin/calendar" },
   {
-    icon: <GridIcon />,
-    name: "Dashboard",
-    path: "/admin",
-    // subItems: [{ name: "Ecommerce", path: "/", pro: false }],
-  },
-  {
-    name: "Utilisateurs",
-    icon: <UserGroup02Icon />,
-    path: "/admin/users",
-  },
-  {
-    name: "Parents",
-    icon: <GroupIcon />,
-    path: "/admin/basic-tables",
-  },
-  {
-    name: "Educateurs",
-    icon: <GroupIcon />,
-    path: "/admin/educateurs",
-  },
-  {
-   name: "Enfants",
-   icon: <svg xmlns="http://www.w3.org/2000/svg" 
-   viewBox="0 0 640 640"
-   fill="currentColor" >
-    <path d="M256 128C256 92.7 284.7 64 320 64C355.3 64 384 92.7 384 128C384 163.3 355.3 192 320 192C284.7 192 256 163.3 256 128zM304 448L304 544C304 561.7 289.7 576 272 576C254.3 576 240 561.7 240 544L240 351.8L219.1 385C209.7 400 189.9 404.4 175 395C160.1 385.6 155.5 365.9 164.9 351L204.8 287.7C229.7 248 273.2 224 320 224C366.8 224 410.3 248 435.2 287.6L475.1 351C484.5 366 480 385.7 465.1 395.1C450.2 404.5 430.4 400 421 385.1L400 351.8L400 544C400 561.7 385.7 576 368 576C350.3 576 336 561.7 336 544L336 448L304 448z"/>
-    </svg>,
-   path: "/admin/enfants",
-  },
-  {
-    name: "Classes",
-    icon: <BoxCubeIcon />,
-    path: "/admin/classes",
-  },
-  {
-    name: "Finance", 
-    icon: <PieChartIcon />,
-    path: "/admin/finance",
-  },
-  {
-    icon: <CalenderIcon />,
-    name: "Calendar",
-    path: "/admin/calendar",
-  },
-  {
-    icon: ( 
-      <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M14 3v4a1 1 0 0 0 1 1h4"/>
-        <path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/>
-        <path d="M9 9h1"/>
-        <path d="M9 13h6"/>
-        <path d="M9 17h6"/>
+    icon: (
+      <svg
+        viewBox="0 0 24 24"
+        className="h-5 w-5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+      >
+        <path d="M14 3v4a1 1 0 0 0 1 1h4" />
+        <path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z" />
+        <path d="M9 9h1" />
+        <path d="M9 13h6" />
+        <path d="M9 17h6" />
       </svg>
     ),
     name: "Rapports",
     path: "/admin/reports",
   },
   {
-    icon: <SettingsIcon />,
+    icon: (
+      <svg
+        className="h-5 w-5"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+      >
+        <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+        <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+      </svg>
+    ),
     name: "Paramètres",
     path: "/admin/parametres",
   },
 ];
 
-const AppSidebar: React.FC = () => {
+/* ===== Constantes d’UI ===== */
+const EXPANDED_W = 250;
+const COLLAPSED_W = 75;
+
+/* ===== Utils ===== */
+const useIsActive = () => {
+  const { pathname } = useLocation();
+  return (path?: string) => (path ? pathname === path : false);
+};
+
+const RailTooltip = ({ label }: { label: string }) => (
+  <span className="pointer-events-none absolute left-full ml-2 top-1/2 -translate-y-1/2 rounded-md bg-slate-900 px-2 py-1 text-[11px] font-medium text-white shadow opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+    {label}
+  </span>
+);
+
+/* =========================================================================
+   Composant principal
+   ========================================================================= */
+export default function AppSidebar() {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
-  const location = useLocation();
+  const isRail = !(isExpanded || isHovered || isMobileOpen);
+  const isActive = useIsActive();
 
-  const [openSubmenu, setOpenSubmenu] = useState<{
-    type: "main" | "others";
-    index: number;
-  } | null>(null);
-  const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>({});
-  const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
-
-  const isActive = useCallback(
-    (path: string) => location.pathname === path,
-    [location.pathname]
-  );
+  const [openIdx, setOpenIdx] = useState<number | null>(null);
+  const subRefs = useRef<Record<number, HTMLDivElement | null>>({});
+  const [subHeights, setSubHeights] = useState<Record<number, number>>({});
 
   useEffect(() => {
-    if (openSubmenu !== null) {
-      const key = `${openSubmenu.type}-${openSubmenu.index}`;
-      if (subMenuRefs.current[key]) {
-        setSubMenuHeight((prevHeights) => ({
-          ...prevHeights,
-          [key]: subMenuRefs.current[key]?.scrollHeight || 0,
-        }));
-      }
+    if (openIdx !== null && subRefs.current[openIdx]) {
+      setSubHeights((p) => ({
+        ...p,
+        [openIdx]: subRefs.current[openIdx]?.scrollHeight || 0,
+      }));
     }
-  }, [openSubmenu]);
+  }, [openIdx]);
 
-  const handleSubmenuToggle = (index: number, menuType: "main" | "others") => {
-    setOpenSubmenu((prevOpenSubmenu) => {
-      if (
-        prevOpenSubmenu &&
-        prevOpenSubmenu.type === menuType &&
-        prevOpenSubmenu.index === index
-      ) {
-        return null;
-      }
-      return { type: menuType, index };
-    });
-  };
-
-  const renderMenuItems = (items: NavItem[], menuType: "main" | "others") => (
-    <ul className="flex flex-col gap-4">
-      {items.map((nav, index) => (
-        <li key={nav.name}>
-          {nav.subItems ? (
-            <button
-              onClick={() => handleSubmenuToggle(index, menuType)}
-              className={`menu-item group ${
-                openSubmenu?.type === menuType && openSubmenu?.index === index
-                  ? "menu-item-active"
-                  : "menu-item-inactive"
-              } cursor-pointer ${
-                !isExpanded && !isHovered
-                  ? "lg:justify-center"
-                  : "lg:justify-start"
-              }`}
-            >
-              <span
-                className={`menu-item-icon-size  ${
-                  openSubmenu?.type === menuType && openSubmenu?.index === index
-                    ? "menu-item-icon-active"
-                    : "menu-item-icon-inactive"
-                }`}
-              >
-                {nav.icon}
-              </span>
-              {(isExpanded || isHovered || isMobileOpen) && (
-                <span className="menu-item-text">{nav.name}</span>
-              )}
-              {(isExpanded || isHovered || isMobileOpen) && (
-                <ChevronDownIcon
-                  className={`ml-auto w-5 h-5 transition-transform duration-200 ${
-                    openSubmenu?.type === menuType &&
-                    openSubmenu?.index === index
-                      ? "rotate-180 text-brand-500"
-                      : ""
-                  }`}
-                />
-              )}
-            </button>
-          ) : (
-            nav.path && (
-              <Link
-                to={nav.path}
-                className={`menu-item group ${
-                  isActive(nav.path) ? "menu-item-active" : "menu-item-inactive"
-                }`}
-              >
-                <span
-                  className={`menu-item-icon-size ${
-                    isActive(nav.path)
-                      ? "menu-item-icon-active"
-                      : "menu-item-icon-inactive"
-                  }`}
-                >
-                  {nav.icon}
-                </span>
-                {(isExpanded || isHovered || isMobileOpen) && (
-                  <span className="menu-item-text">{nav.name}</span>
-                )}
-              </Link>
-            )
-          )}
-          {nav.subItems && (isExpanded || isHovered || isMobileOpen) && (
-            <div
-              ref={(el) => {
-                subMenuRefs.current[`${menuType}-${index}`] = el;
-              }}
-              className="overflow-hidden transition-all duration-300"
-              style={{
-                height:
-                  openSubmenu?.type === menuType && openSubmenu?.index === index
-                    ? `${subMenuHeight[`${menuType}-${index}`]}px`
-                    : "0px",
-              }}
-            >
-              <ul className="mt-2 space-y-1 ml-9">
-                {nav.subItems.map((subItem) => (
-                  <li key={subItem.name}>
-                    <Link
-                      to={subItem.path}
-                      className={`menu-dropdown-item ${
-                        isActive(subItem.path)
-                          ? "menu-dropdown-item-active"
-                          : "menu-dropdown-item-inactive"
-                      }`}
-                    >
-                      {subItem.name}
-                      <span className="flex items-center gap-1 ml-auto">
-                        {subItem.new && (
-                          <span
-                            className={`ml-auto ${
-                              isActive(subItem.path)
-                                ? "menu-dropdown-badge-active"
-                                : "menu-dropdown-badge-inactive"
-                            } menu-dropdown-badge`}
-                          >
-                            new
-                          </span>
-                        )}
-                        {subItem.pro && (
-                          <span
-                            className={`ml-auto ${
-                              isActive(subItem.path)
-                                ? "menu-dropdown-badge-active"
-                                : "menu-dropdown-badge-inactive"
-                            } menu-dropdown-badge`}
-                          >
-                            pro
-                          </span>
-                        )}
-                      </span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </li>
-      ))}
-    </ul>
-  );
+  const widthClass = useMemo(() => {
+    if (isExpanded || isHovered || isMobileOpen) return `w-[${EXPANDED_W}px]`;
+    return `w-[${COLLAPSED_W}px]`;
+  }, [isExpanded, isHovered, isMobileOpen]);
 
   return (
     <aside
-      className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-4 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 dark:text-gray-100 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 
-        ${
-          isExpanded || isMobileOpen
-            ? "w-[250px]"
-            : isHovered
-            ? "w-[250px]"
-            : "w-[70px]"
-        }
-        ${isMobileOpen ? "translate-x-0" : "-translate-x-full"}
-        lg:translate-x-0`}
+      className={[
+        "fixed top-0 left-0 z-50 h-screen border-r bg-white text-slate-900 transition-all duration-300 ease-in-out overflow-hidden shadow-lg",
+        "dark:bg-slate-900 dark:text-slate-100 dark:border-slate-800 border-slate-200",
+        widthClass,
+        isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
+        "mt-16 lg:mt-0 px-3",
+      ].join(" ")}
       onMouseEnter={() => !isExpanded && setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      aria-label="Barre latérale de navigation"
     >
-      {/* Header avec logo */}
-      <div className={["shrink-0", !isExpanded && !isHovered ? "px-2 pt-5" : "px-6 pt-6"].join(" ")}>
-        <div className={[
-          "relative rounded-3xl flex items-center justify-center",
-          !isExpanded && !isHovered && !isMobileOpen ? "p-1.5" : "p-5", // ← Réduit le padding en mode fermé
-          "bg-white dark:bg-gray-900",
-        ].join(" ")}>
-          
-          <Link to="/" className="flex items-center justify-center w-full h-full">
-            <img
-              src="/images/logo/logo_kidora.png" // ← Même logo
-              alt="Kidora Logo"
-              className={[
-                "object-contain transition-all duration-300",
-                !isExpanded && !isHovered && !isMobileOpen 
-                  ? "h-10 w-10" // ← Taille maximale pour le mode fermé
-                  : "max-h-16 w-auto max-w-[200px]" // ← Taille pour le mode ouvert
-              ].join(" ")}
-            />
-          </Link>
-        </div>
+      {/* ===== Logo ===== */}
+      <div className="shrink-0 pt-2">
+        <Link
+          to="/"
+          className={[
+            "group relative mx-auto flex items-center justify-center rounded-2xl ring-1 ring-slate-200/80 dark:ring-white/10",
+            isRail ? "h-[52px] w-[52px] bg-white dark:bg-slate-900" : "h-[80px] w-full bg-white dark:bg-slate-900 px-3",
+          ].join(" ")}
+          aria-label="Accueil Kidora"
+        >
+          {/* logo glyph (mode rail) */}
+          <img
+            src="/images/logo/logo_kidora_glyph.png"
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).src =
+                "/images/logo/logo_kidora.png";
+            }}
+            alt=""
+            className={["object-contain", isRail ? "h-20 w-auto" : "hidden"].join(" ")}
+            aria-hidden
+          />
+          {/* logo complet (mode large) */}
+          <img
+            src="/images/logo/logo_kidora.png"
+            alt="Kidora"
+            className={["object-contain", isRail ? "hidden" : "h-20 w-auto"].join(
+              " "
+            )}
+          />
+        </Link>
       </div>
 
-      {/* Séparateur */}
-      {/* <div className="mt-3 mb-4 h-px bg-indigo-100/80 dark:bg-white/20 shrink-0" /> */}
-      <div className="mt-3 mb-4 h-px shrink-0" />
+      {/* séparateur */}
+      <div className="my-1 h-px w-full bg-white  dark:bg-black" />
 
-      {/* Zone de navigation scrollable */}
-      <div className="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar px-1.5 pr-2 min-h-0 min-w-0 [scrollbar-gutter:stable] group flex-1">
-        <nav className="mb-4">
-          <div className="flex flex-col gap-3">
-            <div>
-              <h2
-                className={`mb-3 text-xs uppercase flex leading-[18px] text-gray-400 ${
-                  !isExpanded && !isHovered
-                    ? "lg:justify-center"
-                    : "justify-start"
-                }`}
-              >
-                {isExpanded || isHovered || isMobileOpen ? (
-                  "Menu"
+      {/* ===== Navigation ===== */}
+      <nav className="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden pr-1">
+        <ul className="flex flex-col gap-1">
+          {navItems.map((item, idx) => {
+            const active = isActive(item.path);
+            const hasSub = !!item.subItems?.length;
+
+            const baseBtn =
+              "group relative flex items-center rounded-xl px-3 py-2 outline-none transition";
+            const layoutBtn = isRail ? "justify-center" : "justify-start";
+            const stateBtn = active
+              ? `${THEME.activeBg} shadow-sm`
+              : `${THEME.hoverBg}`;
+
+            const iconWrap =
+              "grid place-items-center rounded-lg h-9 w-9 shrink-0 ring-1 ring-inset transition";
+            const iconState = active
+              ? `${THEME.iconBg} ${THEME.iconRing} text-white`
+              : "bg-slate-50 text-slate-600 ring-slate-200/70 dark:bg-white/5 dark:text-slate-300 dark:ring-white/10";
+
+            const textClass = active
+              ? "text-white"
+              : "text-slate-800 dark:text-slate-200";
+
+            return (
+              <li key={item.name}>
+                {item.path ? (
+                  <Link
+                    to={item.path}
+                    className={[baseBtn, layoutBtn, stateBtn, textClass].join(" ")}
+                    aria-current={active ? "page" : undefined}
+                  >
+                    {/* liseré gauche (une seule couleur) */}
+                    {active && (
+                      <span
+                        aria-hidden
+                        className={`absolute left-0 top-1/2 -translate-y-1/2 h-8 w-1 rounded-r ${THEME.railBar}`}
+                      />
+                    )}
+
+                    <span className={[iconWrap, iconState].join(" ")}>
+                      <span className="h-5 w-5">{item.icon}</span>
+                    </span>
+
+                    {!isRail && (
+                      <span className="ml-3 truncate text-sm font-medium">
+                        {item.name}
+                      </span>
+                    )}
+
+                    {active && !isRail && (
+                      <span
+                        aria-hidden
+                        className={`ml-auto h-2.5 w-2.5 rounded-full ${THEME.railBar} shadow-inner`}
+                      />
+                    )}
+
+                    {isRail && <RailTooltip label={item.name} />}
+                  </Link>
                 ) : (
-                  <HorizontaLDots className="size-5" />
+                  <button
+                    onClick={() => setOpenIdx((p) => (p === idx ? null : idx))}
+                    className={[baseBtn, layoutBtn, stateBtn, textClass, "w-full"].join(
+                      " "
+                    )}
+                    aria-expanded={openIdx === idx}
+                  >
+                    <span className={[iconWrap, iconState].join(" ")}>
+                      <span className="h-5 w-5">{item.icon}</span>
+                    </span>
+
+                    {!isRail && (
+                      <>
+                        <span className="ml-3 truncate text-sm font-medium">
+                          {item.name}
+                        </span>
+                        <ChevronDownIcon
+                          className={[
+                            "ml-auto h-5 w-5 transition-transform",
+                            openIdx === idx ? "rotate-180" : "",
+                          ].join(" ")}
+                        />
+                      </>
+                    )}
+
+                    {isRail && <RailTooltip label={item.name} />}
+                  </button>
                 )}
-              </h2>
-              {renderMenuItems(navItems, "main")}
-            </div>
-          </div>
-        </nav>
-      </div>
+
+                {hasSub && !isRail && (
+                  <div
+                    ref={(el) => (subRefs.current[idx] = el)}
+                    className="overflow-hidden transition-all"
+                    style={{
+                      height: openIdx === idx ? subHeights[idx] ?? "auto" : 0,
+                    }}
+                  >
+                    <ul className="mt-1 space-y-1 pl-12">
+                      {item.subItems!.map((s) => {
+                        const activeSub = isActive(s.path);
+                        return (
+                          <li key={s.name}>
+                            <Link
+                              to={s.path}
+                              className={[
+                                "flex items-center rounded-lg px-2 py-1.5 text-sm",
+                                activeSub
+                                  ? "bg-slate-100 font-medium text-slate-900 dark:bg-white/10 dark:text-white"
+                                  : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-white/10",
+                              ].join(" ")}
+                            >
+                              {s.name}
+                            </Link>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+
+        <div className="mt-auto pb-4" />
+      </nav>
     </aside>
   );
-};
-
-export default AppSidebar;
+}

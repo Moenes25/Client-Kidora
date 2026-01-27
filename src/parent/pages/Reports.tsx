@@ -1,656 +1,1077 @@
 // src/parent/pages/Reports.tsx
-import { useState, useEffect } from "react";
-import { useParams, useNavigate, Link } from "react-router";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router";
 import PageMeta from "../../components/common/PageMeta";
+import Modal from "../../components/Modal";
 import { DownloadIcon, EyeIcon, CalenderIcon, AngleLeftIcon } from "../../icons";
+import Swal from "sweetalert2";
 
+
+
+
+/* -------------------------------- Types -------------------------------- */
 interface Competence {
   nom: string;
-  niveau: number;
+  niveau: number; // 0..100
 }
+type TRapportType = "quotidien" | "hebdomadaire" | "trimestriel" | "special";
+type TRapportStatut = "nouveau" | "lu" | "archive";
 
 interface Rapport {
   id: number;
   enfant: string;
-  type: 'quotidien' | 'hebdomadaire' | 'trimestriel' | 'special';
+  type: TRapportType;
   titre: string;
   date: string;
   educateur: string;
-  statut: 'nouveau' | 'lu' | 'archive';
+  statut: TRapportStatut;
   resume: string;
   pointsForts: string[];
   recommandations: string[];
   competences: Competence[];
 }
 
+/* -------------------------- Meta d'interface UI ------------------------- */
+const typeMeta: Record<
+  TRapportType,
+  { label: string; chip: string; grad: string; emoji: string }
+> = {
+  quotidien: {
+    label: "Quotidien",
+    chip:
+      "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300",
+    grad: "from-emerald-500 to-green-400",
+    emoji: "📅",
+  },
+  hebdomadaire: {
+    label: "Hebdomadaire",
+    chip: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
+    grad: "from-sky-500 to-blue-500",
+    emoji: "📊",
+  },
+  trimestriel: {
+    label: "Trimestriel",
+    chip:
+      "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300",
+    grad: "from-violet-500 to-fuchsia-500",
+    emoji: "📈",
+  },
+  special: {
+    label: "Spécial",
+    chip:
+      "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
+    grad: "from-amber-500 to-orange-500",
+    emoji: "⭐",
+  },
+};
+
+const statutMeta: Record<TRapportStatut, string> = {
+  nouveau:
+    "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300",
+  lu: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300",
+  archive:
+    "bg-slate-100 text-slate-700 dark:bg-slate-800/60 dark:text-slate-300",
+};
+
+/* ---------------------------- Petits composants ---------------------------- */
+function Chip({
+  className = "",
+  children,
+}: {
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${className}`}>
+      {children}
+    </span>
+  );
+}
+
+function Bar({ value }: { value: number }) {
+  const v = Math.max(0, Math.min(100, value));
+  const color =
+    v >= 90 ? "bg-green-500" : v >= 80 ? "bg-blue-500" : v >= 70 ? "bg-amber-500" : "bg-rose-500";
+  return (
+    <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700 ">
+      <div className={`h-full ${color}`} style={{ width: `${v}%` }} />
+    </div>
+  );
+}
+
+/* -------------------------------- Données -------------------------------- */
+const enfants = [
+  { id: 1, name: "Ahmed Ben Salah", avatar: "/images/3-4_ans/enfant_1.jpg" },
+  { id: 2, name: "Sara Ben Salah", avatar: "/images/3-4_ans/enfant_3.jpg" },
+  { id: 3, name: "Mohamed Ben Salah", avatar: "/images/3-4_ans/enfant_6.jpg" },
+  { id: 4, name: "Nour Ben Salah", avatar: "/images/3-4_ans/enfant_4.jpg" },
+];
+
+const rapportsSeed: Rapport[] = [
+  {
+    id: 1,
+    enfant: "Ahmed Ben Salah",
+    type: "hebdomadaire",
+    titre: "Progrès en Mathématiques et Socialisation",
+    date: "12/01/2024",
+    educateur: "Mme Fatma",
+    statut: "nouveau",
+    resume:
+      "Excellent progrès cette semaine en mathématiques. Ahmed montre une grande curiosité et participe activement aux activités de groupe.",
+    pointsForts: ["Calcul mental", "Travail d'équipe", "Curiosité"],
+    recommandations: [
+      "Continuer les exercices de logique",
+      "Encourager le tutorat des plus jeunes",
+    ],
+    competences: [
+      { nom: "Mathématiques", niveau: 92 },
+      { nom: "Socialisation", niveau: 88 },
+      { nom: "Langage", niveau: 85 },
+    ],
+  },
+  {
+    id: 2,
+    enfant: "Sara Ben Salah",
+    type: "quotidien",
+    titre: "Bilan de la Journée - Participation Active",
+    date: "10/01/2024",
+    educateur: "Mme Amina",
+    statut: "lu",
+    resume:
+      "Journée productive pour Sara. Excellente participation aux activités et bonnes interactions sociales.",
+    pointsForts: ["Participation", "Créativité", "Empathie"],
+    recommandations: ["Encourager l'expression orale", "Activités de groupe"],
+    competences: [
+      { nom: "Participation", niveau: 95 },
+      { nom: "Créativité", niveau: 90 },
+      { nom: "Motricité fine", niveau: 87 },
+    ],
+  },
+  {
+    id: 3,
+    enfant: "Mohamed Ben Salah",
+    type: "trimestriel",
+    titre: "Évaluation Trimestrielle Complète",
+    date: "05/01/2024",
+    educateur: "M. Karim",
+    statut: "lu",
+    resume:
+      "Développement harmonieux dans tous les domaines. Excellente progression en sciences et sport.",
+    pointsForts: ["Sciences", "Sport", "Leadership"],
+    recommandations: [
+      "Activités scientifiques supplémentaires",
+      "Encadrement d'activités sportives",
+    ],
+    competences: [
+      { nom: "Sciences", niveau: 89 },
+      { nom: "Sport", niveau: 94 },
+      { nom: "Leadership", niveau: 82 },
+    ],
+  },
+  {
+    id: 4,
+    enfant: "Nour Ben Salah",
+    type: "quotidien",
+    titre: "Suivi Motricité Fine",
+    date: "03/01/2024",
+    educateur: "Mme Amina",
+    statut: "nouveau",
+    resume:
+      "Amélioration significative en motricité fine. Nour montre plus de précision dans ses gestes.",
+    pointsForts: ["Persévérance", "Concentration", "Précision"],
+    recommandations: ["Exercices de découpage", "Jeux de construction fins"],
+    competences: [
+      { nom: "Motricité fine", niveau: 78 },
+      { nom: "Concentration", niveau: 85 },
+      { nom: "Patience", niveau: 80 },
+    ],
+  },
+  {
+    id: 5,
+    enfant: "Ahmed Ben Salah",
+    type: "quotidien",
+    titre: "Suivi Langue Française",
+    date: "05/01/2024",
+    educateur: "Mme Fatma",
+    statut: "archive",
+    resume:
+      "Bon progrès en vocabulaire. Doit travailler la conjugaison des verbes.",
+    pointsForts: ["Vocabulaire", "Expression orale"],
+    recommandations: ["Lire quotidiennement", "Exercices de conjugaison"],
+    competences: [
+      { nom: "Vocabulaire", niveau: 88 },
+      { nom: "Conjugaison", niveau: 75 },
+      { nom: "Compréhension", niveau: 82 },
+    ],
+  },
+  {
+    id: 6,
+    enfant: "Sara Ben Salah",
+    type: "trimestriel",
+    titre: "Bilan Trimestriel Développement Global",
+    date: "15/12/2023",
+    educateur: "Mme Amina",
+    statut: "lu",
+    resume:
+      "Progression remarquable dans tous les domaines. Sara montre une grande maturité.",
+    pointsForts: ["Lecture", "Raisonnement", "Autonomie"],
+    recommandations: ["Livres plus complexes", "Projets personnels"],
+    competences: [
+      { nom: "Lecture", niveau: 96 },
+      { nom: "Raisonnement", niveau: 92 },
+      { nom: "Autonomie", niveau: 89 },
+    ],
+  },
+  {
+    id: 7,
+    enfant: "Mohamed Ben Salah",
+    type: "hebdomadaire",
+    titre: "Rapport Hebdomadaire - Activités Physiques",
+    date: "08/01/2024",
+    educateur: "M. Karim",
+    statut: "lu",
+    resume:
+      "Bonne semaine d'activités physiques. Mohamed montre de l'endurance et du leadership.",
+    pointsForts: ["Endurance", "Coordination", "Esprit d'équipe"],
+    recommandations: ["Sports collectifs", "Entraînements réguliers"],
+    competences: [
+      { nom: "Endurance", niveau: 91 },
+      { nom: "Coordination", niveau: 88 },
+      { nom: "Esprit d'équipe", niveau: 85 },
+    ],
+  },
+];
+
+/* --------------------------------- Page --------------------------------- */
 export default function ParentReportsPage() {
   const { childId } = useParams<{ childId?: string }>();
   const navigate = useNavigate();
-  
+
+  const [data, setData] = useState<Rapport[]>(rapportsSeed);
   const [selectedChild, setSelectedChild] = useState<string>("Tous les enfants");
-  const [filterType, setFilterType] = useState<string>("all");
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [selectedRapport, setSelectedRapport] = useState<Rapport | null>(null);
+  const [filterType, setFilterType] = useState<TRapportType | "all">("all");
+  const [filterStatut, setFilterStatut] = useState<TRapportStatut | "all">(
+    "all"
+  );
+  const [confirming, setConfirming] = useState(false);
+  const handleConfirmRead = async () => {
+  if (!selectedRapport) return;
+  if (selectedRapport.statut === "lu") {
+    // déjà confirmé -> feedback visuel simple
+    await Swal.fire({
+      icon: "info",
+      title: "Déjà confirmé",
+      text: "Ce rapport est déjà marqué comme lu.",
+      confirmButtonText: "OK",
+    });
+    return;
+  }
 
-  // Données des enfants
-  const enfants = [
-    { id: 1, name: "Ahmed Ben Salah", avatar: "/images/3-4_ans/enfant_1.jpg" },
-    { id: 2, name: "Sara Ben Salah", avatar: "/images/3-4_ans/enfant_3.jpg" },
-    { id: 3, name: "Mohamed Ben Salah", avatar: "/images/3-4_ans/enfant_6.jpg" },
-    { id: 4, name: "Nour Ben Salah", avatar: "/images/3-4_ans/enfant_4.jpg" },
-  ];
+  try {
+    setConfirming(true);
 
-  // Données des rapports - MODIFIÉ avec les bons types
-  const rapports: Rapport[] = [
-    {
-      id: 1,
-      enfant: "Ahmed Ben Salah",
-      type: 'hebdomadaire',
-      titre: "Progrès en Mathématiques et Socialisation",
-      date: "12/01/2024",
-      educateur: "Mme Fatma",
-      statut: 'nouveau',
-      resume: "Excellent progrès cette semaine en mathématiques. Ahmed montre une grande curiosité et participe activement aux activités de groupe.",
-      pointsForts: ["Calcul mental", "Travail d'équipe", "Curiosité"],
-      recommandations: ["Continuer les exercices de logique", "Encourager le tutorat des plus jeunes"],
-      competences: [
-        { nom: "Mathématiques", niveau: 92 },
-        { nom: "Socialisation", niveau: 88 },
-        { nom: "Langage", niveau: 85 }
-      ]
-    },
-    {
-      id: 2,
-      enfant: "Sara Ben Salah",
-      type: 'quotidien',
-      titre: "Bilan de la Journée - Participation Active",
-      date: "10/01/2024",
-      educateur: "Mme Amina",
-      statut: 'lu',
-      resume: "Journée productive pour Sara. Excellente participation aux activités et bonnes interactions sociales.",
-      pointsForts: ["Participation", "Créativité", "Empathie"],
-      recommandations: ["Encourager l'expression orale", "Activités de groupe"],
-      competences: [
-        { nom: "Participation", niveau: 95 },
-        { nom: "Créativité", niveau: 90 },
-        { nom: "Motricité fine", niveau: 87 }
-      ]
-    },
-    {
-      id: 3,
-      enfant: "Mohamed Ben Salah",
-      type: 'trimestriel',
-      titre: "Évaluation Trimestrielle Complète",
-      date: "05/01/2024",
-      educateur: "M. Karim",
-      statut: 'lu',
-      resume: "Développement harmonieux dans tous les domaines. Excellente progression en sciences et sport.",
-      pointsForts: ["Sciences", "Sport", "Leadership"],
-      recommandations: ["Activités scientifiques supplémentaires", "Encadrement d'activités sportives"],
-      competences: [
-        { nom: "Sciences", niveau: 89 },
-        { nom: "Sport", niveau: 94 },
-        { nom: "Leadership", niveau: 82 }
-      ]
-    },
-    {
-      id: 4,
-      enfant: "Nour Ben Salah",
-      type: 'quotidien',
-      titre: "Suivi Motricité Fine",
-      date: "03/01/2024",
-      educateur: "Mme Amina",
-      statut: 'nouveau',
-      resume: "Amélioration significative en motricité fine. Nour montre plus de précision dans ses gestes.",
-      pointsForts: ["Persévérance", "Concentration", "Précision"],
-      recommandations: ["Exercices de découpage", "Jeux de construction fins"],
-      competences: [
-        { nom: "Motricité fine", niveau: 78 },
-        { nom: "Concentration", niveau: 85 },
-        { nom: "Patience", niveau: 80 }
-      ]
-    },
-    {
-      id: 5,
-      enfant: "Ahmed Ben Salah",
-      type: 'quotidien',
-      titre: "Suivi Langue Française",
-      date: "05/01/2024",
-      educateur: "Mme Fatma",
-      statut: 'archive',
-      resume: "Bon progrès en vocabulaire. Doit travailler la conjugaison des verbes.",
-      pointsForts: ["Vocabulaire", "Expression orale"],
-      recommandations: ["Lire quotidiennement", "Exercices de conjugaison"],
-      competences: [
-        { nom: "Vocabulaire", niveau: 88 },
-        { nom: "Conjugaison", niveau: 75 },
-        { nom: "Compréhension", niveau: 82 }
-      ]
-    },
-    {
-      id: 6,
-      enfant: "Sara Ben Salah",
-      type: 'trimestriel',
-      titre: "Bilan Trimestriel Développement Global",
-      date: "15/12/2023",
-      educateur: "Mme Amina",
-      statut: 'lu',
-      resume: "Progression remarquable dans tous les domaines. Sara montre une grande maturité.",
-      pointsForts: ["Lecture", "Raisonnement", "Autonomie"],
-      recommandations: ["Livres plus complexes", "Projets personnels"],
-      competences: [
-        { nom: "Lecture", niveau: 96 },
-        { nom: "Raisonnement", niveau: 92 },
-        { nom: "Autonomie", niveau: 89 }
-      ]
-    },
-    {
-      id: 7,
-      enfant: "Mohamed Ben Salah",
-      type: 'hebdomadaire',
-      titre: "Rapport Hebdomadaire - Activités Physiques",
-      date: "08/01/2024",
-      educateur: "M. Karim",
-      statut: 'lu',
-      resume: "Bonne semaine d'activités physiques. Mohamed montre de l'endurance et du leadership.",
-      pointsForts: ["Endurance", "Coordination", "Esprit d'équipe"],
-      recommandations: ["Sports collectifs", "Entraînements réguliers"],
-      competences: [
-        { nom: "Endurance", niveau: 91 },
-        { nom: "Coordination", niveau: 88 },
-        { nom: "Esprit d'équipe", niveau: 85 }
-      ]
-    }
-  ];
+    // 👉 si tu as une API, appelle-la ici (await api.markAsRead(selectedRapport.id))
 
-  // Lorsque childId change, sélectionner automatiquement l'enfant
+    // Met à jour la liste (card + stats + filtres)
+    setData(prev =>
+      prev.map(r =>
+        r.id === selectedRapport.id ? { ...r, statut: "lu" } : r
+      )
+    );
+
+    // Met à jour l’élément ouvert dans la modale (pour désactiver le bouton)
+    setSelectedRapport(r => (r ? { ...r, statut: "lu" } : r));
+
+    await Swal.fire({
+      icon: "success",
+      title: "Rapport confirmé",
+      text: "Ce rapport a été marqué comme lu.",
+      confirmButtonText: "OK",
+    });
+  } finally {
+    setConfirming(false);
+  }
+};
+
+  const [query, setQuery] = useState("");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+ const [selectedRapport, setSelectedRapport] = useState<Rapport | null>(null);
+
+  // 👉 ref du contenu à imprimer (tout le panel du modal)
+  const modalPrintRef = useRef<HTMLDivElement | null>(null);
+function createPdfClone(source: HTMLElement): HTMLElement {
+  const clone = source.cloneNode(true) as HTMLElement;
+
+  // 1️⃣ Supprimer tous les SVG (cause principale de oklch)
+  clone.querySelectorAll("svg").forEach(el => el.remove());
+
+  // 2️⃣ Supprimer toutes les classes Tailwind problématiques
+  clone.querySelectorAll("*").forEach((el) => {
+    el.removeAttribute("class");
+
+    const htmlEl = el as HTMLElement;
+    htmlEl.style.all = "unset";
+    htmlEl.style.color = "#000";
+    htmlEl.style.background = "#fff";
+    htmlEl.style.backgroundColor = "#fff";
+    htmlEl.style.boxShadow = "none";
+    htmlEl.style.borderColor = "#000";
+    htmlEl.style.fontFamily = "Arial, Helvetica, sans-serif";
+    htmlEl.style.fontSize = "12px";
+  });
+
+  // 3️⃣ Style minimal PDF
+  clone.style.padding = "24px";
+  clone.style.width = "794px"; // A4 px
+  clone.style.background = "#fff";
+  clone.style.color = "#000";
+
+  return clone;
+}
+const handleDownloadPDFVisual = async (fileBaseName: string) => {
+  const el = modalPrintRef.current;
+  if (!el) return;
+
+  const html2canvas = (await import("html2canvas")).default;
+  const { jsPDF } = await import("jspdf");
+
+  // 🔥 CLONE PDF SAFE
+  const pdfNode = createPdfClone(el);
+
+  // Injecter hors écran
+  pdfNode.style.position = "fixed";
+  pdfNode.style.top = "-10000px";
+  pdfNode.style.left = "0";
+  document.body.appendChild(pdfNode);
+
+  try {
+    const canvas = await html2canvas(pdfNode, {
+      scale: 2,
+      backgroundColor: "#ffffff",
+      logging: false,
+      useCORS: false,
+    });
+
+    const imgData = canvas.toDataURL("image/png");
+
+    const pdf = new jsPDF("p", "mm", "a4");
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const imgHeight = (canvas.height * pageWidth) / canvas.width;
+
+    pdf.addImage(imgData, "PNG", 0, 0, pageWidth, imgHeight);
+    pdf.save(`${fileBaseName}.pdf`);
+  } finally {
+    document.body.removeChild(pdfNode);
+  }
+};
+
+
+
+  /* Sélection auto de l'enfant via l'URL */
   useEffect(() => {
     if (childId) {
-      const enfant = enfants.find(e => e.id.toString() === childId);
-      if (enfant) {
-        setSelectedChild(enfant.name);
-      }
+      const e = enfants.find((x) => x.id.toString() === childId);
+      setSelectedChild(e ? e.name : "Tous les enfants");
     } else {
       setSelectedChild("Tous les enfants");
     }
   }, [childId]);
 
-  // Filtrer les rapports selon l'enfant sélectionné
-  const filteredRapports = rapports.filter(rapport => {
-    // Si on est sur une page enfant spécifique (avec childId), filtrer uniquement cet enfant
-    if (childId && selectedChild !== "Tous les enfants") {
-      if (rapport.enfant !== selectedChild) return false;
-    } else if (selectedChild !== "Tous les enfants") {
-      // Sinon, utiliser le filtre manuel
-      if (rapport.enfant !== selectedChild) return false;
-    }
-    
-    if (filterType !== "all" && rapport.type !== filterType) return false;
-    return true;
+  /* Filtres & recherche */
+  const filtered = useMemo(() => {
+    return data.filter((r) => {
+      if (selectedChild !== "Tous les enfants" && r.enfant !== selectedChild)
+        return false;
+      if (filterType !== "all" && r.type !== filterType) return false;
+      if (filterStatut !== "all" && r.statut !== filterStatut) return false;
+      if (query.trim()) {
+        const q = query.toLowerCase();
+        const blob =
+          `${r.titre} ${r.resume} ${r.enfant} ${r.educateur} ${r.pointsForts.join(" ")} ${r.recommandations.join(" ")}`.toLowerCase();
+        if (!blob.includes(q)) return false;
+      }
+      return true;
+    });
+  }, [data, selectedChild, filterType, filterStatut, query]);
+
+  /* Stats mini */
+  const stats = useMemo(() => {
+    return {
+      total: filtered.length,
+      nonLus: filtered.filter((r) => r.statut === "nouveau").length,
+      parType: {
+        quotidien: filtered.filter((r) => r.type === "quotidien").length,
+        hebdomadaire: filtered.filter((r) => r.type === "hebdomadaire").length,
+        trimestriel: filtered.filter((r) => r.type === "trimestriel").length,
+        special: filtered.filter((r) => r.type === "special").length,
+      },
+    };
+  }, [filtered]);
+
+  const currentChild = enfants.find(
+    (e) => childId && e.id.toString() === childId
+  );
+// Palette & thèmes par type (couleurs cohérentes avec l'UI)
+const TYPE_THEME: Record<TRapportType, {
+  label: string;
+  head: [number, number, number];   // bandeau supérieur
+  soft: [number, number, number];   // encarts doux
+  accent: [number, number, number]; // accents, puces, barres
+  emoji: string;
+}> = {
+  quotidien:    { label: "Quotidien",    head: [16,185,129],  soft: [209,250,229], accent: [13,148,136],  emoji: "📅" },
+  hebdomadaire: { label: "Hebdomadaire", head: [14,165,233],  soft: [219,234,254], accent: [59,130,246],  emoji: "📊" },
+  trimestriel:  { label: "Trimestriel",  head: [139,92,246],  soft: [243,232,255], accent: [217,70,239],  emoji: "📈" },
+  special:      { label: "Spécial",      head: [245,158,11],  soft: [254,243,199], accent: [234,88,12],   emoji: "⭐" },
+};
+
+// pour rester cohérent avec le parent + fallback
+const BRAND = {
+  slate: [15, 23, 42] as [number,number,number],
+  gray:  [100,116,139] as [number,number,number],
+  light: [248,250,252] as [number,number,number],
+};
+
+const KIDORA_LOGO_URL = "/logo.png";
+
+// récupère l’avatar s’il existe dans le tableau enfants (optionnel)
+function getAvatarUrl(enfantName: string): string | undefined {
+  const e = enfants.find(x => x.name === enfantName);
+  return e?.avatar;
+}
+
+// util: URL → dataURL (logo, avatar)
+async function toDataUrl(url: string) {
+  const res = await fetch(url, { cache: "force-cache" });
+  const blob = await res.blob();
+  return await new Promise<string>((resolve) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result));
+    r.readAsDataURL(blob);
   });
+}
 
-  const getTypeColor = (type: string) => {
-    switch(type) {
-      case 'quotidien': return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400";
-      case 'hebdomadaire': return "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400";
-      case 'trimestriel': return "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400";
-      case 'special': return "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400";
-      default: return "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300";
+  /* ------------------------------ PDF export ------------------------------ */
+
+
+
+const handleDownloadPDF = async (rapport: Rapport) => {
+  const { jsPDF } = await import("jspdf");
+  const doc = new jsPDF("p", "mm", "a4");
+
+  /* ------------------ Mise en page ------------------ */
+  const margin = 18;
+  const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
+  const contentW = pageW - margin * 2;
+  const HEADER_H = 28;
+  const FOOTER_H = 14;
+
+  let y = margin + HEADER_H;
+  let pageNumber = 1;
+
+  const theme = TYPE_THEME[rapport.type];
+
+  /* ------------------ Helpers base ------------------ */
+  const ensurePage = (need = 0) => {
+    if (y + need > pageH - margin - FOOTER_H) {
+      doc.addPage(); pageNumber++;
+      drawHeader(); drawFooter();
+      y = margin + HEADER_H;
     }
   };
+  const space = (h = 6) => { y += h; ensurePage(0); };
 
-  const getTypeLabel = (type: string) => {
-    switch(type) {
-      case 'quotidien': return "Quotidien";
-      case 'hebdomadaire': return "Hebdomadaire";
-      case 'trimestriel': return "Trimestriel";
-      case 'special': return "Spécial";
-      default: return type;
+  // Encarts & titres
+  const title = (text: string) => {
+    ensurePage(20);
+    doc.setFont("helvetica","bold"); doc.setFontSize(20); doc.setTextColor(...BRAND.slate);
+    doc.text(text, margin, y);
+    doc.setDrawColor(226,232,240); doc.setLineWidth(0.6);
+    doc.line(margin, y+2, margin+70, y+2);
+    space(14);
+  };
+
+  const section = (text: string) => {
+    ensurePage(18);
+    // fond doux
+    doc.setFillColor(...BRAND.light);
+    doc.roundedRect(margin, y-6, contentW, 14, 3,3, "F");
+    // barre colorée à gauche
+    doc.setFillColor(...theme.head);
+    doc.roundedRect(margin, y-6, 3, 14, 3,3, "F");
+    // titre
+    doc.setFont("helvetica","bold"); doc.setFontSize(13); doc.setTextColor(...BRAND.slate);
+    doc.text(text.toUpperCase(), margin+7, y+3);
+    space(16);
+  };
+
+  const kv = (label: string, value: string) => {
+    ensurePage(8);
+    doc.setFont("helvetica","bold"); doc.setFontSize(9); doc.setTextColor(...BRAND.gray);
+    doc.text(label.toUpperCase(), margin, y);
+    doc.setFont("helvetica","normal"); doc.setFontSize(11); doc.setTextColor(17,24,39);
+    const wrapped = doc.splitTextToSize(value, contentW - 60);
+    doc.text(wrapped, margin + 60, y);
+    space(8);
+  };
+
+  const textBlock = (value: string, bg?: boolean) => {
+    const wrapped = doc.splitTextToSize(value, contentW - 6);
+    const h = wrapped.length * 6 + 10;
+    ensurePage(h);
+    if (bg) {
+      const [r,g,b] = theme.soft;
+      doc.setFillColor(r,g,b);
+      doc.roundedRect(margin, y-4, contentW, h, 3,3, "F");
     }
+    doc.setFont("helvetica","normal"); doc.setFontSize(11); doc.setTextColor(51,65,85);
+    doc.text(wrapped, margin+3, y+2);
+    y += h - 6;
+    space(2);
   };
 
-  const getTypeIcon = (type: string) => {
-    switch(type) {
-      case 'quotidien': return "📅👤";
-      case 'hebdomadaire': return "📊👤";
-      case 'trimestriel': return "📈👤";
-      case 'special': return "⭐👤";
-      default: return "📄👤";
+  const bullet = (items: string[]) => {
+    if (!items?.length) return;
+    items.forEach(it => {
+      const wrapped = doc.splitTextToSize(it, contentW - 12);
+      const h = wrapped.length * 6 + 4;
+      ensurePage(h);
+      doc.setFillColor(...theme.accent);
+      doc.circle(margin + 2.5, y + 1.5, 1.2, "F");
+      doc.setFont("helvetica","normal"); doc.setFontSize(11); doc.setTextColor(31,41,55);
+      doc.text(wrapped, margin + 8, y + 4);
+      y += h;
+    });
+    space(2);
+  };
+
+  const bar = (label: string, value: number) => {
+    ensurePage(14);
+    const v = Math.max(0, Math.min(100, value));
+    doc.setFont("helvetica","bold"); doc.setFontSize(11); doc.setTextColor(30,41,59);
+    doc.text(label, margin, y);
+    doc.setFont("helvetica","normal"); doc.text(`${v}%`, pageW - margin, y, { align: "right" });
+    space(3);
+    const w = contentW, filled = (w * v) / 100;
+    doc.setFillColor(226,232,240); doc.roundedRect(margin, y, w, 4, 2,2, "F");
+    doc.setFillColor(...theme.accent); doc.roundedRect(margin, y, Math.max(3, filled), 4, 2,2, "F");
+    space(10);
+  };
+
+  // Pastille “chip”
+  const chip = (text: string, x: number, y0: number, fill: [number,number,number]) => {
+    doc.setFont("helvetica","bold"); doc.setFontSize(9);
+    const padX = 3.5, padY = 3;
+    const tw = doc.getTextWidth(text);
+    doc.setFillColor(...fill);
+    doc.roundedRect(x, y0-5, tw + padX*2, 9, 2,2, "F");
+    doc.setTextColor(255,255,255);
+    doc.text(text, x + padX, y0+1);
+    doc.setTextColor(...BRAND.slate);
+  };
+
+  /* ------------------ Header / Footer ------------------ */
+  let logo: string | undefined;
+  let avatar: string | undefined;
+  try { logo = await toDataUrl(KIDORA_LOGO_URL); } catch {}
+  const avatarUrl = getAvatarUrl(rapport.enfant);
+  if (avatarUrl) {
+    try { avatar = await toDataUrl(avatarUrl); } catch {}
+  }
+
+  const drawHeader = () => {
+    // bandeau couleur (dégradé simulé par deux bandes)
+    doc.setFillColor(...theme.head); doc.rect(0, 0, pageW, 10, "F");
+    doc.setFillColor(255,255,255);
+    doc.roundedRect(margin-4, 10, pageW-(margin-4)*2, HEADER_H-6, 3,3, "F");
+
+    // logo
+    if (logo) doc.addImage(logo, "PNG", margin, 13, 14, 14);
+
+    // avatar enfant
+    if (avatar) {
+      doc.addImage(avatar, "JPEG", pageW - margin - 14, 12.5, 14, 14);
+      // cercle doux autour
+      doc.setDrawColor(226,232,240);
+      doc.circle(pageW - margin - 7, 19.5, 8, "S");
     }
+
+    // brand & sous-titre
+    doc.setFont("helvetica","bold"); doc.setFontSize(14); doc.setTextColor(17,24,39);
+    doc.text("KIDORA", margin + 20, 19);
+
+    doc.setFont("helvetica","normal"); doc.setFontSize(10); doc.setTextColor(100,116,139);
+    doc.text("Rapport pédagogique (Parents)", margin + 20, 24);
+
+    // à droite : ID + date + type chip
+    doc.setFont("helvetica","normal"); doc.setFontSize(10); doc.setTextColor(100,116,139);
+    doc.text(`Rapport #${rapport.id}`, pageW - margin - 16, 16, { align: "right" });
+    doc.text(rapport.date, pageW - margin - 16, 21, { align: "right" });
+
   };
 
-  const getStatutBadge = (statut: string) => {
-    switch(statut) {
-      case 'nouveau': return (
-        <span className="px-2 py-1 bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 text-xs rounded-full">
-          Nouveau
-        </span>
-      );
-      case 'lu': return (
-        <span className="px-2 py-1 bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 text-xs rounded-full">
-          Lu
-        </span>
-      );
-      case 'archive': return (
-        <span className="px-2 py-1 bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-400 text-xs rounded-full">
-          Archivé
-        </span>
-      );
-    }
+  const drawFooter = () => {
+    doc.setDrawColor(226,232,240);
+    doc.line(margin, pageH - FOOTER_H, pageW - margin, pageH - FOOTER_H);
+    doc.setFontSize(9); doc.setTextColor(100,116,139);
+    doc.text(`${rapport.enfant} • ${rapport.educateur}`, margin, pageH - 6);
+    // bulle numéro de page
+    const txt = `Page ${pageNumber}`;
+    const tw = doc.getTextWidth(txt);
+    doc.setFillColor(241,245,249);
+    doc.roundedRect(pageW - margin - tw - 10, pageH - 10, tw + 8, 8, 3,3, "F");
+    doc.setTextColor(51,65,85);
+    doc.text(txt, pageW - margin - 5, pageH - 4, { align: "right" });
+    doc.setTextColor(...BRAND.slate);
   };
 
-  const handleDownload = (rapport: Rapport) => {
-    const content = `
-RAPPORT PÉDAGOGIQUE
-===================
-Enfant: ${rapport.enfant}
-Type: ${getTypeLabel(rapport.type)}
-Date: ${rapport.date}
-Éducateur: ${rapport.educateur}
+  drawHeader(); drawFooter();
 
-RÉSUMÉ
-------
-${rapport.resume}
+  /* ------------------ Watermark subtil (optionnel) ------------------ */
+  doc.setTextColor(226,232,240);
+  doc.setFont("helvetica","bold"); doc.setFontSize(56);
+  doc.text("PARENTS", pageW/2, pageH/2, { align: "center", angle: -25 });
+  doc.setTextColor(...BRAND.slate);
 
-POINTS FORTS
-------------
-${rapport.pointsForts.map(p => `• ${p}`).join('\n')}
+  /* ------------------ CONTENU ------------------ */
+  title("Rapport Pédagogique");
+  // sous-titre coloré
+  doc.setFontSize(13); doc.setTextColor(...theme.head);
+  doc.text(rapport.titre, margin, y); space(8);
+  doc.setTextColor(...BRAND.slate);
 
-RECOMMANDATIONS
----------------
-${rapport.recommandations.map(r => `• ${r}`).join('\n')}
+  // Infos générales en 2 colonnes légères
+  section("Informations générales");
+  kv("Enfant", rapport.enfant);
+  kv("Type", TYPE_THEME[rapport.type].label);
+  kv("Date", rapport.date);
+  kv("Éducateur", rapport.educateur);
 
-COMPÉTENCES ÉVALUÉES
---------------------
-${rapport.competences.map(c => `${c.nom}: ${c.niveau}%`).join('\n')}
+  // Pastilles statut/tonalité
+  const statutLabel = rapport.statut === "nouveau" ? "Nouveau" : rapport.statut === "lu" ? "Lu" : "Archivé";
+  chip(`Statut: ${statutLabel}`, margin, y + 6, theme.accent);
+  chip("Espace Parents", margin + 64, y + 6, [30,41,59]);
+  space(16);
 
-© École Maternelle - ${new Date().getFullYear()}
-    `;
+  // Résumé
+  section("Résumé exécutif");
+  textBlock(rapport.resume, true);
 
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `Rapport_${rapport.enfant.replace(/\s+/g, '_')}_${rapport.date.replace(/\//g, '-')}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
+  // Compétences (barres)
+  section("Compétences évaluées");
+  rapport.competences.forEach(c => bar(c.nom, c.niveau));
 
-  // Trouver l'enfant actuel pour afficher ses informations
-  const currentChild = enfants.find(e => childId && e.id.toString() === childId);
+  // Points forts & Recommandations (deux encarts)
+  section("Points forts");
+  bullet(rapport.pointsForts);
 
-  // Statistiques pour l'enfant courant ou tous
-  const stats = {
-    total: filteredRapports.length,
-    nonLus: filteredRapports.filter(r => r.statut === 'nouveau').length,
-    parType: {
-      quotidien: filteredRapports.filter(r => r.type === 'quotidien').length,
-      hebdomadaire: filteredRapports.filter(r => r.type === 'hebdomadaire').length,
-      trimestriel: filteredRapports.filter(r => r.type === 'trimestriel').length,
-      special: filteredRapports.filter(r => r.type === 'special').length,
-    }
-  };
+  section("Recommandations pour la maison");
+  bullet(rapport.recommandations);
+
+  // Signature / Contact
+  section("Signature & contact");
+  const signH = 24;
+  ensurePage(signH);
+  // cadre signature
+  doc.setDrawColor(226,232,240);
+  doc.roundedRect(margin, y, (contentW/3)*2 - 6, signH, 3,3, "S");
+  doc.setFont("helvetica","normal"); doc.setFontSize(10); doc.setTextColor(100,116,139);
+  doc.text("Signature de l'éducateur", margin + 4, y + 6);
+  // bloc contact
+  doc.roundedRect(margin + (contentW/3)*2, y, (contentW/3), signH, 3,3, "S");
+  doc.text("Contact", margin + (contentW/3)*2 + 4, y + 6);
+  doc.setTextColor(51,65,85); doc.setFontSize(11);
+  doc.text([
+    `Éducateur : ${rapport.educateur}`,
+    `Email : parents@kidora.school`,
+    `Date : ${rapport.date}`
+  ], margin + (contentW/3)*2 + 4, y + 12);
+  space(signH + 2);
+
+  // Enregistrement
+  const fname = `Rapport_${rapport.enfant.replace(/\s+/g,"_")}_${rapport.date.replace(/\//g,"-")}.pdf`;
+  doc.save(fname);
+};
+
+
+
+
+
+  /* -------------------------------- Render -------------------------------- */
 
   return (
     <>
       <PageMeta
-        title={currentChild ? `Rapports - ${currentChild.name}` : "Rapports Pédagogiques | Espace Parent"}
+        title={
+          currentChild
+            ? `Rapports - ${currentChild.name}`
+            : "Rapports Pédagogiques | Espace Parent"
+        }
         description="Consultez les rapports détaillés sur le développement de vos enfants"
       />
 
-      <div className="mb-8">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      {/* HERO */}
+      <section className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-lg dark:border-white/10 dark:bg-slate-900">
+        <span
+          aria-hidden
+          className="pointer-events-none absolute -top-24 -left-24 h-64 w-64 rounded-full bg-sky-400/20 blur-3xl"
+        />
+        <span
+          aria-hidden
+          className="pointer-events-none absolute -bottom-24 -right-16 h-72 w-72 rounded-full bg-fuchsia-400/20 blur-3xl"
+        />
+        <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             {childId && (
-              <div className="flex items-center gap-3 mb-3">
-                <Link 
-                  to="/parent/enfants" 
-                  className="flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:underline"
-                >
-                  <AngleLeftIcon className="size-4" />
-                  Retour aux enfants
-                </Link>
-              </div>
+              <Link
+                to="/parent/enfants"
+                className="mb-2 inline-flex items-center gap-2 text-sky-600 hover:underline"
+              >
+                <AngleLeftIcon className="size-4" />
+                Retour aux enfants
+              </Link>
             )}
-            
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              {currentChild 
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+              {currentChild
                 ? `Rapports de ${currentChild.name}`
-                : "Rapports Pédagogiques"
-              }
+                : "Rapports pédagogiques"}
             </h1>
-            
-            <p className="text-gray-600 dark:text-gray-300 mt-1">
-              {currentChild 
-                ? `Suivez le développement de ${currentChild.name.split(" ")[0]} grâce aux rapports détaillés`
-                : "Suivez le développement de vos enfants grâce aux rapports détaillés des éducateurs"
-              }
+            <p className="text-sm text-slate-600 dark:text-slate-300">
+              {currentChild
+                ? `Suivez le développement de ${currentChild.name.split(" ")[0]}`
+                : "Suivez le développement de vos enfants grâce aux rapports des éducateurs"}
             </p>
           </div>
-          
-          <div className="flex items-center gap-3">
-            <div className="flex gap-2 bg-gray-100 dark:bg-gray-700 p-1 rounded-lg">
-              <button 
-                onClick={() => setViewMode('grid')}
-                className={`px-3 py-1.5 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-white dark:bg-gray-600 shadow-sm' : 'hover:bg-gray-200 dark:hover:bg-gray-600'}`}
+
+          {/* mini stats */}
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="rounded-xl border border-slate-200/70 bg-white px-3 py-2 text-center shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
+              <div className="text-lg font-bold text-slate-900 dark:text-white">
+                {stats.total}
+              </div>
+              <div className="text-[11px] text-slate-500">Total</div>
+            </div>
+            <div className="rounded-xl border border-slate-200/70 bg-white px-3 py-2 text-center shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
+              <div className="text-lg font-bold text-rose-600 dark:text-rose-300">
+                {stats.nonLus}
+              </div>
+              <div className="text-[11px] text-slate-500">Non lus</div>
+            </div>
+            <div className="rounded-xl border border-slate-200/70 bg-white px-3 py-2 text-center shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
+              <div className="text-lg font-bold text-slate-900 dark:text-white">
+                {stats.parType.hebdomadaire}
+              </div>
+              <div className="text-[11px] text-slate-500">Hebdo</div>
+            </div>
+            <div className="rounded-xl border border-slate-200/70 bg-white px-3 py-2 text-center shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
+              <div className="text-lg font-bold text-slate-900 dark:text-white">
+                {stats.parType.trimestriel}
+              </div>
+              <div className="text-[11px] text-slate-500">Trimestriels</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Filtres & recherche */}
+        <div className="relative z-10 mt-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div className="flex-1">
+            <div className="relative">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-slate-400"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.35-4.35" />
+              </svg>
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Rechercher dans les rapports…"
+                className="w-full rounded-lg border border-slate-200 bg-slate-50 py-3 pl-10 pr-4 focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500 dark:border-white/10 dark:bg-white/10 dark:text-white"
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            {!childId && (
+              <select
+                value={selectedChild}
+                onChange={(e) => setSelectedChild(e.target.value)}
+                className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-500 dark:border-white/10 dark:bg-white/5"
+              >
+                <option value="Tous les enfants">Tous les enfants</option>
+                {enfants.map((e) => (
+                  <option key={e.id} value={e.name}>
+                    {e.name}
+                  </option>
+                ))}
+              </select>
+            )}
+
+            {/* Pills Type */}
+            {(["all", "quotidien", "hebdomadaire", "trimestriel", "special"] as const).map(
+              (t) => (
+                <button
+                  key={t}
+                  onClick={() => setFilterType(t)}
+                  className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                    filterType === t
+                      ? `bg-gradient-to-r ${
+                          t === "all" ? "from-slate-500 to-slate-400" : typeMeta[t as TRapportType].grad
+                        } text-white shadow`
+                      : "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-white/10 dark:text-white/80"
+                  }`}
+                >
+                  {t === "all" ? "Tous" : typeMeta[t as TRapportType].label}
+                </button>
+              )
+            )}
+
+            {/* Statut */}
+            {(["all", "nouveau", "lu", "archive"] as const).map((s) => (
+              <button
+                key={s}
+                onClick={() => setFilterStatut(s as any)}
+                className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                  filterStatut === s
+                    ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900"
+                    : "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-white/10 dark:text-white/80"
+                }`}
+              >
+                {s === "all" ? "Tout statut" : s === "lu" ? "Lu" : s === "archive" ? "Archivé" : "Nouveau"}
+              </button>
+            ))}
+
+            {/* Vue */}
+            <div className="ml-2 rounded-lg bg-slate-100 p-1 dark:bg-white/10">
+              <button
+                onClick={() => setViewMode("grid")}
+                className={`rounded-md px-3 py-1.5 text-xs font-semibold ${
+                  viewMode === "grid"
+                    ? "bg-white text-slate-900 shadow-sm dark:bg白/90".replace("白","white")
+                    : "text-slate-600 dark:text-white/80"
+                }`}
               >
                 Grille
               </button>
-              <button 
-                onClick={() => setViewMode('list')}
-                className={`px-3 py-1.5 rounded-md transition-colors ${viewMode === 'list' ? 'bg-white dark:bg-gray-600 shadow-sm' : 'hover:bg-gray-200 dark:hover:bg-gray-600'}`}
+              <button
+                onClick={() => setViewMode("list")}
+                className={`rounded-md px-3 py-1.5 text-xs font-semibold ${
+                  viewMode === "list"
+                    ? "bg-white text-slate-900 shadow-sm dark:bg-white/90"
+                    : "text-slate-600 dark:text-white/80"
+                }`}
               >
                 Liste
               </button>
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Statistiques */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-900/10 p-4 rounded-xl border border-blue-200 dark:border-blue-800">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-blue-600 dark:text-blue-400">Total Rapports</p>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{stats.total}</h3>
-            </div>
-            <div className="p-2 bg-blue-100 dark:bg-blue-800/30 rounded-lg">
-              <span className="text-blue-600 dark:text-blue-400 text-xl">📊</span>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-900/10 p-4 rounded-xl border border-red-200 dark:border-red-800">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-red-600 dark:text-red-400">Non lus</p>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{stats.nonLus}</h3>
-            </div>
-            <div className="p-2 bg-red-100 dark:bg-red-800/30 rounded-lg">
-              <span className="text-red-600 dark:text-red-400 text-xl">🆕</span>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-900/10 p-4 rounded-xl border border-green-200 dark:border-green-800">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-green-600 dark:text-green-400">Quotidiens</p>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-                {stats.parType.quotidien}
-              </h3>
-            </div>
-            <div className="p-2 bg-green-100 dark:bg-green-800/30 rounded-lg">
-              <span className="text-green-600 dark:text-green-400 text-xl">📅</span>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-900/10 p-4 rounded-xl border border-purple-200 dark:border-purple-800">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-purple-600 dark:text-purple-400">Trimestriels</p>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-                {stats.parType.trimestriel}
-              </h3>
-            </div>
-            <div className="p-2 bg-purple-100 dark:bg-purple-800/30 rounded-lg">
-              <span className="text-purple-600 dark:text-purple-400 text-xl">📈</span>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* LISTES */}
+      {viewMode === "grid" ? (
+        <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {filtered.map((r) => {
+            const t = typeMeta[r.type];
+            return (
+              <article
+                key={r.id}
+                className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-white/10 dark:bg-white/[0.04]"
+              >
 
-      {/* Filtres - seulement si on n'est pas sur une page enfant spécifique */}
-      {!childId && (
-        <div className="mb-6">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <svg xmlns="http://www.w3.org/2000/svg" className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="11" cy="11" r="8"/>
-                  <path d="m21 21-4.35-4.35"/>
-                </svg>
-                <input
-                  type="text"
-                  placeholder="Rechercher dans les rapports..."
-                  className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                {/* Accent dégradé */}
+                <span
+                  aria-hidden
+                  className={`pointer-events-none absolute inset-y-0 left-0 w-1 bg-gradient-to-b ${t.grad}`}
                 />
-              </div>
-            </div>
-            
-            <div className="flex flex-wrap gap-3">
-              <select
-                value={selectedChild}
-                onChange={(e) => setSelectedChild(e.target.value)}
-                className="px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="Tous les enfants">Tous les enfants</option>
-                {enfants.map((enfant) => (
-                  <option key={enfant.id} value={enfant.name}>{enfant.name}</option>
-                ))}
-              </select>
-              
-              <select
-                value={filterType}
-                onChange={(e) => setFilterType(e.target.value)}
-                className="px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="all">Tous les types</option>
-                <option value="quotidien">Quotidien</option>
-                <option value="hebdomadaire">Hebdomadaire</option>
-                <option value="trimestriel">Trimestriel</option>
-                <option value="special">Spécial</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Liste des rapports */}
-      {viewMode === 'grid' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredRapports.map((rapport) => (
-            <div key={rapport.id} className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow">
-              <div className="p-5">
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${getTypeColor(rapport.type)}`}>
-                      {getTypeLabel(rapport.type)}
-                    </span>
-                    {getStatutBadge(rapport.statut)}
+                {/* Badge & actions */}
+                <div className="mb-3 flex items-start justify-between gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Chip className={t.chip}>
+                      <span className="mr-1">{t.emoji}</span>
+                      {t.label}
+                    </Chip>
+                    <Chip className={statutMeta[r.statut]}>
+                      {r.statut === "nouveau"
+                        ? "Nouveau"
+                        : r.statut === "lu"
+                        ? "Lu"
+                        : "Archivé"}
+                    </Chip>
                   </div>
-                  <button
-                    onClick={() => handleDownload(rapport)}
-                    className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                  >
-                    <DownloadIcon className="size-5" />
-                  </button>
                 </div>
-                
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                  {rapport.titre}
+
+                <h3 className="line-clamp-2 text-lg font-semibold text-slate-900 dark:text-white">
+                  {r.titre}
                 </h3>
-                
-                <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400 mb-4">
-                  <div className="flex items-center gap-1">
-                    <CalenderIcon className="size-4" />
-                    {rapport.date}
-                  </div>
+
+                <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-slate-600 dark:text-slate-300">
+                  <span className="inline-flex items-center gap-1">
+                    <CalenderIcon className="size-3.5" />
+                    {r.date}
+                  </span>
                   {!childId && (
-                    <div className="flex items-center gap-1">
-                      <span className="text-lg">👶</span>
-                      {rapport.enfant.split(" ")[0]}
-                    </div>
+                    <>
+                      <span className="text-slate-400">•</span>
+                      <span className="inline-flex items-center gap-1">
+                        <span>👶</span>
+                        {r.enfant.split(" ")[0]}
+                      </span>
+                    </>
                   )}
                 </div>
-                
-                <p className="text-gray-600 dark:text-gray-300 mb-4 line-clamp-3">
-                  {rapport.resume}
+
+                <p className="mt-3 line-clamp-3 text-sm text-slate-700 dark:text-slate-300">
+                  {r.resume}
                 </p>
-                
-                <div className="space-y-3">
-                  <div>
-                    <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Points forts :
+
+                {/* Compétences (2 aperçus) */}
+                <div className="mt-4 space-y-2">
+                  {r.competences.slice(0, 2).map((c, i) => (
+                    <div key={i} className="text-xs">
+                      <div className="mb-1 flex items-center justify-between dark:text-slate-300">
+                        <span className="font-medium ">{c.nom}</span>
+                        <span>{c.niveau}%</span>
+                      </div>
+                      <Bar value={c.niveau} />
                     </div>
-                    <div className="flex flex-wrap gap-1">
-                      {rapport.pointsForts.slice(0, 3).map((point, idx) => (
-                        <span key={idx} className="px-2 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs rounded">
-                          {point}
+                  ))}
+                </div>
+
+                <div className="mt-5 border-t border-slate-200 pt-4 dark:border-white/10">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-slate-500 dark:text-slate-400">
+                      Éducateur : {r.educateur}
+                    </span>
+                    <button
+                      onClick={() => setSelectedRapport(r)}
+                      className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 px-3 py-2 text-sm font-semibold text-white shadow hover:brightness-110"
+                    >
+                      Consulter
+                    </button>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="mt-6 space-y-4">
+          {filtered.map((r) => {
+            const t = typeMeta[r.type];
+            return (
+              <article
+                key={r.id}
+                className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md dark:border-white/10 dark:bg-white/[0.04]"
+              >
+                <span
+                  aria-hidden
+                  className={`pointer-events-none absolute inset-y-0 left-0 w-1 bg-gradient-to-b ${t.grad}`}
+                />
+                <div className="flex flex-col justify-between gap-4 lg:flex-row">
+                  <div className="flex-1">
+                    <div className="mb-2 flex flex-wrap items-center gap-2">
+                      <Chip className={t.chip}>
+                        <span className="mr-1">{t.emoji}</span>
+                        {t.label}
+                      </Chip>
+                      <Chip className={statutMeta[r.statut]}>
+                        {r.statut === "nouveau"
+                          ? "Nouveau"
+                          : r.statut === "lu"
+                          ? "Lu"
+                          : "Archivé"}
+                      </Chip>
+                    </div>
+
+                    <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+                      {r.titre}
+                    </h3>
+
+                    <div className="mt-1 flex flex-wrap items-center gap-4 text-sm text-slate-600 dark:text-slate-400">
+                      <span className="inline-flex items-center gap-1">
+                        <CalenderIcon className="size-4" />
+                        {r.date}
+                      </span>
+                      {!childId && (
+                        <span className="inline-flex items-center gap-1">
+                          <span>👶</span>
+                          {r.enfant}
                         </span>
+                      )}
+                      <span className="inline-flex items-center gap-1">
+                        <span>👩‍🏫</span>
+                        {r.educateur}
+                      </span>
+                    </div>
+
+                    <p className="mt-3 text-slate-700 dark:text-slate-300">
+                      {r.resume}
+                    </p>
+
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {r.pointsForts.map((p, i) => (
+                        <Chip
+                          key={i}
+                          className="bg-sky-50 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300"
+                        >
+                          {p}
+                        </Chip>
                       ))}
                     </div>
-                  </div>
-                  
-                  <div>
-                    <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Compétences :
-                    </div>
-                    <div className="space-y-1">
-                      {rapport.competences.slice(0, 2).map((competence, idx) => (
-                        <div key={idx} className="text-xs">
-                          <div className="flex justify-between mb-1">
-                            <span>{competence.nom}</span>
-                            <span>{competence.niveau}%</span>
+
+                    <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-3 ml-22">
+                      {r.competences.map((c, i) => (
+                        <div
+                          key={i}
+                          className="rounded-lg bg-slate-200 p-3 text-center dark:bg-slate-800/50"
+                        >
+                          <div className="text-xs text-slate-600 dark:text-slate-300">
+                            {c.nom}
                           </div>
-                          <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                            <div 
-                              className="h-full bg-green-500 rounded-full"
-                              style={{ width: `${competence.niveau}%` }}
-                            ></div>
+                          <div className="text-xl font-bold text-slate-900 dark:text-white">
+                            {c.niveau}%
                           </div>
                         </div>
                       ))}
                     </div>
                   </div>
-                </div>
-                
-                <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-                  <div className="flex items-center justify-between">
-                    <div className="text-sm text-gray-500 dark:text-gray-400">
-                      Éducateur : {rapport.educateur}
-                    </div>
+
+                  <div className="min-w-[200px] space-y-2">
                     <button
-                      onClick={() => setSelectedRapport(rapport)}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium flex items-center gap-2"
+                      onClick={() => setSelectedRapport(r)}
+                      className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
                     >
                       <EyeIcon className="size-4" />
                       Consulter
                     </button>
                   </div>
                 </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {filteredRapports.map((rapport) => (
-            <div key={rapport.id} className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 hover:shadow-lg transition-shadow">
-              <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-3">
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${getTypeColor(rapport.type)}`}>
-                      {getTypeLabel(rapport.type)}
-                    </span>
-                    {getStatutBadge(rapport.statut)}
-                  </div>
-                  
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                    {rapport.titre}
-                  </h3>
-                  
-                  <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-400 mb-3">
-                    <div className="flex items-center gap-1">
-                      <CalenderIcon className="size-4" />
-                      {rapport.date}
-                    </div>
-                    {!childId && (
-                      <div className="flex items-center gap-1">
-                        <span className="text-lg">👶</span>
-                        {rapport.enfant}
-                      </div>
-                    )}
-                    <div className="flex items-center gap-1">
-                      <span className="text-lg">👩‍🏫</span>
-                      {rapport.educateur}
-                    </div>
-                  </div>
-                  
-                  <p className="text-gray-600 dark:text-gray-300 mb-4">
-                    {rapport.resume}
-                  </p>
-                  
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {rapport.pointsForts.map((point, idx) => (
-                      <span key={idx} className="px-2 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs rounded">
-                        {point}
-                      </span>
-                    ))}
-                  </div>
-                  
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {rapport.competences.map((competence, idx) => (
-                      <div key={idx} className="text-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                        <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          {competence.nom}
-                        </div>
-                        <div className="text-xl font-bold text-gray-900 dark:text-white">
-                          {competence.niveau}%
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                
-                <div className="flex flex-col gap-2 min-w-[200px]">
-                  <button
-                    onClick={() => setSelectedRapport(rapport)}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium flex items-center justify-center gap-2"
-                  >
-                    <EyeIcon className="size-4" />
-                    Consulter le rapport
-                  </button>
-                  <button
-                    onClick={() => handleDownload(rapport)}
-                    className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 text-sm font-medium flex items-center justify-center gap-2"
-                  >
-                    <DownloadIcon className="size-4" />
-                    Télécharger
-                  </button>
-                  <button 
-                    onClick={() => {
-                      // Marquer comme lu
-                      console.log(`Marquer le rapport ${rapport.id} comme lu`);
-                    }}
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium"
-                  >
-                    Confirmer lecture
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
+              </article>
+            );
+          })}
         </div>
       )}
 
-      {filteredRapports.length === 0 && (
-        <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
-          <div className="text-4xl mb-3">📄</div>
-          <p className="text-gray-500 dark:text-gray-400">
-            {currentChild 
+      {/* Empty state */}
+      {filtered.length === 0 && (
+        <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-10 text-center shadow-lg dark:border-white/10 dark:bg-slate-900">
+          <div className="text-4xl">📄</div>
+          <p className="mt-2 text-slate-500 dark:text-slate-400">
+            {currentChild
               ? `Aucun rapport trouvé pour ${currentChild.name}`
-              : "Aucun rapport trouvé avec ces critères"
-            }
+              : "Aucun rapport trouvé avec ces critères"}
           </p>
           {childId && (
-            <button 
-              onClick={() => navigate('/parent/enfants')}
-              className="mt-2 text-blue-600 dark:text-blue-400 hover:underline"
+            <button
+              onClick={() => navigate("/parent/enfants")}
+              className="mt-2 text-sky-600 hover:underline"
             >
               Retour à la liste des enfants
             </button>
@@ -658,351 +1079,231 @@ ${rapport.competences.map(c => `${c.nom}: ${c.niveau}%`).join('\n')}
         </div>
       )}
 
-      {/* Modal de consultation */}
-      {selectedRapport && (
-        <div className="fixed inset-0 z-[100000] overflow-y-auto">
-          <div className="fixed inset-0 bg-black/50 z-[100000]" onClick={() => setSelectedRapport(null)} />
-          <div className="relative z-[100001] flex min-h-full items-center justify-center p-4">
-            <div className="relative w-full max-w-5xl transform overflow-hidden rounded-xl bg-white dark:bg-gray-800 shadow-2xl transition-all">
-              <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 px-6 py-4">
-                <div className="flex items-center gap-3">
-                  <div className={`p-3 rounded-lg ${getTypeColor(selectedRapport.type)}`}>
-                    <span className="text-2xl">
-                      {getTypeIcon(selectedRapport.type)}
-                    </span>
+      {/* MODAL */}
+    {selectedRapport && (
+  <Modal
+    open={!!selectedRapport}
+    onClose={() => setSelectedRapport(null)}
+    className="max-h-[70vh] md:max-h-[85vh] flex flex-col mt-14"
+  >
+    {/* 👉👉👉 AJOUT : on entoure tout le panel par la ref */}
+     <div ref={modalPrintRef} className="flex min-h-0 flex-1 flex-col">
+
+      {/* Header */}
+      <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4 dark:border-white/10">
+        <div className="flex items-center gap-3">
+          <div
+            className={`grid h-12 w-12 place-items-center rounded-lg text-2xl text-white ring-4 ring-white/40 dark:ring-white/20 bg-gradient-to-br ${typeMeta[selectedRapport.type].grad}`}
+          >
+            {typeMeta[selectedRapport.type].emoji}
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+              Rapport {typeMeta[selectedRapport.type].label}
+            </h3>
+            <p className="text-xs text-slate-600 dark:text-slate-300">
+              Pour les parents • {selectedRapport.date}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+
+          <button
+            onClick={() => setSelectedRapport(null)}
+            className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-white/10 dark:hover:text-white/80"
+            aria-label="Fermer"
+          >
+            ✕
+          </button>
+        </div>
+      </div>
+
+          {/* Body */}
+          <div className="flex-1 space-y-6 overflow-y-auto px-6 py-6">
+            {/* En-tête élégant */}
+            <div className="mb-6 border-b pb-6 text-center">
+              <div className="mb-2 text-3xl font-bold text-slate-900 dark:text-white">
+                Rapport Pédagogique
+              </div>
+              <div className="mb-4 text-xl text-sky-600 dark:text-sky-400">
+                {selectedRapport.titre}
+              </div>
+              <div className="flex flex-wrap justify-center gap-3 text-sm text-slate-600 dark:text-slate-400">
+                <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1 dark:bg-white/10">
+                  <CalenderIcon className="size-4" />
+                  {selectedRapport.date}
+                </span>
+                <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1 dark:bg-white/10">
+                  <span>👩‍🏫</span>
+                  {selectedRapport.educateur}
+                </span>
+                <span className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold ${typeMeta[selectedRapport.type].chip}`}>
+                  {typeMeta[selectedRapport.type].label}
+                </span>
+              </div>
+            </div>
+
+            {/* Résumé */}
+            <div className="rounded-xl bg-gradient-to-r from-purple-50 to-pink-50 p-5 dark:from-purple-900/20 dark:to-pink-900/20">
+              <h4 className="mb-2 flex items-center gap-2 font-medium text-slate-900 dark:text-white">
+                <span>📋</span> Résumé exécutif
+              </h4>
+              <p className="leading-relaxed text-slate-700 dark:text-slate-300">
+                {selectedRapport.resume}
+              </p>
+            </div>
+
+            {/* Tableau compétences */}
+            <div className="rounded-xl border border-slate-200 bg-white p-5 dark:border-white/10 dark:bg-white/[0.04]">
+              <h4 className="mb-4 flex items-center gap-2 font-medium text-slate-900 dark:text-white">
+                <span>📊</span> Tableau de développement
+              </h4>
+              <div className="space-y-4">
+                {selectedRapport.competences.map((c, i) => (
+                  <div key={i}>
+                    <div className="mb-1 flex justify-between text-sm">
+                      <span className="font-medium text-slate-700 dark:text-slate-300">
+                        {c.nom}
+                      </span>
+                      <span
+                        className={`font-medium ${
+                          c.niveau >= 90
+                            ? "text-green-600 dark:text-green-400"
+                            : c.niveau >= 80
+                            ? "text-blue-600 dark:text-blue-400"
+                            : c.niveau >= 70
+                            ? "text-amber-600 dark:text-amber-400"
+                            : "text-rose-600 dark:text-rose-400"
+                        }`}
+                      >
+                        {c.niveau >= 90
+                          ? "Excellent"
+                          : c.niveau >= 80
+                          ? "Très bon"
+                          : c.niveau >= 70
+                          ? "Bon"
+                          : "À améliorer"}
+                      </span>
+                    </div>
+                    <Bar value={c.niveau} />
                   </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                      Rapport {getTypeLabel(selectedRapport.type)}
-                    </h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Pour les parents • {selectedRapport.date}
+                ))}
+              </div>
+            </div>
+
+            {/* Points forts */}
+            <div className="rounded-xl bg-gradient-to-r from-emerald-50 to-green-50 p-5 dark:from-emerald-900/20 dark:to-green-900/20">
+              <h4 className="mb-4 flex items-center gap-2 font-medium text-slate-900 dark:text-white">
+                <span>⭐</span> Points forts identifiés
+              </h4>
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                {selectedRapport.pointsForts.map((p, i) => (
+                  <div
+                    key={i}
+                    className="rounded-lg bg-white/70 p-3 dark:bg-white/5"
+                  >
+                    <div className="mb-2 flex items-center gap-2">
+                      <span
+                        className={`h-2 w-2 rounded-full ${
+                          i === 0
+                            ? "bg-emerald-500"
+                            : i === 1
+                            ? "bg-sky-500"
+                            : "bg-violet-500"
+                        }`}
+                      />
+                      <span className="font-medium text-slate-800 dark:text-slate-300">
+                        Point fort {i + 1}
+                      </span>
+                    </div>
+                    <p className="text-sm text-slate-700 dark:text-slate-300">
+                      {p}
                     </p>
                   </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => handleDownload(selectedRapport)}
-                    className="px-3 py-1.5 text-sm bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 flex items-center gap-1"
-                  >
-                    <DownloadIcon className="size-4" />
-                    PDF
-                  </button>
-                  <button
-                    onClick={() => setSelectedRapport(null)}
-                    className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
-                  >
-                    ✕
-                  </button>
-                </div>
+                ))}
               </div>
+            </div>
 
-              <div className="px-6 py-4 space-y-6 max-h-[75vh] overflow-y-auto">
-                {/* En-tête élégant */}
-                <div className="text-center border-b pb-6 mb-6">
-                  <div className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                    Rapport Pédagogique
-                  </div>
-                  <div className="text-xl text-blue-600 dark:text-blue-400 mb-4">
-                    {selectedRapport.titre}
-                  </div>
-                  <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-600 dark:text-gray-400">
-                    <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full">
-                      <CalenderIcon className="size-4" />
-                      {selectedRapport.date}
-                    </div>
-                    <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full">
-                      <span className="text-lg">👩‍🏫</span>
-                      Éducateur: {selectedRapport.educateur}
-                    </div>
-                    <div className={`px-3 py-1 rounded-full text-xs font-medium ${getTypeColor(selectedRapport.type)}`}>
-                      {getTypeLabel(selectedRapport.type)}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Message personnalisé aux parents */}
-                <div className="p-5 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-xl border border-blue-200 dark:border-blue-700">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="p-2 bg-blue-100 dark:bg-blue-800 rounded-lg">
-                      <span className="text-xl">👨‍👩‍👧</span>
+            {/* Recommandations */}
+            <div className="rounded-xl bg-gradient-to-r from-indigo-50 to-sky-50 p-5 dark:from-indigo-900/20 dark:to-sky-900/20">
+              <h4 className="mb-4 flex items-center gap-2 font-medium text-slate-900 dark:text-white">
+                <span>💡</span> Suggestions pour la maison
+              </h4>
+              <div className="space-y-3">
+                {selectedRapport.recommandations.map((reco, i) => (
+                  <div key={i} className="flex items-start gap-3">
+                    <div
+                      className={`rounded-lg p-2 ${
+                        i === 0
+                          ? "bg-violet-100 dark:bg-violet-800/50"
+                          : i === 1
+                          ? "bg-sky-100 dark:bg-sky-800/50"
+                          : "bg-emerald-100 dark:bg-emerald-800/50"
+                      }`}
+                    >
+                      <span className="text-xl">
+                        {i === 0 ? "📚" : i === 1 ? "🎮" : "🗣️"}
+                      </span>
                     </div>
                     <div>
-                      <h4 className="font-medium text-gray-900 dark:text-white">
-                        Message aux parents
-                      </h4>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Observations détaillées sur votre enfant
+                      <p className="font-medium text-slate-800 dark:text-slate-300">
+                        {i === 0
+                          ? "Lecture quotidienne"
+                          : i === 1
+                          ? "Jeux éducatifs"
+                          : "Dialoguer sur les émotions"}
+                      </p>
+                      <p className="text-sm text-slate-600 dark:text-slate-400">
+                        {reco}
                       </p>
                     </div>
                   </div>
-                  <div className="bg-white/50 dark:bg-gray-800/50 p-4 rounded-lg">
-                    <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                      <span className="font-medium">Cher(s) parent(s),</span><br/>
-                      Voici un rapport détaillé sur le développement et les progrès de {selectedRapport.enfant.split(" ")[0]} pendant cette période. 
-                      Nous souhaitons partager avec vous les observations positives, les compétences acquises et les domaines 
-                      où nous continuons à travailler ensemble pour soutenir sa croissance.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Résumé exécutif */}
-                <div className="p-5 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl">
-                  <h4 className="font-medium text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                    <span className="text-xl">📋</span>
-                    Résumé Exécutif
-                  </h4>
-                  <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                    {selectedRapport.resume}
-                  </p>
-                </div>
-
-                {/* Tableau de développement */}
-                <div className="p-5 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
-                  <h4 className="font-medium text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                    <span className="text-xl">📊</span>
-                    Tableau de Développement
-                  </h4>
-                  <div className="space-y-4">
-                    {selectedRapport.competences.map((competence, idx) => (
-                      <div key={idx}>
-                        <div className="flex justify-between text-sm mb-1">
-                          <span className="font-medium text-gray-700 dark:text-gray-300">{competence.nom}</span>
-                          <span className={`font-medium ${
-                            competence.niveau >= 90 ? 'text-green-600 dark:text-green-400' :
-                            competence.niveau >= 80 ? 'text-blue-600 dark:text-blue-400' :
-                            competence.niveau >= 70 ? 'text-amber-600 dark:text-amber-400' :
-                            'text-red-600 dark:text-red-400'
-                          }`}>
-                            {competence.niveau >= 90 ? 'Excellent' :
-                             competence.niveau >= 80 ? 'Très bon' :
-                             competence.niveau >= 70 ? 'Bon' : 'À améliorer'}
-                          </span>
-                        </div>
-                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
-                          <div 
-                            className={`h-full rounded-full ${
-                              competence.niveau >= 90 ? 'bg-green-500' :
-                              competence.niveau >= 80 ? 'bg-blue-500' :
-                              competence.niveau >= 70 ? 'bg-amber-500' : 'bg-red-500'
-                            }`}
-                            style={{ width: `${competence.niveau}%` }}
-                          ></div>
-                        </div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                          Progression: {competence.niveau >= 80 ? 'Rythme excellent' :
-                          competence.niveau >= 70 ? 'Progression régulière' :
-                          'Nécessite un accompagnement renforcé'}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Points forts identifiés */}
-                <div className="p-5 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl">
-                  <h4 className="font-medium text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                    <span className="text-xl">⭐</span>
-                    Points Forts Identifiés
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {selectedRapport.pointsForts.map((point, idx) => (
-                      <div key={idx} className="bg-white/70 dark:bg-gray-800/70 p-3 rounded-lg">
-                        <div className="flex items-center gap-2 mb-2">
-                          <div className={`w-2 h-2 rounded-full ${
-                            idx === 0 ? 'bg-green-500' :
-                            idx === 1 ? 'bg-blue-500' :
-                            idx === 2 ? 'bg-purple-500' : 'bg-amber-500'
-                          }`}></div>
-                          <span className="font-medium text-gray-800 dark:text-gray-300">Point fort {idx + 1}</span>
-                        </div>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {point}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Moments forts */}
-                <div className="p-5 bg-amber-50 dark:bg-amber-900/20 rounded-xl">
-                  <h4 className="font-medium text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                    <span className="text-xl">🏆</span>
-                    Moments Forts de la Période
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div className="bg-white dark:bg-gray-800 p-3 rounded-lg">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        <span className="font-medium text-gray-800 dark:text-gray-300">Succès académique</span>
-                      </div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Excellente participation aux activités de groupe et progrès significatifs dans les apprentissages
-                      </p>
-                    </div>
-                    <div className="bg-white dark:bg-gray-800 p-3 rounded-lg">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                        <span className="font-medium text-gray-800 dark:text-gray-300">Progrès social</span>
-                      </div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Interactions positives avec les camarades et développement de l'empathie
-                      </p>
-                    </div>
-                    <div className="bg-white dark:bg-gray-800 p-3 rounded-lg">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                        <span className="font-medium text-gray-800 dark:text-gray-300">Créativité</span>
-                      </div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Expression artistique développée et imagination fertile
-                      </p>
-                    </div>
-                    <div className="bg-white dark:bg-gray-800 p-3 rounded-lg">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-2 h-2 bg-indigo-500 rounded-full"></div>
-                        <span className="font-medium text-gray-800 dark:text-gray-300">Autonomie</span>
-                      </div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Prise d'initiatives et développement de l'indépendance dans les tâches quotidiennes
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Recommandations pour les parents */}
-                <div className="p-5 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl">
-                  <h4 className="font-medium text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                    <span className="text-xl">💡</span>
-                    Suggestions pour la Maison
-                  </h4>
-                  <div className="bg-white/70 dark:bg-gray-800/70 p-4 rounded-lg">
-                    <div className="space-y-3">
-                      {selectedRapport.recommandations.map((reco, idx) => (
-                        <div key={idx} className="flex items-start gap-3">
-                          <div className={`p-2 rounded-lg ${
-                            idx === 0 ? 'bg-purple-100 dark:bg-purple-800' :
-                            idx === 1 ? 'bg-blue-100 dark:bg-blue-800' :
-                            'bg-green-100 dark:bg-green-800'
-                          }`}>
-                            <span className={`text-xl ${
-                              idx === 0 ? 'text-purple-600 dark:text-purple-300' :
-                              idx === 1 ? 'text-blue-600 dark:text-blue-300' :
-                              'text-green-600 dark:text-green-300'
-                            }`}>
-                              {idx === 0 ? '📚' : idx === 1 ? '🎮' : '🗣️'}
-                            </span>
-                          </div>
-                          <div>
-                            <p className="font-medium text-gray-800 dark:text-gray-300">
-                              {idx === 0 ? 'Lecture quotidienne' : 
-                               idx === 1 ? 'Jeux éducatifs' : 
-                               'Dialoguer sur les émotions'}
-                            </p>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                              {reco}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Activités préférées */}
-                <div className="p-5 bg-gradient-to-r from-cyan-50 to-blue-50 dark:from-cyan-900/20 dark:to-blue-900/20 rounded-xl">
-                  <h4 className="font-medium text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                    <span className="text-xl">❤️</span>
-                    Domaines d'Intérêt
-                  </h4>
-                  <div className="flex flex-wrap gap-2">
-                    <span className="px-3 py-1 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full text-sm">
-                      Activités créatives
-                    </span>
-                    <span className="px-3 py-1 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full text-sm">
-                      Jeux de construction
-                    </span>
-                    <span className="px-3 py-1 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full text-sm">
-                      Histoires et contes
-                    </span>
-                    <span className="px-3 py-1 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full text-sm">
-                      Activités en extérieur
-                    </span>
-                    <span className="px-3 py-1 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full text-sm">
-                      Musique et danse
-                    </span>
-                  </div>
-                </div>
-
-                {/* Signature et contacts */}
-                <div className="p-5 border-t border-gray-200 dark:border-gray-700">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <h5 className="font-medium text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                        <span className="text-lg">📞</span>
-                        Contact
-                      </h5>
-                      <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-                        <p>Éducateur/Éducatrice: 
-                          <span className="font-medium text-gray-900 dark:text-white ml-2">
-                            {selectedRapport.educateur}
-                          </span>
-                        </p>
-                        <p>Disponible pour échanger: Lundi et jeudi de 16h30 à 17h30</p>
-                        <p>Email: educateur@ecole-exemple.fr</p>
-                        <p>Téléphone: 01 23 45 67 89</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="inline-block border-t border-gray-300 dark:border-gray-600 pt-4">
-                        <p className="font-medium text-gray-900 dark:text-white">{selectedRapport.educateur}</p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Éducateur/Éducatrice référent(e)</p>
-                        <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
-                          Établi le {new Date().toLocaleDateString('fr-FR', { 
-                            weekday: 'long', 
-                            year: 'numeric', 
-                            month: 'long', 
-                            day: 'numeric' 
-                          })}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-between items-center border-t border-gray-200 dark:border-gray-700 px-6 py-4 bg-gray-50 dark:bg-gray-700/50">
-                <div className="text-sm text-gray-500 dark:text-gray-400">
-                  Rapport #{selectedRapport.id} • Enfant: {selectedRapport.enfant}
-                </div>
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => setSelectedRapport(null)}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
-                  >
-                    Fermer
-                  </button>
-                  <button
-                    onClick={() => {
-                      // Marquer comme lu
-                      setSelectedRapport(null);
-                    }}
-                    className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-green-600 to-emerald-600 rounded-lg hover:from-green-700 hover:to-emerald-700"
-                  >
-                    Confirmer la lecture
-                  </button>
-                  <button
-                    onClick={() => handleDownload(selectedRapport)}
-                    className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg hover:from-blue-700 hover:to-purple-700 flex items-center gap-2"
-                  >
-                    <DownloadIcon className="size-4" />
-                    Télécharger
-                  </button>
-                </div>
+                ))}
               </div>
             </div>
           </div>
+
+          {/* Footer */}
+      <div className="flex items-center justify-between border-t border-slate-200 bg-slate-50 px-6 py-4 dark:border-white/10 dark:bg-slate-800/40">
+        <div className="text-sm text-slate-500 dark:text-slate-400">
+          Rapport #{selectedRapport.id} • Enfant : {selectedRapport.enfant}
         </div>
+        <div className="flex gap-3">
+          <button
+            onClick={() => setSelectedRapport(null)}
+            className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:text-white/80 dark:hover:bg-white/10"
+          >
+            Fermer
+          </button>
+        <button
+  onClick={handleConfirmRead}
+  disabled={confirming || selectedRapport.statut === "lu"}
+  className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium
+    ${selectedRapport.statut === "lu"
+      ? "bg-slate-200 text-slate-500 cursor-not-allowed dark:bg-white/10 dark:text-white/40"
+      : "bg-emerald-600 text-white hover:bg-emerald-700"
+    }`}
+>
+  {selectedRapport.statut === "lu"
+    ? "Lecture confirmée"
+    : confirming
+      ? "Confirmation..."
+      : "Confirmer lecture"}
+</button>
+
+          <button
+           onClick={() => handleDownloadPDF(selectedRapport)}
+
+            className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-2 text-sm font-medium text-white hover:from-blue-700 hover:to-purple-700"
+          >
+            <DownloadIcon className="size-4" />
+            Télécharger
+          </button>
+        </div>
+      </div>
+    </div>
+    {/* 👆 fin du wrapper ref */}
+  </Modal>
       )}
     </>
   );

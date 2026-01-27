@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import EnfantsTable from "./EnfantsTable";
 import EnfantForm from "./EnfantForm";
 import EnfantDetails from "./EnfantDetails";
@@ -8,32 +8,32 @@ import { enfantApi, EnfantResponse } from "../../../services/api/enfantApi";
 import { parentApi } from "../../../services/api/parentApi";
 import { Parent } from "../Parents/types";
 import { StatutClient } from "../../../types/auth.types";
+import { RefreshCw, Search, X, Trash2, Check, Ban, Plus } from "lucide-react";
 
-
+type ParentOption = { label: string; value: string };
 
 export default function GestionEnfants() {
-  // États pour les filtres
-  const [viewMode, setViewMode] = useState<'liste' | 'grille'>('liste');
+  // vue + filtres + recherche
+  const [viewMode, setViewMode] = useState<"liste" | "grille">("liste");
   const [classeFilter, setClasseFilter] = useState<string>("");
   const [statutFilter, setStatutFilter] = useState<string>("");
-  const [parentFilter, setParentFilter] = useState<string>("");
-  
+  const [parentFilter, setParentFilter] = useState<string>(""); // parentId
+  const [query, setQuery] = useState("");
+
+  // data
   const [enfants, setEnfants] = useState<Enfant[]>([]);
-  const [filteredEnfants, setFilteredEnfants] = useState<Enfant[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  
-  
-  // États pour la sélection multiple
+
+  // sélection multiple
   const [selectedEnfants, setSelectedEnfants] = useState<string[]>([]);
   const [isSelectAll, setIsSelectAll] = useState(false);
   const [showSelectionHeader, setShowSelectionHeader] = useState(false);
 
+  // modals + forms
   const [imageFile, setImageFile] = useState<File | null>(null);
-
-  // États pour les modals
   const [selectedEnfant, setSelectedEnfant] = useState<Enfant | null>(null);
-  const [modalType, setModalType] = useState<'view' | 'edit' | 'delete' | null>(null);
+  const [modalType, setModalType] = useState<"view" | "edit" | "delete" | null>(null);
   const [editForm, setEditForm] = useState<EnfantFormData>({});
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newEnfant, setNewEnfant] = useState<EnfantFormData & { parentId: string }>({
@@ -47,256 +47,208 @@ export default function GestionEnfants() {
   });
 
   const [parents, setParents] = useState<Parent[]>([]);
-  const [parentOptions, setParentOptions] = useState<string[]>(["Tous"]);
+  const parentOptions: ParentOption[] = useMemo(
+    () => [{ label: "Tous", value: "" }, ...parents.map(p => ({ label: `${p.prenom} ${p.nom}`, value: p.id }))],
+    [parents]
+  );
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  useEffect(() => { fetchData(); }, []);
 
   const fetchData = async () => {
     try {
-      console.log("fetchData"); 
       setLoading(true);
       setError(null);
-      
-      // Charger les enfants
-      const enfantsData = await enfantApi.getAllEnfants();
-      
-      // Charger les parents
-      const parentsData = await parentApi.getAllParents();
-      console.log(" liste parents", parentsData);
-      
+      const [enfantsData, parentsData] = await Promise.all([
+        enfantApi.getAllEnfants(),
+        parentApi.getAllParents()
+      ]);
       setParents(parentsData);
-      
-      // Créer les options de parent pour le filtre
-      const options = ["Tous", ...parentsData.map(p => `${p.prenom} ${p.nom}`)];
-      setParentOptions(options);
-      
-      console.log("parentsData  ==> ", parentsData);
-      // Convertir les données API en format frontend
-      const convertedEnfants: Enfant[] = enfantsData.map((enfant: EnfantResponse) => {
-        console.log("enfant", enfant);
-        const parent = parentsData.find(p => p.id === enfant.parentId);
-         console.log("parent === >", parent);
-        return {
-          id: enfant.idEnfant,
-          nom: enfant.nom,
-          prenom: enfant.prenom,
-          age: enfant.age,
-          classe: enfant.classe,
-          imageUrl: enfant.imageUrl || '/images/default-child.jpg',
-          // parent: {
-          //   nom: parent?.nom || 'Non',
-          //   prenom: parent?.prenom || 'Parent',
-          //   image: parent?.image || '/images/default-parent.jpg'
-          // },
-          parentId: parent?.id || '',
-          statut: StatutClient.ACTIF, // À adapter selon votre logique métier
-          dateInscription: new Date().toISOString().split('T')[0], // À adapter
-          dernierAcces: new Date().toISOString().split('T')[0] // À adapter
-        };
-      });
-      
-      setEnfants(convertedEnfants);
-      setFilteredEnfants(convertedEnfants);
-      
-    } catch (error: any) {
-      setError(`Erreur de chargement: ${error.message}`);
-      console.error("Erreur lors du chargement des données:", error);
+
+      const converted: Enfant[] = enfantsData.map((e: EnfantResponse) => ({
+        id: e.idEnfant,
+        nom: e.nom,
+        prenom: e.prenom,
+        age: e.age,
+        classe: e.classe,
+        imageUrl: e.imageUrl || "/images/default-child.jpg",
+        parentId: e.parentId || "",
+        statut: StatutClient.ACTIF,
+        dateInscription: new Date().toISOString().split("T")[0],
+        dernierAcces: new Date().toISOString().split("T")[0]
+      }));
+
+      setEnfants(converted);
+    } catch (e: any) {
+      setError(`Erreur de chargement: ${e.message}`);
+      console.error("Erreur lors du chargement des données:", e);
     } finally {
       setLoading(false);
     }
   };
 
-   useEffect(() => {
-    let filtered = enfants;
-    
+  // filtrage + recherche
+  const filteredEnfants = useMemo(() => {
+    let base = [...enfants];
+
     if (classeFilter && classeFilter !== "Toutes") {
-      filtered = filtered.filter(enfant => enfant.classe === classeFilter);
+      base = base.filter(e => e.classe === classeFilter);
     }
-    
+
     if (statutFilter && statutFilter !== "Tous") {
-      filtered = filtered.filter(enfant => {
-        if (statutFilter === "Actif") return enfant.statut === StatutClient.ACTIF;
-        if (statutFilter === "Inactif") return enfant.statut === StatutClient.INACTIF;
-        if (statutFilter === "En attente") return enfant.statut === StatutClient.EN_ATTENTE;
-        // if (statutFilter === "Inactif") return enfant.statut === 'inactif';
-        // if (statutFilter === "En attente") return enfant.statut === 'en_attente';
-        return true;
-      });
-    }
-    
-    if (parentFilter && parentFilter !== "Tous") {
-      filtered = filtered.filter(enfant => 
-        `${enfant.parentId}` === parentFilter
+      base = base.filter(e =>
+        statutFilter === "Actif" ? e.statut === StatutClient.ACTIF :
+        statutFilter === "Inactif" ? e.statut === StatutClient.INACTIF :
+        statutFilter === "En attente" ? e.statut === StatutClient.EN_ATTENTE : true
       );
     }
-    
-    setFilteredEnfants(filtered);
-    // Réinitialiser la sélection quand les filtres changent
+
+    if (parentFilter) {
+      base = base.filter(e => e.parentId === parentFilter); // <-- FIX : filtre sur parentId
+    }
+
+    const q = query.trim().toLowerCase();
+    if (q) {
+      base = base.filter(e => {
+        const parent = parents.find(p => p.id === e.parentId);
+        const parentName = parent ? `${parent.prenom} ${parent.nom}`.toLowerCase() : "";
+        return (
+          `${e.prenom} ${e.nom}`.toLowerCase().includes(q) ||
+          e.classe.toLowerCase().includes(q) ||
+          parentName.includes(q)
+        );
+      });
+    }
+
+    // reset sélection quand ça change
     setSelectedEnfants([]);
     setIsSelectAll(false);
     setShowSelectionHeader(false);
-  }, [enfants, classeFilter, statutFilter, parentFilter]);
 
-  // Options pour les filtres
-  const classeOptions = ["Toutes", "Toute Petite Section", "Petite Section", "Moyenne Section", "Grande Section", "CP", "CE1"];
+    return base;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enfants, classeFilter, statutFilter, parentFilter, query, parents]);
+
+  // options
+  const classeOptions = ["Toutes","Toute Petite Section","Petite Section","Moyenne Section","Grande Section","CP","CE1"];
   const statutOptions = ["Tous", "Actif", "Inactif", "En attente"];
-  // const parentOptions = ["Tous", "Sophie Martin", "Thomas Dubois", "Marie Lambert", "Jean Petit", "Laura Bernard", "Pierre Moreau", "Julie Leroy", "Marc Blanc"]; 
 
-  // Filtrer les données
-  // const filteredEnfants = enfantsData.filter(enfant => {
-  //   const matchesClasse = !classeFilter || classeFilter === "Toutes" || enfant.classe === classeFilter;
-  //   const matchesStatut = !statutFilter || statutFilter === "Tous" || 
-  //     (statutFilter === "Actif" && enfant.statut === 'actif') ||
-  //     (statutFilter === "Inactif" && enfant.statut === 'inactif') ||
-  //     (statutFilter === "En attente" && enfant.statut === 'en_attente');
-  //   const matchesParent = !parentFilter || parentFilter === "Tous" || 
-  //     `${enfant.parent.prenom} ${enfant.parent.nom}` === parentFilter; 
-    
-  //   return matchesClasse && matchesStatut && matchesParent;
-  // });
-
-  // Gestion de la sélection
-  const handleSelectEnfant = (enfantId: string) => {
+  // sélection
+  const handleSelectEnfant = (id: string) => {
     setSelectedEnfants(prev => {
-      const newSelected = prev.includes(enfantId)
-        ? prev.filter(id => id !== enfantId)
-        : [...prev, enfantId];
-      
-      if (newSelected.length > 0 && !showSelectionHeader) {
-        setShowSelectionHeader(true);
-      } else if (newSelected.length === 0 && showSelectionHeader) {
-        setShowSelectionHeader(false);
-      }
-      
-      setIsSelectAll(newSelected.length === filteredEnfants.length);
-      
-      return newSelected;
+      const next = prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id];
+      setShowSelectionHeader(next.length > 0);
+      setIsSelectAll(next.length === filteredEnfants.length);
+      return next;
     });
   };
-
   const handleSelectAll = () => {
     if (isSelectAll) {
       setSelectedEnfants([]);
       setIsSelectAll(false);
       setShowSelectionHeader(false);
     } else {
-      const allIds = filteredEnfants.map(enfant => enfant.id);
+      const allIds = filteredEnfants.map(e => e.id);
       setSelectedEnfants(allIds);
       setIsSelectAll(true);
       setShowSelectionHeader(true);
     }
   };
-
   const handleCancelSelection = () => {
     setSelectedEnfants([]);
     setIsSelectAll(false);
     setShowSelectionHeader(false);
   };
 
-  const handleDeleteSelected = async () => {
-    if (selectedEnfants.length === 0) return;
-    
-    if (!window.confirm(`Êtes-vous sûr de vouloir supprimer ${selectedEnfants.length} enfant(s) ?`)) {
-      return;
-    }
-    
+  // actions groupées
+  const handleBulkActivate = async () => {
+    if (!selectedEnfants.length) return;
     try {
-      // Supprimer chaque enfant sélectionné
-      const promises = selectedEnfants.map(id => enfantApi.deleteEnfant(id));
-      await Promise.all(promises);
-      
-      // Mettre à jour localement
-      setEnfants(prev => prev.filter(enfant => !selectedEnfants.includes(enfant.id)));
-      
-      const enfantsNames = filteredEnfants
-        .filter(enfant => selectedEnfants.includes(enfant.id))
-        .map(enfant => `${enfant.prenom} ${enfant.nom}`)
-        .join(', ');
-      
-      alert(`${selectedEnfants.length} enfant(s) supprimé(s) : ${enfantsNames}`);
-      
+      await Promise.all(selectedEnfants.map(id =>
+        enfantApi.updateEnfant(id, { /* payload côté serveur si besoin */ })
+      ));
+      setEnfants(prev => prev.map(e => selectedEnfants.includes(e.id) ? { ...e, statut: StatutClient.ACTIF } : e));
       handleCancelSelection();
-      
-    } catch (error: any) {
-      console.error('Erreur lors de la suppression multiple:', error);
-      alert(`Erreur: ${error.message}`);
+      alert("Enfant(s) activé(s) avec succès");
+    } catch (e: any) {
+      console.error(e);
+      alert(`Erreur: ${e.message}`);
     }
   };
 
-
-  // Gestion des actions sur les enfants
-  const handleView = (enfant: Enfant) => {
-    console.log("view", enfant);
-    setSelectedEnfant(enfant);
-    setModalType('view');
+  const handleBulkDeactivate = async () => {
+    if (!selectedEnfants.length) return;
+    try {
+      await Promise.all(selectedEnfants.map(id =>
+        enfantApi.updateEnfant(id, { /* payload côté serveur si besoin */ })
+      ));
+      setEnfants(prev => prev.map(e => selectedEnfants.includes(e.id) ? { ...e, statut: StatutClient.INACTIF } : e));
+      handleCancelSelection();
+      alert("Enfant(s) désactivé(s) avec succès");
+    } catch (e: any) {
+      console.error(e);
+      alert(`Erreur: ${e.message}`);
+    }
   };
 
-  const handleEdit = (enfant: Enfant) => {
-    setSelectedEnfant(enfant);
+  const handleDeleteSelected = async () => {
+    if (!selectedEnfants.length) return;
+    if (!window.confirm(`Êtes-vous sûr de vouloir supprimer ${selectedEnfants.length} enfant(s) ?`)) return;
+    try {
+      await Promise.all(selectedEnfants.map(id => enfantApi.deleteEnfant(id)));
+      setEnfants(prev => prev.filter(e => !selectedEnfants.includes(e.id)));
+      handleCancelSelection();
+      alert("Suppression effectuée");
+    } catch (e: any) {
+      console.error("Erreur lors de la suppression multiple:", e);
+      alert(`Erreur: ${e.message}`);
+    }
+  };
+
+  // handlers individuels (inchangés sauf petites sécurités)
+  const handleView = (e: Enfant) => { setSelectedEnfant(e); setModalType("view"); };
+  const handleEdit = (e: Enfant) => {
+    setSelectedEnfant(e);
     setEditForm({
-      nom: enfant.nom,
-      prenom: enfant.prenom,
-      age: enfant.age,
-      classe: enfant.classe,
-      statut: enfant.statut,
-      image: enfant.imageUrl,
-      parentId: enfant.parentId
-      
+      nom: e.nom,
+      prenom: e.prenom,
+      age: e.age,
+      classe: e.classe,
+      statut: e.statut,
+      image: e.imageUrl,
+      parentId: e.parentId
     });
-    setModalType('edit');
+    setModalType("edit");
   };
+  const handleDelete = (e: Enfant) => { setSelectedEnfant(e); setModalType("delete"); };
 
-  const handleDelete = (enfant: Enfant) => {
-    setSelectedEnfant(enfant);
-    setModalType('delete');
-  };
-
-  const handleSaveEdit = async () => { // Ajouté async
-  if (!selectedEnfant) return;
-  
-  try {
-    // Appel API
-    await enfantApi.updateEnfant(
-      selectedEnfant.id, // ID string
-      {
-        nom: editForm.nom || '',
-        prenom: editForm.prenom || '',
-        age: editForm.age || 3,
-        classe: editForm.classe || ''
-      }
-    );
-    
-    // Mise à jour locale
-    setEnfants(prev => prev.map(e => 
-      e.id === selectedEnfant.id 
-        ? { ...e, ...editForm } 
-        : e
-    ));
-    // ... reste du code
-  } catch (error: any) {
-    console.error("Erreur...", error);
-    alert(`Erreur: ${error.message}`);
-  }
-};
-
-  const confirmDelete = async () => { 
+  const handleSaveEdit = async () => {
     if (!selectedEnfant) return;
-    
+    try {
+      await enfantApi.updateEnfant(selectedEnfant.id, {
+        nom: editForm.nom || "",
+        prenom: editForm.prenom || "",
+        age: editForm.age || 3,
+        classe: editForm.classe || ""
+      });
+      setEnfants(prev => prev.map(x => (x.id === selectedEnfant.id ? { ...x, ...editForm } : x)));
+      closeModal();
+    } catch (e: any) {
+      console.error("Erreur...", e);
+      alert(`Erreur: ${e.message}`);
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (!selectedEnfant) return;
     try {
       await enfantApi.deleteEnfant(selectedEnfant.id);
-      
-      // Mettre à jour localement
       setEnfants(prev => prev.filter(e => e.id !== selectedEnfant.id));
       setSelectedEnfants(prev => prev.filter(id => id !== selectedEnfant.id));
-      
       alert(`Enfant "${selectedEnfant.prenom} ${selectedEnfant.nom}" supprimé`);
       closeModal();
-      
-    } catch (error: any) {
-      console.error("Erreur lors de la suppression:", error);
-      alert(`Erreur: ${error.message}`);
+    } catch (e: any) {
+      console.error("Erreur lors de la suppression:", e);
+      alert(`Erreur: ${e.message}`);
     }
   };
 
@@ -306,65 +258,39 @@ export default function GestionEnfants() {
     setEditForm({});
   };
 
-  // Gestion de l'ajout d'un nouvel enfant
-  const handleAddNew = () => {
-    setIsAddModalOpen(true);
-  };
+  // ajout
+  const handleAddNew = () => setIsAddModalOpen(true);
 
   const handleSaveNew = async () => {
     try {
-      if (!newEnfant.parentId) {
-      throw new Error("Veuillez sélectionner un parent valide");
-    }
-    if (!imageFile) {
-      throw new Error("Veuillez sélectionner une photo pour l'enfant");
-    }
-      // Trouver le parent sélectionné
-      const selectedParentName = `${newEnfant.parentId}`;
-      
-      
-      // if (!parent) {
-      //   throw new Error("Veuillez sélectionner un parent valide");
-      // }
-      
-      // Ajouter l'enfant via l'API
-      const response = await enfantApi.ajouterEnfant(
+      if (!newEnfant.parentId) throw new Error("Veuillez sélectionner un parent valide");
+      if (!imageFile) throw new Error("Veuillez sélectionner une photo pour l'enfant");
+
+      const res = await enfantApi.ajouterEnfant(
         {
-          nom: newEnfant.nom || '',
-          prenom: newEnfant.prenom || '',
+          nom: newEnfant.nom || "",
+          prenom: newEnfant.prenom || "",
           age: newEnfant.age || 3,
-          classe: newEnfant.classe || 'Petite Section'
+          classe: newEnfant.classe || "Petite Section"
         },
         newEnfant.parentId,
         imageFile
-        // Note: Vous devez ajouter la gestion de l'image ici
       );
-      // const parent = parents.find(p => p.id === newEnfant.parentId);
-      // Créer le nouvel enfant pour l'affichage
 
-      const parent = parents.find(p => p.id === newEnfant.parentId);
-      if (!parent) {
-        throw new Error("Veuillez sélectionner un parent valide");
-      }
-      const nouvelEnfant: Enfant = {
-        id: response.idEnfant,
-        nom: response.nom,
-        prenom: response.prenom,
-        age: response.age,
-        classe: response.classe,
-        imageUrl: response.imageUrl || '/images/default-child.jpg',
-        parentId: response.parentId,
+      const created: Enfant = {
+        id: res.idEnfant,
+        nom: res.nom,
+        prenom: res.prenom,
+        age: res.age,
+        classe: res.classe,
+        imageUrl: res.imageUrl || "/images/default-child.jpg",
+        parentId: res.parentId,
         statut: StatutClient.ACTIF,
-        dateInscription: new Date().toISOString().split('T')[0],
-        dernierAcces: new Date().toISOString().split('T')[0]
+        dateInscription: new Date().toISOString().split("T")[0],
+        dernierAcces: new Date().toISOString().split("T")[0]
       };
-      
-      // Ajouter à la liste
-      setEnfants(prev => [...prev, nouvelEnfant]);
-      
-      alert(`Enfant "${nouvelEnfant.prenom} ${nouvelEnfant.nom}" ajouté avec succès`);
-      
-      // Réinitialiser le formulaire
+
+      setEnfants(prev => [...prev, created]);
       setNewEnfant({
         nom: "",
         prenom: "",
@@ -374,12 +300,12 @@ export default function GestionEnfants() {
         statut: StatutClient.EN_ATTENTE,
         parentId: ""
       });
-      
+      setImageFile(null);
       setIsAddModalOpen(false);
-      
-    } catch (error: any) {
-      console.error("Erreur lors de l'ajout:", error);
-      alert(`Erreur: ${error.message}`);
+      alert(`Enfant "${created.prenom} ${created.nom}" ajouté avec succès`);
+    } catch (e: any) {
+      console.error("Erreur lors de l'ajout:", e);
+      alert(`Erreur: ${e.message}`);
     }
   };
 
@@ -394,236 +320,149 @@ export default function GestionEnfants() {
       statut: StatutClient.EN_ATTENTE,
       parentId: ""
     });
-     setImageFile(null);
+    setImageFile(null);
   };
-   const getParentInfo = (parentId: string) => {
-    const parent = parents.find(p => p.id === parentId);
-    return parent || {
-      nom: 'Non',
-      prenom: 'Parent',
-      image: '/images/default-parent.jpg',
-      email: '',
-      telephone: ''
-    } as Parent;
+
+  const getParentInfo = (parentId: string) => {
+    const p = parents.find(pp => pp.id === parentId);
+    return p || ({ nom: "Non", prenom: "Parent", image: "/images/default-parent.jpg", email: "", telephone: "", id: parentId } as Parent);
   };
-   if (loading) {
+
+  if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex min-h-[400px] items-center justify-center">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Chargement des enfants...</p>
+          <div className="inline-block h-12 w-12 animate-spin rounded-full border-b-2 border-t-2 border-indigo-600"></div>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Chargement des enfants…</p>
         </div>
       </div>
     );
   }
-
   if (error) {
     return (
       <div className="p-6">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <div className="flex items-center">
-            <svg className="w-5 h-5 text-red-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-            </svg>
-            <span className="text-red-700 font-medium">{error}</span>
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+          <div className="flex items-center justify-between">
+            <span className="font-medium text-red-700">{error}</span>
+            <button
+              onClick={fetchData}
+              className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-red-700"
+            >
+              <RefreshCw className="h-4 w-4" /> Réessayer
+            </button>
           </div>
-          <button 
-            onClick={fetchData}
-            className="mt-3 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-          >
-            Réessayer
-          </button>
         </div>
       </div>
     );
   }
+
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
-      {/* En-tête principal avec titre et bouton d'ajout */}
-      <div className="p-6 border-b border-gray-100 dark:border-white/[0.05] bg-white dark:bg-gray-900/50">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            {/* <h2 className="text-xl font-semibold text-gray-800 dark:text-white">
-              Liste des Enfants
-            </h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-              Gérez les enfants et leurs informations
-            </p> */}
-          </div>
-          
-          <button
-            onClick={handleAddNew}
-            className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
-          >
-            <svg 
-              className="w-5 h-5" 
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24"
-            >
-              <path 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                strokeWidth="2" 
-                d="M12 4v16m8-8H4"
+      {/* Toolbar : recherche + filtres + actions rapides */}
+      <div className="border-b border-gray-100 bg-gray-50/60 p-4 dark:border-white/[0.05] dark:bg-gray-900/40">
+        <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between">
+          {/* Gauche */}
+          <div className="flex flex-1 flex-wrap items-center gap-2">
+            <div className="relative w-full sm:w-72">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Rechercher (nom, classe, parent)"
+                className="h-10 w-full rounded-lg border border-gray-300 bg-white pl-9 pr-3 text-sm text-gray-800 outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/10 dark:border-white/10 dark:bg-gray-900 dark:text-white"
               />
-            </svg>
-            Nouveau Enfant
-          </button>
-        </div>
-      </div>
-
-      {/* Filtres et options de vue */}
-      <div className="p-4 border-b border-gray-100 dark:border-white/[0.05] bg-gray-50 dark:bg-gray-900/50">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-            {/* Filtre par classe */}
-            <div className="w-full sm:w-auto">
-              <label htmlFor="classeFilter" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Classe
-              </label>
-              <select
-                id="classeFilter"
-                value={classeFilter}
-                onChange={(e) => setClasseFilter(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
-              >
-                {classeOptions.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
             </div>
 
-            {/* Filtre par statut */}
-            <div className="w-full sm:w-auto">
-              <label htmlFor="statutFilter" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Statut
-              </label>
-              <select
-                id="statutFilter"
-                value={statutFilter}
-                onChange={(e) => setStatutFilter(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
-              >
-                {statutOptions.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <select
+              value={classeFilter}
+              onChange={(e) => setClasseFilter(e.target.value)}
+              className="h-10 rounded-lg border border-gray-300 bg-white px-3 text-sm dark:border-white/10 dark:bg-gray-900 dark:text-white"
+            >
+              {classeOptions.map(o => <option key={o} value={o}>{o}</option>)}
+            </select>
 
-            {/* Filtre par parent */}
-            <div className="w-full sm:w-auto">
-              <label htmlFor="parentFilter" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Parent
-              </label>
-              <select
-                id="parentFilter"
-                value={parentFilter}
-                onChange={(e) => setParentFilter(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
-              >
-                {parentOptions.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <select
+              value={statutFilter}
+              onChange={(e) => setStatutFilter(e.target.value)}
+              className="h-10 rounded-lg border border-gray-300 bg-white px-3 text-sm dark:border-white/10 dark:bg-gray-900 dark:text-white"
+            >
+              {statutOptions.map(o => <option key={o} value={o}>{o}</option>)}
+            </select>
 
-            {/* Bouton pour réinitialiser les filtres */}
-            <div className="w-full sm:w-auto flex items-end">
-              <button
-                onClick={() => {
-                  setClasseFilter("");
-                  setStatutFilter("");
-                  setParentFilter("");
-                }}
-                className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700"
-              >
-                Réinitialiser
-              </button>
-            </div>
+            {/* FIX : value=id, affichage=nom complet */}
+            <select
+              value={parentFilter}
+              onChange={(e) => setParentFilter(e.target.value)}
+              className="h-10 rounded-lg border border-gray-300 bg-white px-3 text-sm dark:border-white/10 dark:bg-gray-900 dark:text-white"
+            >
+              {parentOptions.map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+
+            <button
+              onClick={() => { setClasseFilter(""); setStatutFilter(""); setParentFilter(""); setQuery(""); }}
+              className="inline-flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-white/10 dark:bg-gray-900 dark:text-gray-300"
+            >
+              <X className="h-4 w-4" /> Réinitialiser
+            </button>
           </div>
 
-          {/* Boutons de changement de vue */}
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-600 dark:text-gray-400">Vue :</span>
-            <div className="flex border border-gray-300 rounded-lg overflow-hidden dark:border-gray-700">
-              <button
-                onClick={() => setViewMode('liste')}
-                className={`px-3 py-2 text-sm font-medium ${viewMode === 'liste' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'}`}
-                title="Vue liste"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
-                </svg>
-              </button>
-              <button
-                onClick={() => setViewMode('grille')}
-                className={`px-3 py-2 text-sm font-medium ${viewMode === 'grille' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'}`}
-                title="Vue grille"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                </svg>
-              </button>
-            </div>
+          {/* Droite */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={fetchData}
+              className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-white/10 dark:bg-gray-900 dark:text-gray-300"
+              title="Rafraîchir"
+            >
+              <RefreshCw className="h-4 w-4" /> Rafraîchir
+            </button>
+            <button
+              onClick={handleAddNew}
+              className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-indigo-600 to-violet-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:from-indigo-700 hover:to-violet-700"
+              title="Nouvel enfant"
+            >
+              <Plus className="h-4 w-4" /> Nouvel Enfant
+            </button>
           </div>
         </div>
-        
-        {/* Compteur de résultats */}
+
         <div className="mt-3 text-sm text-gray-600 dark:text-gray-400">
           {filteredEnfants.length} enfant(s) trouvé(s)
+          {selectedEnfants.length > 0 && (
+            <span className="ml-2 font-medium text-indigo-600 dark:text-indigo-400">
+              • {selectedEnfants.length} sélectionné(s)
+            </span>
+          )}
         </div>
       </div>
 
-      {/* Header de sélection */}
+      {/* Header d’actions groupées */}
       {showSelectionHeader && (
-        <div className="bg-gradient-to-br from-emerald-500 to-emerald-600  border-b border-blue-100 dark:border-blue-800/30 p-3">
+        <div className="sticky top-0 z-10 border-b border-emerald-600/20 bg-gradient-to-r from-emerald-500 to-emerald-600 p-3 text-white">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 flex items-center justify-center bg-blue-100 dark:bg-blue-800 rounded-full">
-                  <span className="text-sm font-semibold text-blue-600 dark:text-blue-300">
-                    {selectedEnfants.length}
-                  </span>
-                </div>
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  enfant(s) sélectionné(s)
-                </span>
-              </div>
+            <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-sm font-medium">
+              {selectedEnfants.length} sélectionné(s)
             </div>
-            
             <div className="flex items-center gap-2">
-              <button
-                onClick={handleDeleteSelected}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 rounded-lg transition-colors"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-                Supprimer
+              <button onClick={handleBulkActivate} className="inline-flex items-center gap-1 rounded-lg bg-white/15 px-3 py-1.5 text-sm hover:bg-white/25">
+                <Check className="h-4 w-4" /> Activer
               </button>
-              
-              <button
-                onClick={handleCancelSelection}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 rounded-lg transition-colors"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-                Annuler
+              <button onClick={handleBulkDeactivate} className="inline-flex items-center gap-1 rounded-lg bg-white/15 px-3 py-1.5 text-sm hover:bg-white/25">
+                <Ban className="h-4 w-4" /> Désactiver
+              </button>
+              <button onClick={handleDeleteSelected} className="inline-flex items-center gap-1 rounded-lg bg-white/15 px-3 py-1.5 text-sm hover:bg-white/25">
+                <Trash2 className="h-4 w-4" /> Supprimer
+              </button>
+              <button onClick={handleCancelSelection} className="inline-flex items-center gap-1 rounded-lg bg-white/15 px-3 py-1.5 text-sm hover:bg-white/25">
+                <X className="h-4 w-4" /> Annuler
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Tableau des enfants */}
+      {/* Table/Grid */}
       <EnfantsTable
         enfants={filteredEnfants}
         viewMode={viewMode}
@@ -637,27 +476,17 @@ export default function GestionEnfants() {
         parents={parents}
       />
 
-      {/* Message si aucun enfant trouvé */}
+      {/* Modals */}
       {filteredEnfants.length === 0 && (
         <div className="p-8 text-center">
-          <div className="text-gray-400 dark:text-gray-500">
-            <svg className="w-12 h-12 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9.708a4 4 0 01-7 0" />
-            </svg>
-            <p className="text-lg font-medium text-gray-600 dark:text-gray-400 mb-1">
-              Aucun enfant trouvé
-            </p>
-            <p className="text-sm text-gray-500 dark:text-gray-500">
-              Essayez de modifier vos critères de filtrage
-            </p>
-          </div>
+          <p className="text-lg font-medium text-gray-600 dark:text-gray-400 mb-1">Aucun enfant trouvé</p>
+          <p className="text-sm text-gray-500 dark:text-gray-500">Essayez de modifier vos critères de filtrage</p>
         </div>
       )}
 
-      {/* Modals */}
-      {modalType === 'view' && selectedEnfant && (
+      {modalType === "view" && selectedEnfant && (
         <EnfantDetails
-          isOpen={true}
+          isOpen
           onClose={closeModal}
           enfant={selectedEnfant}
           onEdit={() => handleEdit(selectedEnfant)}
@@ -665,25 +494,23 @@ export default function GestionEnfants() {
         />
       )}
 
-      {modalType === 'edit' && selectedEnfant && (
+      {modalType === "edit" && selectedEnfant && (
         <EnfantForm
-          isOpen={true}
+          isOpen
           onClose={closeModal}
           enfant={selectedEnfant}
           formData={editForm as EnfantFormData & { parentId: string }}
-          // formData={editForm}
-          onFormChange={(field, value) => setEditForm(prev => ({ ...prev, [field]: value }))}
+          onFormChange={(f, v) => setEditForm(prev => ({ ...prev, [f]: v }))}
           onSave={handleSaveEdit}
           parentOptions={parents}
-          // parentOptions={parentOptions.filter(opt => opt !== "Tous")}
-          isEditing={true}
+          isEditing
           onImageChange={(file) => setImageFile(file)}
         />
       )}
 
-      {modalType === 'delete' && selectedEnfant && (
+      {modalType === "delete" && selectedEnfant && (
         <DeleteConfirmation
-          isOpen={true}
+          isOpen
           onClose={closeModal}
           enfant={selectedEnfant}
           onDelete={confirmDelete}
@@ -696,10 +523,9 @@ export default function GestionEnfants() {
           onClose={closeAddModal}
           enfant={null}
           formData={newEnfant}
-          onFormChange={(field, value) => setNewEnfant(prev => ({ ...prev, [field]: value }))}
+          onFormChange={(f, v) => setNewEnfant(prev => ({ ...prev, [f]: v }))}
           onSave={handleSaveNew}
           parentOptions={parents}
-          // parentOptions={parentOptions.filter(opt => opt !== "Tous")}
           onImageChange={(file) => setImageFile(file)}
           isEditing={false}
         />

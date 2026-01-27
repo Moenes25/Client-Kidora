@@ -1,9 +1,9 @@
+import React, { useEffect, useState } from "react";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "../../ui/table";
 import Badge from "../../ui/badge/Badge";
 import { Parent } from "./types";
-import { useEffect, useState } from "react";
-// import imageApi from "../../../services/api/imageService";
 import { imageApi } from "../../../services/api/imageService";
+import { Eye, Pencil, Trash2 } from "lucide-react";
 
 interface ParentsTableProps {
   parents: Parent[];
@@ -16,11 +16,12 @@ interface ParentsTableProps {
   onDelete: (parent: Parent) => void;
 }
 
-interface ImageCache {
-  [parentId: string]: string;
-}
+type ImageCache = Record<string, string>;
 
-export default function ParentsTable({
+const badgeColor = (s: string) =>
+  s === "Actif" ? "success" : s === "En attente" ? "warning" : s === "Inactif" ? "error" : "primary";
+
+const ParentsTable: React.FC<ParentsTableProps> = ({
   parents,
   selectedParents,
   isAllSelected,
@@ -28,274 +29,254 @@ export default function ParentsTable({
   onSelectParent,
   onViewDetails,
   onEdit,
-  onDelete
-}: ParentsTableProps) {
+  onDelete,
+}) => {
+  const [imageCache, setImageCache] = useState<ImageCache>({});
+  const [loadingImages, setLoadingImages] = useState<boolean>(false);
 
-   const [imageCache, setImageCache] = useState<ImageCache>({});
-   const [loadingImages, setLoadingImages] = useState<boolean>(false);
-  const getBadgeColor = (statut: string) => {
-    switch(statut) {
-      case "Actif": return "success";
-      case "En attente": return "warning";
-      case "Inactif": return "error";
-      default: return "primary";
+  useEffect(() => {
+    if (parents.length) void loadParentsImages();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [parents]);
+
+  const loadParentsImages = async (): Promise<void> => {
+    setLoadingImages(true);
+    const next: ImageCache = { ...imageCache };
+    const slice = parents.slice(0, 20);
+    await Promise.all(
+      slice.map(async (p) => {
+        if (p.image && !next[p.id]) {
+          try {
+            const url = await imageApi.getImage(p.image);
+            next[p.id] = url;
+          } catch {
+            next[p.id] = "/default-avatar.png";
+          }
+        }
+      })
+    );
+    setImageCache(next);
+    setLoadingImages(false);
+  };
+
+  const loadSingle = async (p: Parent): Promise<void> => {
+    if (!p.image || imageCache[p.id]) return;
+    try {
+      const url = await imageApi.getImage(p.image);
+      setImageCache((prev) => ({ ...prev, [p.id]: url }));
+    } catch {
+      setImageCache((prev) => ({ ...prev, [p.id]: "/default-avatar.png" }));
     }
   };
+
+  const getParentImage = (p: Parent): string => {
+    if (!p.image) return "/default-avatar.png";
+    if (imageCache[p.id]) return imageCache[p.id];
+    if (!loadingImages) void loadSingle(p);
+    return "/placeholder-avatar.png";
+  };
+
   useEffect(() => {
-      if (parents.length > 0) {
-        loadParentsImages();
-      };
-    }, [parents]);
-  
-  const loadParentsImages = async () => {
-  setLoadingImages(true);
-  const newCache: ImageCache = { ...imageCache };
-  const parentsToLoad = parents.slice(0, 20); // Limite à 20 parents
-
-  const loadPromises = parentsToLoad.map(async (parent) => {
-    // Ne charger que si l'image n'est pas déjà en cache
-    if (parent.image && !newCache[parent.id]) {
-      try {
-        console.log(`Chargement de l'image pour: ${parent.prenom} ${parent.nom}`, parent.image);
-        const imageUrl = await imageApi.getImage(parent.image);
-        newCache[parent.id] = imageUrl;
-      } catch (error) {
-        console.error(`Erreur de chargement de l'image pour ${parent.prenom} ${parent.nom}:`, error);
-        newCache[parent.id] = '/default-avatar.png';
-      }
-    }
-  });
-
-  await Promise.all(loadPromises);
-  setImageCache(newCache);
-  setLoadingImages(false);
-};
-
-    const getParentImage  = (parent: Parent): string => {
-        if (!parent.image) {
-          return '/default-avatar.png';
-        }
-        
-        // Si l'image est déjà en cache
-        if (imageCache[parent.id]) {
-          return imageCache[parent.id];
-        }
-        
-        // Sinon, charger l'image à la volée (lazy loading)
-        if (parent.image && !loadingImages) {
-          loadSingleImage(parent);
-        }
-        
-        // Retourner une image de placeholder pendant le chargement
-        return '/placeholder-avatar.png';
-      };
-      const loadSingleImage = async (parent: Parent) => {
-          if (!parent.image || imageCache[parent.id]) return;
-          
-          try {
-            const imageUrl = await imageApi.getImage(parent.image);
-            setImageCache(prev => ({
-              ...prev,
-              [parent.id]: imageUrl
-            }));
-          } catch (error) {
-            console.error(`Erreur de chargement de l'image pour ${parent.id}:`, error);
-            setImageCache(prev => ({
-              ...prev,
-              [parent.id]: '/default-avatar.png'
-            }));
-          }
-        };
-        useEffect(() => {
+    // cleanup blobs on unmount / change
     return () => {
-      Object.values(imageCache).forEach(url => {
-        if (url && url.startsWith('blob:')) {
-          URL.revokeObjectURL(url);
-        }
+      Object.values(imageCache).forEach((u) => {
+        if (u?.startsWith("blob:")) URL.revokeObjectURL(u);
       });
     };
   }, [imageCache]);
-  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>, educateurId: string) => {
-    e.currentTarget.src = '/default-avatar.png';
-    // Mettre à jour le cache avec l'image par défaut
-    setImageCache(prev => ({
-      ...prev,
-      [educateurId]: '/default-avatar.png'
-    }));
+
+  const handleImgError = (
+    e: React.SyntheticEvent<HTMLImageElement, Event>,
+    id: string
+  ): void => {
+    e.currentTarget.src = "/default-avatar.png";
+    setImageCache((p) => ({ ...p, [id]: "/default-avatar.png" }));
   };
 
-   const getChildImageUrl = (imagePath: string): string => {
-    if (!imagePath || imagePath === '') {
-      return '/default-child-avatar.png';
-    }
-    
-    // Si c'est déjà une URL complète
-    if (imagePath.startsWith('http')) {
-      return imagePath;
-    }
-    
-    // Sinon, construire l'URL complète (option simple sans blob)
-    return imageApi.getImageUrl ? imageApi.getImageUrl(imagePath) : `http://localhost:8086/${encodeURI(imagePath.startsWith('/') ? imagePath.substring(1) : imagePath)}`;
+  const childUrl = (path: string): string => {
+    if (!path) return "/default-child-avatar.png";
+    if (path.startsWith("http")) return path;
+    return imageApi.getImageUrl
+      ? imageApi.getImageUrl(path)
+      : `http://localhost:8086/${encodeURI(path.startsWith("/") ? path.substring(1) : path)}`;
   };
-  return (
-    <div className="max-w-full overflow-x-auto">
-      <Table>
-        <TableHeader className="border-b  bg-indigo-500 ">
-          <TableRow>
-            <TableCell isHeader className="px-5 py-3 font-medium text-white text-start text-theme-xs">
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={isAllSelected}
-                  onChange={onSelectAll}
-                  className="w-4 h-4 text-white bg-white/20 border-white/30 rounded focus:ring-white dark:focus:ring-white focus:ring-2 mr-3"
-                />
-                Nom et Prénom
-              </div>
-            </TableCell>
-            <TableCell isHeader className="px-5 py-3 font-medium text-white text-start text-theme-xs">
-              Email
-            </TableCell>
-            <TableCell isHeader className="px-5 py-3 font-medium text-white text-start text-theme-xs">
-              Téléphone
-            </TableCell>
-            <TableCell isHeader className="px-5 py-3 font-medium text-white text-start text-theme-xs">
-              Relation
-            </TableCell>
-            <TableCell isHeader className="px-5 py-3 font-medium text-white text-start text-theme-xs">
-              Enfants
-            </TableCell>
-            <TableCell isHeader className="px-5 py-3 font-medium text-white text-start text-theme-xs">
-              Statut
-            </TableCell>
-            <TableCell isHeader className="px-5 py-3 font-medium text-white text-start text-theme-xs">
-              Profession
-            </TableCell>
-            <TableCell isHeader className="px-5 py-3 font-medium text-white text-start text-theme-xs">
-              Actions
-            </TableCell>
-          </TableRow>
-        </TableHeader>
 
-        <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-          {parents.map((parent) => {
-            const isSelected = selectedParents.includes(parent.id);
-            const parentImageUrl = getParentImage(parent);
-            return (
-              <TableRow key={parent.id} className={isSelected ? "bg-blue-50 dark:bg-blue-900/10" : ""}>
-                <TableCell className="px-5 py-4 sm:px-6 text-start">
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="checkbox"
-                      checked={isSelected}
-                      onChange={() => onSelectParent(parent.id)}
-                      className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-                    />
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 overflow-hidden rounded-full">
-                        <img
-                          width={40}
-                          height={40}
-                          src={parentImageUrl}
-                          // alt={`${parent.prenom} ${parent.nom}`}
-                          onError={(e) => handleImageError(e, parent.id)}
-                          className="w-full h-full object-cover"
-                          loading="lazy"
-                        />
-                      </div>
-                      <span className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
-                        {parent.nom + " " + parent.prenom}
-                      </span>
+ return (
+  <div
+    className="
+      w-full overflow-x-hidden
+      [&_*]:min-w-0
+    "
+  >
+    <Table
+      className="
+        w-full table-fixed border-collapse
+      "
+    >
+      {/* Largeurs en % (somme = 100) -> pas de dépassement */}
+      <colgroup>
+        <col className="w-[24%]" /> {/* Nom & Prénom */}
+        <col className="w-[18%]" /> {/* Email */}
+        <col className="w-[12%]" /> {/* Téléphone */}
+        <col className="w-[8%]"  /> {/* Relation */}
+        <col className="w-[10%]" /> {/* Enfants */}
+        <col className="w-[8%]"  /> {/* Statut */}
+        <col className="w-[12%]" /> {/* Profession */}
+        <col className="w-[8%]"  /> {/* Actions */}
+      </colgroup>
+
+      <TableHeader className="sticky top-0 z-[5] border-b border-gray-100 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-sm">
+        <TableRow>
+          <TableCell isHeader className="px-5 py-3 text-start font-medium">
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                checked={isAllSelected}
+                onChange={onSelectAll}
+                className="mr-3 h-4 w-4 rounded border-white/30 bg-white/20 text-white focus:ring-2 focus:ring-white"
+              />
+              Nom et Prénom
+            </div>
+          </TableCell>
+          <TableCell isHeader className="px-5 py-3 text-start font-medium">Email</TableCell>
+          <TableCell isHeader className="px-5 py-3 text-start font-medium">Téléphone</TableCell>
+          <TableCell isHeader className="px-5 py-3 text-start font-medium">Relation</TableCell>
+          <TableCell isHeader className="px-5 py-3 text-start font-medium">Enfants</TableCell>
+          <TableCell isHeader className="px-5 py-3 text-start font-medium">Statut</TableCell>
+          <TableCell isHeader className="px-5 py-3 text-start font-medium">Profession</TableCell>
+          <TableCell isHeader className="px-5 py-3 text-start font-medium">Actions</TableCell>
+        </TableRow>
+      </TableHeader>
+
+      <TableBody className="divide-y divide-gray-100 dark:divide-white/10">
+        {parents.map((p) => {
+          const selected = selectedParents.includes(p.id);
+          const avatar = getParentImage(p);
+          return (
+            <TableRow
+              key={p.id}
+              className={[
+                selected ? "bg-blue-50/80 dark:bg-blue-900/20" : "",
+                "transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/40",
+              ].join(" ")}
+            >
+              {/* Nom & Prénom */}
+              <TableCell className="px-5 py-4 text-start">
+                <div className="flex min-w-0 items-center gap-3">
+                  <input
+                    type="checkbox"
+                    checked={selected}
+                    onChange={() => onSelectParent(p.id)}
+                    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 shrink-0"
+                  />
+                  <div className="flex min-w-0 items-center gap-3">
+                    <div className="relative h-10 w-10 overflow-hidden rounded-full ring-2 ring-white dark:ring-gray-900 shrink-0">
+                      <img
+                        width={40}
+                        height={40}
+                        src={avatar}
+                        onError={(e) => handleImgError(e, p.id)}
+                        className="h-full w-full object-cover"
+                        loading="lazy"
+                        alt=""
+                      />
+                      <span
+                        className={[
+                          "absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white dark:border-gray-900",
+                          p.statut === "Actif" ? "bg-emerald-500" : p.statut === "En attente" ? "bg-amber-500" : "bg-rose-500",
+                        ].join(" ")}
+                      />
                     </div>
+                    <span className="min-w-0 truncate text-sm font-semibold text-gray-800 dark:text-white/90">
+                      {p.nom} {p.prenom}
+                    </span>
                   </div>
-                </TableCell>
-                <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                  <a href={`mailto:${parent.email}`} className="hover:text-blue-600 hover:underline">
-                    {parent.email}
-                  </a>
-                </TableCell>
-                <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                  <a href={`tel:${parent.telephone}`} className="hover:text-blue-600 hover:underline">
-                    {parent.telephone}
-                  </a>
-                </TableCell>
-                <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                  <span className="px-2 py-1 text-xs bg-blue-50 text-blue-600 dark:bg-blue-100 dark:text-blue-700 rounded-full">
-                    {parent.relation}
-                  </span>
-                </TableCell>
-                <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                  <div className="flex -space-x-2">
-                    {parent.enfants.images.slice(0, 3).map((image, index) => (
-                      <div
-                        key={index}
-                        className="relative w-8 h-8 overflow-hidden border-2 border-white rounded-full dark:border-gray-900"
-                      >
-                        <img
-                          width={32}
-                          height={32}
-                          src={getChildImageUrl(image)}
-                          // alt={`Enfant ${index + 1}`}
-                          onError={(e) => e.currentTarget.src = '/default-child-avatar.png'}
-                          className="w-full h-full object-cover"
-                          loading="lazy"
-                        />
-                      </div>
-                    ))}
-                    {parent.enfants.images.length > 3 && (
-                      <div className="relative w-8 h-8 flex items-center justify-center bg-gray-200 border-2 border-white rounded-full dark:border-gray-900 dark:bg-gray-700">
-                        <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                          +{parent.enfants.images.length - 3}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                  <Badge size="sm" color={getBadgeColor(parent.statut)}>
-                    {parent.statut}
-                  </Badge>
-                </TableCell>
-                <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                  {parent.profession}
-                </TableCell>
-                <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                  <div className="flex items-center gap-1.5">
-                    <button 
-                      onClick={() => onViewDetails(parent)}
-                      className="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
-                      title="Voir détails"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                      </svg>
-                    </button>
-                    <button 
-                      onClick={() => onEdit(parent)}
-                      className="p-1.5 text-green-600 hover:text-green-800 hover:bg-green-50 rounded transition-colors"
-                      title="Modifier"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
-                    </button>
-                    <button 
-                      onClick={() => onDelete(parent)}
-                      className="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
-                      title="Supprimer"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
-    </div>
-  );
-}
+                </div>
+              </TableCell>
+
+              {/* Email (truncate) */}
+              <TableCell className="px-4 py-3 text-start">
+                <a
+                  href={`mailto:${p.email}`}
+                  className="block truncate text-sm text-blue-600 hover:underline dark:text-blue-400"
+                  title={p.email}
+                >
+                  {p.email}
+                </a>
+              </TableCell>
+
+              {/* Téléphone (nowrap) */}
+              <TableCell className="px-4 py-3 text-start text-sm text-gray-700 dark:text-gray-300">
+                <span className="whitespace-nowrap">
+                  <a href={`tel:${p.telephone}`} className="hover:underline">{p.telephone}</a>
+                </span>
+              </TableCell>
+
+              {/* Relation */}
+              <TableCell className="px-4 py-3 text-start">
+                <span className="rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                  {p.relation}
+                </span>
+              </TableCell>
+
+              {/* Enfants */}
+              <TableCell className="px-4 py-3 text-start">
+                <div className="flex -space-x-2">
+                  {p.enfants.images.slice(0, 3).map((img, i) => (
+                    <div key={i} className="relative h-8 w-8 overflow-hidden rounded-full border-2 border-white dark:border-gray-900 shrink-0">
+                      <img
+                        width={32}
+                        height={32}
+                        src={childUrl(img)}
+                        onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/default-child-avatar.png"; }}
+                        className="h-full w-full object-cover"
+                        loading="lazy"
+                        alt=""
+                      />
+                    </div>
+                  ))}
+                  {p.enfants.images.length > 3 && (
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-gray-200 text-xs font-medium text-gray-700 dark:border-gray-900 dark:bg-gray-700 dark:text-gray-300 shrink-0">
+                      +{p.enfants.images.length - 3}
+                    </div>
+                  )}
+                </div>
+              </TableCell>
+
+              {/* Statut */}
+              <TableCell className="px-4 py-3 text-start">
+                <Badge size="sm" color={badgeColor(p.statut)}>{p.statut}</Badge>
+              </TableCell>
+
+              {/* Profession (truncate) */}
+              <TableCell className="px-4 py-3 text-start">
+                <span className="block truncate text-sm text-gray-700 dark:text-gray-300" title={p.profession}>
+                  {p.profession}
+                </span>
+              </TableCell>
+
+              {/* Actions (nowrap) */}
+              <TableCell className="px-4 py-3 text-start">
+                <div className="flex items-center gap-1.5 whitespace-nowrap">
+                  <button onClick={() => onViewDetails(p)} className="rounded p-1.5 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/30" title="Voir détails">
+                    <Eye className="h-4 w-4" />
+                  </button>
+                  <button onClick={() => onEdit(p)} className="rounded p-1.5 text-emerald-600 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-900/30" title="Modifier">
+                    <Pencil className="h-4 w-4" />
+                  </button>
+                  <button onClick={() => onDelete(p)} className="rounded p-1.5 text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-900/30" title="Supprimer">
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              </TableCell>
+            </TableRow>
+          );
+        })}
+      </TableBody>
+    </Table>
+  </div>
+);
+
+};
+
+export default ParentsTable;

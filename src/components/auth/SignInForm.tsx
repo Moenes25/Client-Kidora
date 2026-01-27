@@ -98,10 +98,10 @@ export default function SignInForm() {
   return (
   <div className="w-full max-w-sm mx-auto">
     {/* Carte du formulaire avec hauteur réduite */}
-    <div className="bg-white p-5 rounded-xl shadow-lg border border-gray-100"> {/* p-5 au lieu de p-6 */}
+    <div className="bg-white p-5 rounded-xl shadow-lg border border-gray-100 dark:supports-[backdrop-filter]:bg-gray-900/60"> {/* p-5 au lieu de p-6 */}
       {/* Message d'erreur */}
       {(error && authError) &&(
-        <div className="mb-3 p-2 text-sm text-red-700 bg-red-50 rounded-lg border border-red-200"> {/* mb-3 p-2 */}
+        <div className="mb-3 p-2 text-sm text-red-700 bg-red-50 rounded-lg border border-red-200 dark:text-red-300 dark:bg-red-900/20 dark:border-red-800/30"> {/* mb-3 p-2 */}
           {error || authError}
         </div>
       )}
@@ -113,9 +113,9 @@ export default function SignInForm() {
    <div className="text-center mb-6">
   <div className="inline-flex items-center justify-center mb-2"> {/* Changé de mb-4 à mb-2 */}
     <img 
-      src="/images/logo/logo.png"
+      src="/images/logo/logo_kidora.png"
       alt="KIDORA Logo" 
-      className="w-32 h-32 object-contain" 
+      className="w-36 h-36 object-contain" 
       onError={(e) => {
         const target = e.target as HTMLImageElement;
         target.style.display = 'none';
@@ -130,7 +130,7 @@ export default function SignInForm() {
 </div>
           {/* Champ Email */}
           <div className="space-y-1"> {/* space-y-1 au lieu de space-y-1.5 */}
-            <label className="text-sm font-medium text-gray-900">
+            <label className="text-sm font-medium text-gray-900 dark:text-white">
               Email
             </label>
             <input
@@ -140,13 +140,14 @@ export default function SignInForm() {
               onChange={(e) => setEmail(e.target.value)}
               required 
               disabled={isLoading}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm" /* py-2 au lieu de py-2.5 */
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm dark:border-white/10 dark:bg-gray-900 dark:text-white
+                         dark:placeholder:text-white/50 dark:focus:ring-white/10" /* py-2 au lieu de py-2.5 */
             />
           </div>
 
           {/* Champ Mot de passe */}
           <div className="space-y-1"> {/* space-y-1 au lieu de space-y-1.5 */}
-            <label className="text-sm font-medium text-gray-900">
+            <label className="text-sm font-medium text-gray-900 dark:text-white">
               Mot de passe
             </label>
             <div className="relative">
@@ -157,18 +158,18 @@ export default function SignInForm() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 disabled={isLoading}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white tracking-widest pr-10 text-sm" /* py-2 au lieu de py-2.5 */
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white tracking-widest pr-10 text-sm  dark:border-white/10 dark:bg-gray-900 dark:text-white dark:focus:ring-white/10" /* py-2 au lieu de py-2.5 */
               />
               <button
                 type="button"
                 disabled={isLoading}
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 text-sm" /* right-2 au lieu de right-3 */
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 text-sm dark:text-white " /* right-2 au lieu de right-3 */
               >
                 {showPassword ? (
-                  <EyeIcon className="h-4 w-4" /> 
+                  <EyeIcon className="h-4 w-4 dark:text-white" /> 
                 ) : (
-                  <EyeCloseIcon className="h-4 w-4" /> 
+                  <EyeCloseIcon className="h-4 w-4 " /> 
                 )}
               </button>
             </div>
@@ -181,9 +182,9 @@ export default function SignInForm() {
                 checked={isChecked}
                 onChange={setIsChecked}
                 disabled={isLoading}
-                className="h-3.5 w-3.5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" /* h-3.5 w-3.5 */
+                className="h-3.5 w-3.5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded dark:border-white/20" /* h-3.5 w-3.5 */
               />
-              <label className="ml-1.5 text-xs text-gray-700"> {/* ml-1.5 text-xs */}
+              <label className="ml-1.5 text-xs text-gray-700 dark:text-white/80"> {/* ml-1.5 text-xs */}
                 Rester connecté
               </label>
             </div>
@@ -223,7 +224,7 @@ export default function SignInForm() {
 
       {/* Lien d'inscription */}
       <div className="mt-3 pt-3 border-t border-gray-200 text-center"> {/* mt-3 pt-3 */}
-        <p className="text-gray-600 text-xs"> {/* text-xs */}
+        <p className="text-gray-600 text-xs dark:text-white/60 dark:hover:text-white/80"> {/* text-xs */}
           Vous n'avez pas de compte ?{" "}
           <Link
             to="/signup"
@@ -237,7 +238,7 @@ export default function SignInForm() {
       {/* Boutons d'accès rapide (optionnel, pour le développement) */}
       <div className="mt-3"> {/* mt-3 */}
         <details className="text-center">
-          <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-700"> {/* text-xs */}
+          <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-700 dark:text-white/60 dark:hover:text-white/80"> {/* text-xs */}
             Accès rapide pour les tests
           </summary>
           <div className="mt-1.5 space-y-1"> {/* mt-1.5 */}
