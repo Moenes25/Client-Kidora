@@ -840,26 +840,60 @@ const presentPct = nbTotal ? Math.round((nbPresents / nbTotal) * 100) : 0;
               <h3 className="text-lg font-semibold">Actions rapides</h3>
             </div>
             <div className="p-5 space-y-3">
-              <button
-                onClick={() => setShowGestionPresence(true)}
-                className="w-full flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700"
-              >
-                <span className="font-medium">Gérer présence</span>
-                <span className="text-xs bg-blue-400 px-2 py-1 rounded">+</span>
-              </button>
+              
+         <button
+             onClick={() => setShowGestionPresence(true)}
+             className="w-full flex items-center justify-between p-3 rounded-lg 
+             bg-gradient-to-r from-blue-500 to-blue-600 text-white 
+             hover:from-blue-600 hover:to-blue-700"
+          >
+           <span className="font-medium">Gérer présence</span>
+
+         <span className="bg-blue-500 p-1.5 rounded flex items-center justify-center dark:text-white-300 text-white-900">
+          <svg
+             xmlns="http://www.w3.org/2000/svg"
+             viewBox="0 0 640 640"
+             width="18"
+             height="18"
+             fill="currentColor">
+             <path d="M439.4 96L448 96C483.3 96 512 124.7 512 160L512 512C512 547.3 483.3 576 448 576L192 576C156.7 576 128 547.3 128 512L128 160C128 124.7 156.7 96 192 96L200.6 96C211.6 76.9 232.3 64 256 64L384 64C407.7 64 428.4 76.9 439.4 96zM376 176C389.3 176 400 165.3 400 152C400 138.7 389.3 128 376 128L264 128C250.7 128 240 138.7 240 152C240 165.3 250.7 176 264 176L376 176zM256 320C256 302.3 241.7 288 224 288C206.3 288 192 302.3 192 320C192 337.7 206.3 352 224 352C241.7 352 256 337.7 256 320zM288 320C288 333.3 298.7 344 312 344L424 344C437.3 344 448 333.3 448 320C448 306.7 437.3 296 424 296L312 296C298.7 296 288 306.7 288 320zM288 448C288 461.3 298.7 472 312 472L424 472C437.3 472 448 461.3 448 448C448 434.7 437.3 424 424 424L312 424C298.7 424 288 434.7 288 448zM224 480C241.7 480 256 465.7 256 448C256 430.3 241.7 416 224 416C206.3 416 192 430.3 192 448C192 465.7 206.3 480 224 480z"/>
+          </svg>
+        </span>
+         </button>
               <button
                 onClick={() => setShowAjouterActivite(true)}
-                className="w-full flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700"
-              >
+                className="w-full flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700">
                 <span className="font-medium">Ajouter activité</span>
-                <span className="text-xs bg-green-400 px-2 py-1 rounded">+</span>
+
+
+                <span className="bg-green-500 p-1.5 rounded flex items-center justify-center dark:text-white-300 text-white-900">
+                <svg 
+                 xmlns="http://www.w3.org/2000/svg" 
+                 viewBox="0 0 640 640"
+                 width="18"
+                 height="18"
+                 fill="currentColor">
+                 <path d="M288 64C323.3 64 352 85.5 352 112C352 122.4 347.6 132 340 139.9C333.4 146.8 328 155.2 328 164.8C328 179.8 340.2 192 355.2 192L400 192C426.5 192 448 213.5 448 240L448 284.8C448 299.8 460.2 312 475.2 312C484.7 312 493.2 306.6 500.1 300C508 292.5 517.6 288 528 288C554.5 288 576 316.7 576 352C576 387.3 554.5 416 528 416C517.6 416 507.9 411.6 500.1 404C493.2 397.4 484.8 392 475.2 392C460.2 392 448 404.2 448 419.2L448 528C448 554.5 426.5 576 400 576L343.2 576C330.4 576 320 565.6 320 552.8C320 543.6 325.8 535.5 333.2 530C344.8 521.3 352 509.3 352 496C352 469.5 323.3 448 288 448C252.7 448 224 469.5 224 496C224 509.3 231.2 521.3 242.8 530C250.2 535.5 256 543.5 256 552.8C256 565.6 245.6 576 232.8 576L112 576C85.5 576 64 554.5 64 528L64 407.2C64 394.4 74.4 384 87.2 384C96.4 384 104.5 389.8 110 397.2C118.7 408.8 130.7 416 144 416C170.5 416 192 387.3 192 352C192 316.7 170.5 288 144 288C130.7 288 118.7 295.2 110 306.8C104.5 314.2 96.5 320 87.2 320C74.4 320 64 309.6 64 296.8L64 240C64 213.5 85.5 192 112 192L220.8 192C235.8 192 248 179.8 248 164.8C248 155.3 242.6 146.8 236 139.9C228.5 132 224 122.4 224 112C224 85.5 252.7 64 288 64z"/>
+                </svg>
+                </span>
               </button>
               <button
                 onClick={() => setShowAjouterObservation(true)}
                 className="w-full flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700"
               >
                 <span className="font-medium">Ajouter observation</span>
-                <span className="text-xs bg-purple-400 px-2 py-1 rounded">📝</span>
+                <span className="bg-purple-500 p-1.5 rounded flex items-center justify-center dark:text-white-300 text-white-900">
+                 <svg xmlns="http://www.w3.org/2000/svg" 
+                 viewBox="0 0 640 640"
+                 width="18"
+                 height="18"
+                 fill="currentColor"
+                 >
+                 <path d="M320 544C461.4 544 576 436.5 576 304C576 171.5 461.4 64 320 64C178.6 64 64 171.5 64 304C64 358.3 83.2 408.3 115.6 448.5L66.8 540.8C62 549.8 63.5 560.8 70.4 568.3C77.3 575.8 88.2 578.1 97.5 574.1L215.9 523.4C247.7 536.6 282.9 544 320 544zM192 272C209.7 272 224 286.3 224 304C224 321.7 209.7 336 192 336C174.3 336 160 321.7 160 304C160 286.3 174.3 272 192 272zM320 272C337.7 272 352 286.3 352 304C352 321.7 337.7 336 320 336C302.3 336 288 321.7 288 304C288 286.3 302.3 272 320 272zM416 304C416 286.3 430.3 272 448 272C465.7 272 480 286.3 480 304C480 321.7 465.7 336 448 336C430.3 336 416 321.7 416 304z"/>
+                 </svg>
+
+
+                </span>
               </button>
             </div>
           </div>
