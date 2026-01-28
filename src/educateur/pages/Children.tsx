@@ -405,15 +405,15 @@ export default function ChildrenPage() {
               <thead className="bg-gradient-to-r from-indigo-500 to-violet-600">
                 <tr>
                   {["Enfant", "Âge/Classe", "Contact parents", "Dernière observation", "Actions"].map(
-                    (h) => (
-                      <th
-                        key={h}
-                        className="px-4 py-3 text-left text-sm font-semibold text-white"
-                      >
-                        {h}
-                      </th>
-                    )
-                  )}
+                      (h) => (
+                        <th
+                          key={h}
+                          className={`px-4 py-3 text-sm font-semibold text-white ${h === "Actions" ? "text-center" : "text-left"}`}
+                        >
+                          {h}
+                        </th>
+                      )
+                    )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
@@ -492,8 +492,8 @@ export default function ChildrenPage() {
                     </td>
 
                     {/* Actions */}
-                    <td className="px-4 py-4">
-                      <div className="flex items-center gap-2">
+                    <td className="px-4 py-4 text-center">
+                      <div className="flex items-center justify-center gap-2">
                         <button
                           onClick={() => setSelectedEnfant(enfant)}
                           className="inline-flex items-center gap-2 rounded-lg bg-blue-50 px-3 py-2 text-sm font-medium text-blue-600 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-300 dark:hover:bg-blue-900/50"
