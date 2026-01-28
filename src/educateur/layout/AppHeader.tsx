@@ -1,6 +1,6 @@
 // src/educateur/layout/AppHeader.tsx
 import { useEffect, useMemo, useRef, useState } from "react";
-import { NavLink, Link, useLocation } from "react-router-dom";
+import { NavLink, Link } from "react-router-dom";
 import { ThemeToggleButton } from "../../components/common/ThemeToggleButton";
 import NotificationDropdown from "../../components/header/NotificationDropdown";
 import UserDropdown from "../../components/header/UserDropdown";
@@ -9,7 +9,7 @@ import logoUrl from "../../assets/img/logo/logo.png";
 type NavItem = {
   name: string;
   path: string;
-  icon: JSX.Element;
+  icon: React.ReactNode;
 };
 
 const NAV_LINKS: NavItem[] = [
@@ -67,7 +67,6 @@ const NAV_LINKS: NavItem[] = [
 export default function AppHeader() {
   const [openMobile, setOpenMobile] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const location = useLocation();
 
   // (optionnel) raccourci clavier pour focus une zone de recherche si tu l’ajoutes plus tard
   const inputRef = useRef<HTMLInputElement>(null);

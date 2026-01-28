@@ -324,7 +324,11 @@ function ObservationModal({
           <button
             onClick={onSave}
             disabled={!observationGeneree}
-            className={`rounded-lg px-4 py-2 font-medium text-white ${observationGeneree ? "bg-green-600 hover:bg-green-700" : "cursor-not-allowed bg-gray-300 dark:bg-gray-700"}`}
+            className={`rounded-lg px-4 py-2 font-medium text-white 
+              ${observationGeneree ? 
+                "bg-green-600 hover:bg-green-700" 
+                : 
+                "cursor-not-allowed bg-gray-300 dark:bg-gray-700"}`}
           >
             Enregistrer
           </button>
@@ -349,14 +353,14 @@ function ObservationModal({
                   <button
                     type="button"
                     onClick={() => setNouvelleObservation({ ...nouvelleObservation, typeCible: "enfant", cibleId: "" })}
-                    className={`flex-1 rounded-lg border px-3 py-2 text-left ${nouvelleObservation.typeCible === "enfant" ? "border-blue-500 bg-white dark:bg-gray-900" : "border-gray-300 dark:border-gray-700"}`}
+                    className={`dark:text-gray-500 flex-1 rounded-lg border px-3 py-2 text-left ${nouvelleObservation.typeCible === "enfant" ? "border-blue-500 bg-white dark:bg-gray-900" : "border-gray-300 dark:border-gray-700"}`}
                   >
                     👤 Individuelle
                   </button>
                   <button
                     type="button"
                     onClick={() => setNouvelleObservation({ ...nouvelleObservation, typeCible: "classe", cibleId: "" })}
-                    className={`flex-1 rounded-lg border px-3 py-2 text-left ${nouvelleObservation.typeCible === "classe" ? "border-purple-500 bg-white dark:bg-gray-900" : "border-gray-300 dark:border-gray-700"}`}
+                    className={`dark:text-gray-500 flex-1 rounded-lg border px-3 py-2 text-left ${nouvelleObservation.typeCible === "classe" ? "border-purple-500 bg-white dark:bg-gray-900" : "border-gray-300 dark:border-gray-700"}`}
                   >
                     👥 Classe
                   </button>
@@ -368,7 +372,7 @@ function ObservationModal({
                     required
                     value={nouvelleObservation.cibleId}
                     onChange={(e) => setNouvelleObservation({ ...nouvelleObservation, cibleId: e.target.value })}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
+                    className=" dark:text-gray-500 w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800 "
                   >
                     <option value="">Sélectionnez un enfant…</option>
                     {enfants.map((e) => (
@@ -380,7 +384,7 @@ function ObservationModal({
                     required
                     value={nouvelleObservation.cibleId}
                     onChange={(e) => setNouvelleObservation({ ...nouvelleObservation, cibleId: e.target.value })}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
+                    className=" w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-500"
                   >
                     <option value="">Sélectionnez une classe…</option>
                     {classes.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -389,7 +393,7 @@ function ObservationModal({
               </div>
             </div>
 
-            <div className="mt-3 grid grid-cols-2 gap-3">
+            <div className="mt-3 grid grid-cols-2 gap-3 dark:text-gray-500">
               <input
                 type="date"
                 value={nouvelleObservation.date}
@@ -400,13 +404,13 @@ function ObservationModal({
                 type="time"
                 value={nouvelleObservation.heure}
                 onChange={(e) => setNouvelleObservation({ ...nouvelleObservation, heure: e.target.value })}
-                className="rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
+                className="rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800 "
               />
             </div>
           </div>
 
           {/* Domaine + Sentiment */}
-          <div className="rounded-xl border border-green-200 bg-green-50 p-4 dark:border-green-900/40 dark:bg-green-900/20">
+          <div className="rounded-xl border border-green-200 bg-green-50 p-4 dark:border-green-900/40 dark:bg-green-900/20 dark:text-gray-500">
             <h4 className="mb-3 text-sm font-semibold text-green-800 dark:text-green-300">Analyse</h4>
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
@@ -445,34 +449,34 @@ function ObservationModal({
           </div>
 
           {/* Détails */}
-          <div className="rounded-xl border border-purple-200 bg-purple-50 p-4 dark:border-purple-900/40 dark:bg-purple-900/20">
+          <div className="rounded-xl border border-purple-200 bg-purple-50 p-4 dark:border-purple-900/40 dark:bg-purple-900/20 ">
             <h4 className="mb-3 text-sm font-semibold text-purple-800 dark:text-purple-300">Détails</h4>
-            <label className="mb-1 block text-sm font-medium">Note rapide (1–2 phrases) *</label>
+            <label className="mb-1 block text-sm font-medium dark:text-gray-400">Note rapide (1–2 phrases) *</label>
             <textarea
               value={nouvelleObservation.descriptionRapide}
               onChange={(e) => setNouvelleObservation({ ...nouvelleObservation, descriptionRapide: e.target.value })}
               rows={3}
               placeholder="Ex : a aidé un camarade, a demandé de l’aide calmement…"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-500"
             />
-            <div className="mt-3 grid grid-cols-2 gap-3">
+            <div className="mt-3 grid grid-cols-2 gap-3 ">
               <div>
-                <label className="mb-1 block text-sm font-medium">Moment</label>
+                <label className="mb-1 block text-sm font-medium dark:text-gray-400">Moment</label>
                 <select
                   value={nouvelleObservation.contexte}
                   onChange={(e) => setNouvelleObservation({ ...nouvelleObservation, contexte: e.target.value })}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-500"
                 >
                   <option value="">Non spécifié</option>
                   {contextesRapides.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
                 </select>
               </div>
               <div>
-                <label className="mb-1 block text-sm font-medium">Intensité</label>
+                <label className="mb-1 block text-sm font-medium dark:text-gray-400">Intensité</label>
                 <select
                   value={nouvelleObservation.intensite}
                   onChange={(e) => setNouvelleObservation({ ...nouvelleObservation, intensite: e.target.value })}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-500"
                 >
                   {intensitesOptions.map((i) => <option key={i.value} value={i.value}>{i.label}</option>)}
                 </select>
@@ -480,7 +484,7 @@ function ObservationModal({
             </div>
 
             {/* Templates rapides */}
-            <div className="mt-3 flex flex-wrap gap-2">
+            <div className="mt-3 flex flex-wrap gap-2 dark:text-gray-500">
               {[
                 "a collaboré avec enthousiasme",
                 "a montré de la persévérance",
