@@ -1160,10 +1160,10 @@ function PresenceModal({
         </div>
 
         {/* Dropdown animée */}
-        <div className="relative group hover:scale-105 focus-within:animate-pulse transition-transform duration-300 ease-out h-10 ">          <select
+        <div className="relative group hover:scale-105 focus-within:animate-pulse transition-transform duration-300 ease-out h-10 text-gray-600 dark:text-gray-300">          <select
             value={classe}
             onChange={(e) => setClasse(e.target.value)}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 pr-10 shadow-sm appearance-none transition-all duration-200  hover:border-gray-400 hover:bg-gray-50  focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:shadow-lg dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-blue-400 dark:hover:bg-gradient-to-r dark:from-blue-900/50 dark:to-purple-900/50 dark:focus:ring-blue-400 dark:focus:shadow-blue-500/50" >
+            className="w-full rounded-lg   border border-gray-300 px-3 py-2 pr-10 shadow-sm appearance-none transition-all duration-200  hover:border-gray-400 hover:bg-gray-50  focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:shadow-lg dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-blue-400 dark:hover:bg-gradient-to-r dark:from-blue-900/50 dark:to-purple-900/50 dark:focus:ring-blue-400 dark:focus:shadow-blue-500/50" >
             <option>Toutes</option>
             {classes.map((c) => (
               <option key={c} value={c}>
