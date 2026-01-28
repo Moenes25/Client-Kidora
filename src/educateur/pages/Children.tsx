@@ -2,7 +2,6 @@
 import React, { useMemo, useState } from "react";
 import PageMeta from "../../components/common/PageMeta";
 import {
-  PlusIcon,
   EyeIcon,
   DownloadIcon,
   MailIcon,
@@ -405,11 +404,16 @@ export default function ChildrenPage() {
             <table className="w-full">
               <thead className="bg-gradient-to-r from-indigo-500 to-violet-600">
                 <tr>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-white">Enfant</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-white">Âge/Classe</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-white">Contact parents</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-white">Dernière observation</th>
-                  <th className="py-3 px-25 text-left text-sm font-semibold text-white">Actions</th>
+                  {["Enfant", "Âge/Classe", "Contact parents", "Dernière observation", "Actions"].map(
+                    (h) => (
+                      <th
+                        key={h}
+                        className="px-4 py-3 text-left text-sm font-semibold text-white"
+                      >
+                        {h}
+                      </th>
+                    )
+                  )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
@@ -533,100 +537,106 @@ export default function ChildrenPage() {
         </div>
       ) : (
         // Grille
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {filteredEnfants.map((enfant) => (
-            <div
-              key={enfant.id}
-              className="rounded-2xl border border-gray-200 bg-white p-5 transition-shadow hover:shadow-lg dark:border-gray-800 dark:bg-gray-900"
-            >
-              <div className="flex flex-col items-center text-center">
-                <div className="relative mb-4">
-                  <Avatar enfant={enfant} size="lg" ring />
-                  <div
-                    className={`absolute -bottom-2 -right-2 grid h-6 w-6 place-items-center rounded-full border-2 border-white text-[10px] font-bold dark:border-gray-800 ${
-                      enfant.presence === "present"
-                        ? "bg-green-500 text-white"
-                        : enfant.presence === "absent"
-                        ? "bg-rose-500 text-white"
-                        : "bg-amber-500 text-white"
-                    }`}
-                    title={enfant.presence === "present" ? "Présent" : enfant.presence === "absent" ? "Absent" : "En retard"}
-                  >
-                    {enfant.presence === "present" ? "✓" : enfant.presence === "absent" ? "✗" : "•"}
-                  </div>
-                </div>
-
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  {enfant.prenom} {enfant.nom}
-                </h3>
-
-                <div className="mt-2 flex items-center gap-2">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                    {enfant.age} ans
-                  </span>
-                  <span className="text-sm text-gray-400 dark:text-gray-600">•</span>
-                  <ClasseBadge classe={enfant.classe} />
-                </div>
-
-                <div className="mt-4 w-full text-left">
-                  {!!enfant.pointsFort?.length && (
-                    <div className="mb-2 text-sm text-gray-500 dark:text-gray-400">
-                      <strong>Points forts :</strong>
-                      <div className="mt-1 flex flex-wrap gap-1">
-                        {enfant.pointsFort.slice(0, 3).map((p, i) => (
-                          <span
-                            key={i}
-                            className="rounded px-2 py-0.5 text-xs text-green-700 ring-1 ring-green-200 dark:text-green-300 dark:ring-green-900/40"
-                          >
-                            {p}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {!!enfant.activitesPreferees?.length && (
-                    <div className="mb-2 text-sm text-gray-500 dark:text-gray-400">
-                      <strong>Activités préférées :</strong>
-                      <div className="mt-1 flex flex-wrap gap-1">
-                        {enfant.activitesPreferees.slice(0, 3).map((a, i) => (
-                          <span
-                            key={i}
-                            className="rounded px-2 py-0.5 text-xs text-blue-700 ring-1 ring-blue-200 dark:text-blue-300 dark:ring-blue-900/40"
-                          >
-                            {a}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div className="mt-4 w-full border-t border-gray-200 pt-4 dark:border-gray-800">
-                  <div className="flex justify-between gap-2">
-                    <button
-                      onClick={() => setSelectedEnfant(enfant)}
-                      className="flex-1 rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
-                    >
-                      Voir profil
-                    </button>
-                    <button
-                      className="rounded-lg bg-gray-100 px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-                      title="Contacter parents"
-                    >
-                      <MailIcon className="size-4" />
-                    </button>
-                  </div>
-                </div>
+  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 auto-rows-fr">
+    {filteredEnfants.map((enfant) => (
+      <div
+        key={enfant.id}
+        className="flex h-full flex-col rounded-2xl border border-gray-200 bg-white p-5 transition-shadow hover:shadow-lg dark:border-gray-800 dark:bg-gray-900"
+      >
+        <div className="flex h-full flex-col text-center">
+          <div className="flex flex-col items-center">
+            <div className="relative mb-4">
+              <Avatar enfant={enfant} size="lg" ring />
+              <div
+                className={`absolute -bottom-2 -right-2 grid h-6 w-6 place-items-center rounded-full border-2 border-white text-[10px] font-bold dark:border-gray-800 ${
+                  enfant.presence === "present"
+                    ? "bg-green-500 text-white"
+                    : enfant.presence === "absent"
+                    ? "bg-rose-500 text-white"
+                    : "bg-amber-500 text-white"
+                }`}
+              >
+                {enfant.presence === "present"
+                  ? "✓"
+                  : enfant.presence === "absent"
+                  ? "✗"
+                  : "•"}
               </div>
             </div>
-          ))}
 
-          {filteredEnfants.length === 0 && (
-            <div className="col-span-full rounded-2xl border border-dashed border-gray-300 p-10 text-center text-gray-500 dark:border-gray-700 dark:text-gray-400">
-              Aucun enfant à afficher.
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              {enfant.prenom} {enfant.nom}
+            </h3>
+
+            <div className="mt-2 flex items-center justify-center gap-2">
+              <span className="text-sm text-gray-600 dark:text-gray-400">
+                {enfant.age} ans
+              </span>
+              <span className="text-sm text-gray-400 dark:text-gray-600">•</span>
+              <ClasseBadge classe={enfant.classe} />
             </div>
-          )}
+            <div className="mt-4 w-full text-left text-sm text-gray-500 dark:text-gray-400">
+              {!!enfant.pointsFort?.length && (
+                <div className="mb-2">
+                  <strong>Points forts :</strong>
+                  <div className="mt-1 flex flex-wrap gap-1">
+                    {enfant.pointsFort.slice(0, 2).map((p, i) => (
+                      <span
+                        key={i}
+                        className="rounded px-2 py-0.5 text-xs text-green-700 ring-1 ring-green-200 dark:text-green-300 dark:ring-green-900/40"
+                      >
+                        {p}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {!!enfant.activitesPreferees?.length && (
+                <div className="mb-3">
+                  <strong>Activités :</strong>
+                  <div className="mt-1 flex flex-wrap gap-1">
+                    {enfant.activitesPreferees.slice(0, 2).map((a, i) => (
+                      <span
+                        key={i}
+                        className="rounded px-2 py-0.5 text-xs text-blue-700 ring-1 ring-blue-200 dark:text-blue-300 dark:ring-blue-900/40"
+                      >
+                        {a}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="flex-1" />
+          <div className="mt-auto w-full border-t border-gray-200 pt-4 dark:border-gray-800">
+            <div className="flex gap-2">
+              <button
+                onClick={() => setSelectedEnfant(enfant)}
+                className="flex-1 rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
+              >
+                Voir profil
+              </button>
+
+              <button
+                className="rounded-lg bg-gray-100 px-3 py-2 text-sm text-gray-700 transition hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                title="Contacter parents"
+              >
+                <MailIcon className="size-4" />
+              </button>
+            </div>
+          </div>
         </div>
+      </div>
+    ))}
+
+    {filteredEnfants.length === 0 && (
+      <div className="col-span-full rounded-2xl border border-dashed border-gray-300 p-10 text-center text-gray-500 dark:border-gray-700 dark:text-gray-400">
+        Aucun enfant à afficher.
+      </div>
+    )}
+  </div>
       )}
 
       {/* Modal profil enfant */}
