@@ -498,14 +498,14 @@ export default function ChildrenPage() {
                           onClick={() => setSelectedEnfant(enfant)}
                           className="inline-flex items-center gap-2 rounded-lg bg-blue-50 px-3 py-2 text-sm font-medium text-blue-600 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-300 dark:hover:bg-blue-900/50"
                         >
-                          <EyeIcon className="size-4" />
+                          <EyeIcon className="w-4 h-4 text-blue-600 dark:text-blue-300" />
                           Voir profil
                         </button>
                         <button
                           className="inline-flex items-center gap-2 rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
                           title="Contacter les parents"
                         >
-                          <MailIcon className="size-4" />
+                          <MailIcon className="w-4 h-4" />
                           Contacter
                         </button>
                       </div>
