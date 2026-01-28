@@ -325,70 +325,169 @@ export default function ChildrenPage() {
               </span>
             </div>
 
-            <select
-              value={filterClass}
-              onChange={(e) => setFilterClass(e.target.value)}
-              className="rounded-xl border border-gray-300 bg-gray-50 px-3 py-3 text-sm focus:ring-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
-            >
-              <option value="all">Toutes les classes</option>
-              {classes
-                .filter((c) => c !== "all")
-                .map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-            </select>
 
-            <select
-              value={filterPresence}
-              onChange={(e) => setFilterPresence(e.target.value)}
-              className="dark:text-white rounded-xl border border-gray-300 bg-gray-50 px-3 py-3 text-sm focus:ring-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800"
-            >
-              <option value="all">Tous statuts</option>
-              <option value="present">Présents</option>
-              <option value="absent">Absents</option>
-              <option value="retard">En retard</option>
-            </select>
+            <div className="relative w-full max-w-xs">
 
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as any)}
-              className="dark:text-white rounded-xl border border-gray-300 bg-gray-50 px-3 py-3 text-sm focus:ring-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800"
-            >
-              <option value="prenom">Trier par prénom</option>
-              <option value="age">Trier par âge</option>
-              <option value="classe">Trier par classe</option>
-            </select>
+ <div 
+  className="
+    relative group
+    transition-all duration-300 ease-out
+    hover:scale-105
+    active:scale-[0.98]
+    focus-within:scale-105
+  "
+>
+
+
+  <div className="
+    absolute -inset-[2px] rounded-xl
+    bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500
+    opacity-0
+    group-hover:opacity-70
+    group-focus-within:opacity-100
+    blur-sm
+    transition duration-500
+    pointer-events-none
+  " />
+  <div className="
+    relative z-10 rounded-xl
+    bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900
+    border-2 border-indigo-200 dark:border-indigo-900/50
+    shadow-lg
+    group-hover:shadow-xl
+    group-focus-within:shadow-indigo-500/60
+    group-focus-within:border-indigo-500 dark:group-focus-within:border-indigo-400
+    transition-all 
+  ">
+
+    <div className="
+      pointer-events-none absolute inset-y-0 left-3
+      flex items-center
+      text-indigo-600 dark:text-indigo-300
+
+
+    ">
+      <svg className="h-5 w-5"
+        fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}
+          d="M4 6h16M4 12h16M4 18h16" />
+      </svg>
+    </div>
+
+
+    <select
+      value={filterClass}
+      onChange={(e) => setFilterClass(e.target.value)}
+      className="
+        w-full appearance-none
+        pl-10 pr-10 py-3
+        text-sm font-bold
+        text-gray-900 dark:text-white
+        bg-transparent
+        focus:outline-none
+        cursor-pointer
+        transition-all duration-200
+      "
+    >
+      <option className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-bold" value="all">
+        📚 Toutes les classes
+      </option>
+      {classes
+        .filter((c) => c !== "all")
+        .map((c) => (
+          <option
+            key={c}
+            value={c}
+            className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-bold"
+          >
+            👥 {c}
+          </option>
+        ))}
+    </select>
+
+    <div className="
+      pointer-events-none absolute inset-y-0 right-3
+      flex items-center
+      text-indigo-600 dark:text-indigo-300
+      transition-transform duration-500 ease-out
+      group-focus-within:rotate-180
+    ">
+      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}
+          d="M19 9l-7 7-7-7" />
+      </svg>
+    </div>
+
+  </div>
+</div>
+
+
+</div>
+
+
+            <div className="relative group transition-all duration-300 ease-out hover:scale-105 active:scale-[0.98] focus-within:scale-105">
+              <div className="absolute -inset-[2px] rounded-xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-0 group-hover:opacity-70 group-focus-within:opacity-100 blur-sm transition duration-500 pointer-events-none" />
+              <div className="relative z-10 rounded-xl bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 border-2 border-indigo-200 dark:border-indigo-900/50 shadow-lg group-hover:shadow-xl group-focus-within:shadow-indigo-500/60 group-focus-within:border-indigo-500 dark:group-focus-within:border-indigo-400 transition-all duration-300">
+              <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-indigo-600 dark:text-indigo-300 transition-all duration-300">
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
+                </div>
+                <select value={filterPresence} onChange={(e) => setFilterPresence(e.target.value)} className="w-full appearance-none pl-10 pr-10 py-3 text-sm font-bold text-gray-900 dark:text-white bg-transparent focus:outline-none cursor-pointer transition-all duration-200">
+                  <option className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-bold" value="all">✓ Tous statuts</option>
+                  <option className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-bold" value="present">✅ Présents</option>
+                  <option className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-bold" value="absent">❌ Absents</option>
+                  <option className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-bold" value="retard">⏳ En retard</option>
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-indigo-600 dark:text-indigo-300 transition-transform duration-500 ease-out group-focus-within:rotate-180">
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" /></svg>
+                </div>
+              </div>
+            </div>
+
+            <div className="relative group transition-all duration-300 ease-out hover:scale-105 active:scale-[0.98] focus-within:scale-105">
+              <div className="absolute -inset-[2px] rounded-xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-0 group-hover:opacity-70 group-focus-within:opacity-100 blur-sm transition duration-500 pointer-events-none" />
+              <div className="relative z-10 rounded-xl bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 border-2 border-indigo-200 dark:border-indigo-900/50 shadow-lg group-hover:shadow-xl group-focus-within:shadow-indigo-500/60 group-focus-within:border-indigo-500 dark:group-focus-within:border-indigo-400 transition-all duration-300">
+                <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-indigo-600 dark:text-indigo-300 transition-all duration-300">
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
+                </div>
+                <select value={sortBy} onChange={(e) => setSortBy(e.target.value as any)} className="w-full appearance-none pl-10 pr-10 py-3 text-sm font-bold text-gray-900 dark:text-white bg-transparent focus:outline-none cursor-pointer transition-all duration-200">
+                  <option className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-bold" value="prenom">A→Z Trier par prénom</option>
+                  <option className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-bold" value="age">🎂 Trier par âge</option>
+                  <option className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-bold" value="classe">📚 Trier par classe</option>
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-indigo-600 dark:text-indigo-300 transition-transform duration-500 ease-out group-focus-within:rotate-180">
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" /></svg>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <div className="flex gap-1 rounded-xl bg-gray-100 p-1 dark:bg-gray-800">
+          <div className="flex items-center gap-3">
+            <div className="flex gap-2 rounded-xl bg-gradient-to-r from-gray-100 to-gray-50 p-2 dark:from-gray-800 dark:to-gray-900 border border-gray-300 dark:border-gray-700 shadow-md">
               <button
                 onClick={() => setViewMode("list")}
-                className={`rounded-lg px-3 py-2 text-sm ${
+                className={`rounded-lg px-4 py-2 text-sm font-semibold transition-all duration-300 ${
                   viewMode === "list"
-                    ? "bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-white"
-                    : "text-gray-600 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-700"
+                    ? "bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg scale-105"
+                    : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-white dark:hover:bg-gray-700"
                 }`}
               >
-                Liste
+                📋 Liste
               </button>
               <button
                 onClick={() => setViewMode("grid")}
-                className={`rounded-lg px-3 py-2 text-sm ${
+                className={`rounded-lg px-4 py-2 text-sm font-semibold transition-all duration-300 ${
                   viewMode === "grid"
-                    ? "bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-white"
-                    : "text-gray-600 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-700"
+                    ? "bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg scale-105"
+                    : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-white dark:hover:bg-gray-700"
                 }`}
               >
-                Grille
+                🎯 Grille
               </button>
             </div>
 
             <button
               onClick={exportCSV}
-              className="inline-flex items-center gap-2 rounded-xl bg-gray-100 px-4 py-2 text-sm text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 px-5 py-2 text-sm font-bold text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 dark:from-green-600 dark:to-emerald-600"
             >
               <DownloadIcon className="size-5" />
               Exporter
