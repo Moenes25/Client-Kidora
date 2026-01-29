@@ -1,11 +1,9 @@
 import PageMeta from "../../components/common/PageMeta";
-import { useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   UserIcon,
   CalenderIcon,
   EyeIcon,
-  PlusIcon,
-  CloseIcon,
   CheckCircleIcon,
   MailIcon,
 } from "../../icons";
@@ -613,33 +611,39 @@ export default function ActivitiesPage() {
 
       {/* -------------------- Modale: Ajouter une activité -------------------- */}
       {showAjouterActivite && (
-        <div className="fixed inset-0 z-[100000]">
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowAjouterActivite(false)} />
-          <div className="relative mx-auto mt-2 w-full max-w-3xl px-4">
-            <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-gray-800 dark:bg-gray-900">
-              <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4 dark:border-gray-800">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Nouvelle activité</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Créez une activité et visualisez-la en direct</p>
-                </div>
-                <button onClick={() => setShowAjouterActivite(false)} className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800">
-                  <CloseIcon className="size-5" />
-                </button>
-              </div>
-
-              <div className="grid max-h-[80vh] gap-6 overflow-y-auto p-6 md:grid-cols-[1.2fr,1fr]">
-                {/* Form */}
-                <form
-                  onSubmit={(e) => { e.preventDefault(); ajouterActivite(); }}
-                  className="space-y-4 dark:text-gray-300"
-                >
+        <ModalShell
+          open={showAjouterActivite}
+          onClose={() => setShowAjouterActivite(false)}
+          title="Nouvelle activité"
+          subtitle="Créez une activité et visualisez-la en direct"
+          width="max-w-4xl"
+          footer={
+            <>
+              <button
+                onClick={ajouterActivite}
+                className="rounded-lg bg-green-600 px-4 py-2 font-medium text-white hover:bg-green-700"
+              >
+                Créer l'activité
+              </button>
+              <button
+                onClick={() => setShowAjouterActivite(false)}
+                className="rounded-lg border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+              >
+                Annuler
+              </button>
+            </>
+          }
+        >
+          <div className="grid gap-6 md:grid-cols-2">
+            {/* Form */}
+            <div className="space-y-4">
                   <div>
-                    <label className="mb-1 block text-sm font-medium  ">Titre *</label>
+                    <label className="mb-1 block text-sm font-medium">Titre *</label>
                     <input
                       value={nouvelleActivite.titre}
                       onChange={(e) => setNouvelleActivite({ ...nouvelleActivite, titre: e.target.value })}
                       required
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-500"
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
                       placeholder="Ex : Atelier Peinture Libre"
                     />
                   </div>
@@ -650,7 +654,7 @@ export default function ActivitiesPage() {
                       <select
                         value={nouvelleActivite.type}
                         onChange={(e) => setNouvelleActivite({ ...nouvelleActivite, type: e.target.value as any })}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-500"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
                       >
                         <option value="creatif">Créatif</option>
                         <option value="sportif">Sportif</option>
@@ -665,7 +669,7 @@ export default function ActivitiesPage() {
                       <select
                         value={nouvelleActivite.classe}
                         onChange={(e) => setNouvelleActivite({ ...nouvelleActivite, classe: e.target.value })}
-                        className="w-full  rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-500"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
                       >
                         {["(3-4) ans","(4-5) ans","(6-7) ans","(8-9) ans","(10-11) ans","12 ans","Toutes classes"].map((c) => (
                           <option key={c} value={c}>{c}</option>
@@ -675,13 +679,13 @@ export default function ActivitiesPage() {
                   </div>
 
                   <div>
-                    <label className="mb-1 block text-sm font-medium dark:text-gray-300">Description *</label>
+                    <label className="mb-1 block text-sm font-medium">Description *</label>
                     <textarea
                       value={nouvelleActivite.description}
                       onChange={(e) => setNouvelleActivite({ ...nouvelleActivite, description: e.target.value })}
                       rows={3}
                       required
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-500"
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
                       placeholder="Décrivez l’activité…"
                     />
                   </div>
@@ -693,7 +697,7 @@ export default function ActivitiesPage() {
                         type="date"
                         value={nouvelleActivite.date}
                         onChange={(e) => setNouvelleActivite({ ...nouvelleActivite, date: e.target.value })}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-500"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
                       />
                     </div>
                     <div>
@@ -702,7 +706,7 @@ export default function ActivitiesPage() {
                         type="time"
                         value={nouvelleActivite.heure}
                         onChange={(e) => setNouvelleActivite({ ...nouvelleActivite, heure: e.target.value })}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-500"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
                       />
                     </div>
                     <div>
@@ -723,14 +727,15 @@ export default function ActivitiesPage() {
                   <div className="grid gap-4 md:grid-cols-2">
                     <div>
                       <label className="mb-1 block text-sm font-medium">Objectifs</label>
-                      <TagEditor
+                      <TagInput
                         value={nouvelleActivite.objectifs}
                         onChange={(v) => setNouvelleActivite({ ...nouvelleActivite, objectifs: v })}
-                        placeholder="ex: écoute, coopération…" />
+                        placeholder="ex: écoute, coopération…"
+                      />
                     </div>
                     <div>
                       <label className="mb-1 block text-sm font-medium">Matériel</label>
-                      <TagEditor
+                      <TagInput
                         value={nouvelleActivite.materiel}
                         onChange={(v) => setNouvelleActivite({ ...nouvelleActivite, materiel: v })}
                         placeholder="ex: peinture, ciseaux…"
@@ -747,7 +752,7 @@ export default function ActivitiesPage() {
                         max={30}
                         value={nouvelleActivite.enfantsMax}
                         onChange={(e) => setNouvelleActivite({ ...nouvelleActivite, enfantsMax: parseInt(e.target.value) || 0 })}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-500"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
                       />
                     </div>
                     <div>
@@ -755,7 +760,7 @@ export default function ActivitiesPage() {
                       <select
                         value={nouvelleActivite.statut}
                         onChange={(e) => setNouvelleActivite({ ...nouvelleActivite, statut: e.target.value as any })}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-500"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
                       >
                         <option value="planifie">Planifié</option>
                         <option value="en_cours">En cours</option>
@@ -777,7 +782,6 @@ export default function ActivitiesPage() {
                       Annuler
                     </button>
                   </div>
-                </form>
 
                 {/* Preview */}
                 <div className="space-y-3">
@@ -820,7 +824,7 @@ export default function ActivitiesPage() {
               </div>
             </div>
           </div>
-        </div>
+        </ModalShell>
       )}
 
       {/* -------------------- Modale: Évaluation -------------------- */}
@@ -998,7 +1002,8 @@ export default function ActivitiesPage() {
 }
 
 /* -------------------- Petits composants -------------------- */
-function TagEditor({
+/* -------------------- TagInput component -------------------- */
+function TagInput({
   value,
   onChange,
   placeholder,
@@ -1039,6 +1044,68 @@ function TagEditor({
           placeholder={placeholder}
           className="min-w-[160px] flex-1 bg-transparent px-2 py-1 text-sm outline-none placeholder:text-gray-400"
         />
+      </div>
+    </div>
+  );
+}
+
+/* -------------------- ModalShell component -------------------- */
+function ModalShell({
+  open,
+  onClose,
+  title,
+  subtitle,
+  children,
+  footer,
+  width = "max-w-3xl",
+}: {
+  open: boolean;
+  onClose: () => void;
+  title: string;
+  subtitle?: string;
+  children: React.ReactNode;
+  footer?: React.ReactNode;
+  width?: string;
+}) {
+  React.useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
+
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-[100000]">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative mx-auto mt-10 mb-10 w-full px-4">
+        <div className={`mx-auto ${width} overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-gray-800 dark:bg-gray-900`}>
+          <div className="sticky top-0 z-10 border-b border-gray-200 bg-white/90 px-6 py-4 backdrop-blur dark:border-gray-800 dark:bg-gray-900/90">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{title}</h3>
+                {subtitle && <p className="text-sm text-gray-500 dark:text-gray-400">{subtitle}</p>}
+              </div>
+              <button
+                onClick={onClose}
+                className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-800"
+                aria-label="Fermer"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+
+          <div className="max-h-[70vh] overflow-y-auto px-6 py-4">{children}</div>
+
+          {footer && (
+            <div className="sticky bottom-0 z-10 border-t border-gray-200 bg-white/90 px-6 py-4 backdrop-blur dark:border-gray-800 dark:bg-gray-900/90">
+              <div className="flex items-center justify-end gap-3">{footer}</div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
