@@ -1,0 +1,27 @@
+package tn.kidora.spring.kidorabackoffice.services;
+
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.web.multipart.MultipartFile;
+import tn.kidora.spring.kidorabackoffice.dto.RegisterDto;
+import tn.kidora.spring.kidorabackoffice.dto.Client.UserRegistreDto;
+import tn.kidora.spring.kidorabackoffice.entities.Client.Users;
+import tn.kidora.spring.kidorabackoffice.entities.Role;
+import tn.kidora.spring.kidorabackoffice.entities.User;
+
+public interface AuthService {
+    User register(RegisterDto dto);
+    Map<String,Object> login(String email, String password);
+    List<User> getAllUsersExceptSuperAdmin();
+     User updateAdminProfile(String email, String newEmail,String nom, String tel, String newPassword,MultipartFile imageFile);
+     void deleteUserById(String id);
+    User getUserById(String id);
+    User updateAdminProfileById(String id, String newEmail, String newPassword,Role newRole);
+    User updateSuperAdminPassword(String email, String oldPassword, String newPassword);
+    List<User> getAllUsersByRegion(String region);
+    Users registerClient(UserRegistreDto dto);
+
+
+
+}
