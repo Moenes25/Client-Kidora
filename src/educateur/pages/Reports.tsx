@@ -865,71 +865,147 @@ export default function ReportsPage() {
       {/* Barre sticky : filtres & modes */}
       <div className="sticky top-2 z-[5] mb-6 rounded-2xl border border-gray-200 bg-white/70 p-4 backdrop-blur dark:border-gray-800 dark:bg-gray-900/70">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          
+          {/* LEFT SIDE */}
           <div className="flex flex-1 items-center gap-3">
+            
+            {/* SEARCH */}
             <div className="relative flex-1">
               <input
                 type="text"
                 placeholder="Rechercher (titre, résumé, mots-clés)…"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="dark:text-white w-full rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 pl-10 text-sm outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800"
+                className="w-full rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 pl-10 text-sm outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
               />
               <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
                 🔎
               </span>
             </div>
 
-            <select
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value as any)}
-              className="dark:text-white rounded-xl border border-gray-300 bg-gray-50 px-3 py-3 text-sm focus:ring-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800"
+            {/* FILTER TYPE */}
+            <div 
+              className="
+                relative group w-full max-w-xs
+                transition-all duration-300 ease-out
+                hover:scale-105
+                active:scale-[0.98]
+                focus-within:scale-105
+              "
             >
-              <option value="all">Tous les types</option>
-              <option value="individuel_hebdomadaire">Individuel Hebdomadaire</option>
-              <option value="individuel_quotidien">Individuel Quotidien</option>
-              <option value="classe_hebdomadaire">Classe Hebdomadaire</option>
-              <option value="trimestriel">Trimestriel</option>
-            </select>
+              <div className="
+                absolute -inset-[2px] rounded-xl
+                bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500
+                opacity-0
+                group-hover:opacity-70
+                group-focus-within:opacity-100
+                blur-sm
+                transition duration-500
+                pointer-events-none
+              " />
+              <div className="
+                relative z-10 rounded-xl
+                bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900
+                border-2 border-indigo-200 dark:border-indigo-900/50
+                shadow-lg
+                group-hover:shadow-xl
+                group-focus-within:shadow-indigo-500/60
+                group-focus-within:border-indigo-500 dark:group-focus-within:border-indigo-400
+                transition-all
+              ">
+                <div className="
+                  pointer-events-none absolute inset-y-0 left-3
+                  flex items-center
+                  text-indigo-600 dark:text-indigo-300
+                ">
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}
+                      d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                </div>
+                <select
+                  value={filterType}
+                  onChange={(e) => setFilterType(e.target.value as any)}
+                  className="
+                    w-full appearance-none
+                    pl-10 pr-10 py-3
+                    text-sm font-bold
+                    text-gray-900 dark:text-white
+                    bg-transparent
+                    focus:outline-none
+                    cursor-pointer
+                    transition-all duration-200
+                  "
+                >
+                  <option className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-bold" value="all">📋 Tous les types</option>
+                  <option className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-bold" value="individuel_hebdomadaire">📊 Individuel Hebdo</option>
+                  <option className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-bold" value="individuel_quotidien">📝 Individuel Quotidien</option>
+                  <option className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-bold" value="classe_hebdomadaire">👥 Classe Hebdo</option>
+                  <option className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-bold" value="trimestriel">📅 Trimestriel</option>
+                </select>
+                <div className="
+                  pointer-events-none absolute inset-y-0 right-3
+                  flex items-center
+                  text-indigo-600 dark:text-indigo-300
+                  transition-transform duration-500 ease-out
+                  group-focus-within:rotate-180
+                ">
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}
+                      d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
+            </div>
 
-            <select
-              value={filterStatut}
-              onChange={(e) => setFilterStatut(e.target.value as any)}
-              className="dark:text-white rounded-xl border border-gray-300 bg-gray-50 px-3 py-3 text-sm focus:ring-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800"
-            >
-              <option value="all">Tous statuts</option>
-              <option value="brouillon">Brouillon</option>
-              <option value="finalise">Finalisé</option>
-              <option value="envoye">Envoyé</option>
-              <option value="archive">Archivé</option>
-            </select>
+            {/* FILTER STATUT */}
+            <div className="relative group transition-all duration-300 ease-out hover:scale-105 active:scale-[0.98] focus-within:scale-105">
+              <div className="absolute -inset-[2px] rounded-xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-0 group-hover:opacity-70 group-focus-within:opacity-100 blur-sm transition duration-500 pointer-events-none" />
+              <div className="relative z-10 rounded-xl bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 border-2 border-indigo-200 dark:border-indigo-900/50 shadow-lg group-hover:shadow-xl group-focus-within:shadow-indigo-500/60 group-focus-within:border-indigo-500 dark:group-focus-within:border-indigo-400 transition-all duration-300">
+                <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-indigo-600 dark:text-indigo-300 transition-all duration-300">
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
+                </div>
+                <select value={filterStatut} onChange={(e) => setFilterStatut(e.target.value as any)} className="w-full appearance-none pl-10 pr-10 py-3 text-sm font-bold text-gray-900 dark:text-white bg-transparent focus:outline-none cursor-pointer transition-all duration-200">
+                  <option className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-bold" value="all">✓ Tous statuts</option>
+                  <option className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-bold" value="brouillon">📋 Brouillon</option>
+                  <option className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-bold" value="finalise">✅ Finalisé</option>
+                  <option className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-bold" value="envoye">📤 Envoyé</option>
+                  <option className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-bold" value="archive">📦 Archivé</option>
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-indigo-600 dark:text-indigo-300 transition-transform duration-500 ease-out group-focus-within:rotate-180">
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" /></svg>
+                </div>
+              </div>
+            </div>
           </div>
 
+          {/* RIGHT SIDE */}
           <div className="flex items-center gap-2">
-            <div className="flex gap-1 rounded-xl bg-gray-100 p-1 dark:bg-gray-800">
+            <div className="flex gap-2 rounded-xl bg-gradient-to-r from-gray-100 to-gray-50 p-1.5 dark:from-gray-800 dark:to-gray-900 border border-gray-300 dark:border-gray-700 shadow-md">
               <button
                 onClick={() => setViewMode("list")}
-                className={`rounded-lg px-3 py-2 text-sm ${
+                className={`rounded-lg px-3.5 py-2 text-sm font-semibold transition-all duration-300 min-w-[90px] text-center ${
                   viewMode === "list"
-                    ? "bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-white"
-                    : "text-gray-600 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-700"
+                    ? "bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg"
+                    : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-white dark:hover:bg-gray-700"
                 }`}
               >
-                Liste
+                📋 Liste
               </button>
               <button
                 onClick={() => setViewMode("stats")}
-                className={`rounded-lg px-3 py-2 text-sm ${
+                className={`rounded-lg px-3.5 py-2 text-sm font-semibold transition-all duration-300 min-w-[90px] text-center ${
                   viewMode === "stats"
-                    ? "bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-white"
-                    : "text-gray-600 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-700"
+                    ? "bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg"
+                    : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-white dark:hover:bg-gray-700"
                 }`}
               >
-                Statistiques
+                📊 Stats
               </button>
             </div>
             <button
               onClick={() => setShowModeleModal(true)}
-              className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 h-10"
             >
               Nouveau Rapport
             </button>
