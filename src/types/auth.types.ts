@@ -62,10 +62,13 @@ export interface AuthContextType {
   login: (credentials: LoginCredentials) => Promise<userData>;
   logout: () => void;
   clearError: () => void;
+  setUser: (user: User) => void; // ✅ ajoute ceci
 }
+
 
 export interface userData {
   id: string;
   email: string;
   role: RoleUsers;
+  
 }

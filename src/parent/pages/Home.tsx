@@ -1,11 +1,15 @@
 // pages/Home.tsx - Interface Parent améliorée selon cahier des charges
 import { BellIcon, CalendarIcon, ClipboardCheckIcon, StarIcon, User2Icon, UserCircleIcon, UsersIcon } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { CheckCircleIcon, UserGroup02Icon } from "../../icons";
+import apiClient from "../../services/api/axiosConfig";
+import { useAuth } from "../../context/AuthContext"; // si tu as ça
+import { authApi } from "../../services/api/authApi";
+
 
 const HomeParent = () => {
-  const [children] = useState([
+ /* const [children] = useState([
     {
       id: 1,
       name: "Ahmed Ben Salah",
@@ -119,7 +123,91 @@ const HomeParent = () => {
         social: 85
       }
     }
-  ]);
+  ]);*/
+
+
+  const { user } = useAuth(); // récupère l'utilisateur connecté
+  const [children, setChildren] = useState<any[]>([]); // données des enfants
+
+useEffect(() => {
+  const fetchChildrenAndEducators = async () => {
+    if (!user?.id) return;
+    try {
+      // 1) Enfants du parent
+      const { data: rawChildren } = await apiClient.get(`/enfants/BYIdPrent/${user.id}`);
+
+      // 2) Adapter enfants (on garde aussi classId)
+      const adapted = (rawChildren || []).map((enfant, index) => {
+        const classObj = enfant.classe || {};
+        const classId = classObj.id || classObj._id || enfant.classeId || null;
+
+        return {
+          id: enfant.id || enfant.idEnfant,
+          name: `${enfant.prenom ?? ""} ${enfant.nom ?? ""}`.trim(),
+          age: enfant.age ? `${enfant.age} ans` : "Âge inconnu",
+          class: enfant.classeNom ? `${enfant.classeNom}` : (classObj.nom_classe || "Classe inconnue"),
+          classId, // <<< important
+          educator: "Éducateur inconnu", // provisoire, on hydrate après
+          avatar: enfant.imageUrl ? authApi.getImageUrl(enfant.imageUrl) : "/images/avatar-default.png",
+          health: {
+            allergies: enfant.allergies ?? ["Aucune"],
+            medicalNotes: enfant.notesSante ?? "Aucune remarque",
+            vaccination: enfant.vaccination ?? "À jour",
+          },
+          presence: {
+            today: enfant.presence?.today ?? false,
+            week: enfant.presence?.week ?? 0,
+            month: enfant.presence?.month ?? 0,
+          },
+          performance: enfant.performance ?? 80 + index * 3,
+          color: enfant.color || "from-indigo-500 to-purple-500",
+          bgColor: enfant.bgColor || "bg-white dark:bg-gray-900/40",
+          borderColor: enfant.borderColor || "border-gray-200 dark:border-white/10",
+          evolution: enfant.evolution ?? { language: 85, motor: 78, cognitive: 90, social: 82 },
+        };
+      });
+
+      // 3) classIds uniques (non nuls)
+      const classIds = Array.from(
+        new Set(adapted.map(c => c.classId).filter(Boolean))
+      );
+
+      // 4) Récupérer les éducateurs par classe
+      //    Endpoint d’après ton back: /api/educateurClasse/{id}/educateurs
+      const mapByClass = {};
+      await Promise.all(classIds.map(async (cid) => {
+        try {
+          const { data } = await apiClient.get(`/educateur-classe/${cid}/educateurs`);
+          // data = Array<EducateurClasseResponseDTO>
+          // on s’attend à { educateur: { nom, prenom, ... }, classe: {...} }
+          const names = (data || [])
+            .map(x => x?.educateur)
+            .filter(Boolean)
+            .map(e => [e?.prenom, e?.nom].filter(Boolean).join(" ").trim())
+            .filter(Boolean);
+
+          mapByClass[cid] = names.length ? names : ["Éducateur inconnu"];
+        } catch {
+          mapByClass[cid] = ["Éducateur inconnu"];
+        }
+      }));
+
+      // 5) Hydrater la propriété educator pour chaque enfant
+      const finalChildren = adapted.map(c => ({
+        ...c,
+        educator: c.classId ? (mapByClass[c.classId]?.join(", ") || "Éducateur inconnu") : "Éducateur inconnu",
+      }));
+
+      setChildren(finalChildren);
+    } catch (error) {
+      console.error("Erreur chargement enfants / éducateurs :", error);
+    }
+  };
+
+  fetchChildrenAndEducators();
+}, [user]);
+
+
 
 // --- Onglet actif
 const [tab, setTab] = useState<"today" | "tomorrow" | "week">("today");
@@ -1161,7 +1249,7 @@ async function handleSend() {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
             <div className="absolute bottom-2 left-2 text-white opacity-0 transition-opacity group-hover:opacity-100">
-              <div className="text-sm font-medium">{child.name.split(" ")[0]}</div>
+              <div className="text-sm font-medium">(child.name?.split(" ")[0] || "")</div>
               <div className="text-xs">{child.age}</div>
             </div>
           </button>

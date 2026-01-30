@@ -98,11 +98,11 @@ export const AuthProvider : React.FC<AuthProviderProps> = ({ children }) => {
                         experience :  0,
                         disponibilite :  "",
                         classe : "",
-                       imageUrl: undefined,
+                       imageUrl: "",
                         createdAt :  "",
                         updatedAt : ""
                     };
-                  console.log("imageUrl =", user?.imageUrl);
+                  
 
                 setAuthState({
                    user,
@@ -151,13 +151,15 @@ export const AuthProvider : React.FC<AuthProviderProps> = ({ children }) => {
          const clearError = (): void => {
             setAuthState(prev => ({ ...prev, error: null }));
         };
+const contextValue: AuthContextType = {
+  ...authState,
+  login,
+  logout,
+  clearError,
+  setUser: (user: User) =>
+    setAuthState(prev => ({ ...prev, user })), // ✅ la fonction pour mettre à jour
+};
 
-        const contextValue: AuthContextType = {
-            ...authState,
-            login,
-            logout,
-            clearError,
-        };
 
         return (
             <AuthContext.Provider value={contextValue}>

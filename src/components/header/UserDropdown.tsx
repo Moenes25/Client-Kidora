@@ -3,6 +3,12 @@ import { Link } from "react-router-dom";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { useAuth } from "../../context/AuthContext";
+import apiClient from '../../services/api/axiosConfig';
+import { authApi } from '../../services/api/authApi';
+import { User } from '../../types/auth.types';
+
+
+
 
 const ROLE_LABEL: Record<string, string> = {
   PARENT: "Parent",
@@ -13,7 +19,8 @@ const ROLE_LABEL: Record<string, string> = {
 export default function UserDropdown() {
   const [isOpen, setIsOpen] = useState(false);
   const btnRef = useRef<HTMLButtonElement>(null);
-  const { user } = useAuth();
+const { user, setUser } = useAuth(); // ← assure-toi que `setUser` existe dans le contexte
+   console.log("Image URL du user :", user?.imageUrl);
 
   function toggleDropdown() {
     setIsOpen((v) => !v);
@@ -22,6 +29,24 @@ export default function UserDropdown() {
     setIsOpen(false);
     btnRef.current?.focus();
   }
+
+
+useEffect(() => {
+  async function fetchFullUser() {
+    if (!user?.id) return;
+    try {
+      const response = await apiClient.get<User>(`/client/${user.id}`);
+      setUser(response.data); // met à jour avec l'image
+    } catch (err) {
+      console.error("Erreur chargement utilisateur complet :", err);
+    }
+  }
+
+  if (!user?.imageUrl) {
+    fetchFullUser(); // appel uniquement si image manquante
+  }
+}, [user]);
+
 
   // Esc pour fermer
   useEffect(() => {
@@ -49,11 +74,13 @@ export default function UserDropdown() {
         ].join(" ")}
       >
         <span className="relative inline-block size-10 overflow-hidden rounded-full ring-1 ring-white/30">
-          <img
-            src="/images/user/owner.jpg"
-            alt="Photo de profil"
-            className="h-full w-full object-cover object-center"
-          />
+         <img
+ src={user?.imageUrl ? authApi.getImageUrl(user.imageUrl) : '/default-avatar.png'} 
+  alt="Photo de profil"
+ 
+  className="h-full w-full object-cover object-center"
+/>
+
         </span>
 
         <span className="hidden sm:block font-medium">
@@ -100,7 +127,9 @@ export default function UserDropdown() {
         {/* En-tête */}
         <div className="flex items-center gap-3 px-2 pb-3 border-b border-slate-200 dark:border-white/10">
           <span className="inline-block h-10 w-10 overflow-hidden rounded-full ring-1 ring-black/10 dark:ring-white/10">
-            <img src="/images/user/owner.jpg" alt="" className="h-full w-full object-cover" />
+            <img 
+            src={user?.imageUrl ? authApi.getImageUrl(user.imageUrl) : '/default-avatar.png'} 
+         alt="Photo de profil" className="h-full w-full object-cover" />
           </span>
           <div className="min-w-0">
             <p className="truncate font-semibold"> {user?.prenom || user?.email?.split("@")[0]}</p>

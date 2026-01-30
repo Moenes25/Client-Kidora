@@ -5,6 +5,12 @@ import { useTranslation } from "react-i18next";
 import { setAppLanguage } from "../../utils/lang";
 // en haut du fichier
 import { Edit3, Save } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
+import apiClient from "../../services/api/axiosConfig";
+import { authApi } from '../../services/api/authApi';
+
+
+ 
 
 
 
@@ -13,6 +19,27 @@ const ParentProfil = () => {
       // dans le composant
 const [isEditing, setIsEditing] = useState(false);
 const [flashMsg, setFlashMsg] = useState<string | null>(null);
+
+
+ const { user } = useAuth(); // Récupère l'utilisateur connecté
+
+  const [profileData, setProfileData] = useState<any | null>(null);
+
+  useEffect(() => {
+    const fetchUserDetails = async () => {
+      if (!user?.id) return;
+
+      try {
+        const res = await apiClient.get(`/client/${user.id}`);
+        setProfileData(res.data);
+      } catch (err) {
+        console.error("Erreur chargement données utilisateur :", err);
+      }
+    };
+
+    fetchUserDetails();
+  }, [user]);
+
 
 function handleToggleEdit() {
   if (isEditing) {
@@ -184,7 +211,7 @@ const handleAvatarChange: React.ChangeEventHandler<HTMLInputElement> = async (e)
                 </label>
               <input
   type="text"
-  value={parentInfo.name}
+ value={(profileData?.nom || "") + " " + (profileData?.prenom || "")}
   onChange={(e) => setParentInfo({ ...parentInfo, name: e.target.value })}
   disabled={!isEditing}
   className={
@@ -201,7 +228,7 @@ const handleAvatarChange: React.ChangeEventHandler<HTMLInputElement> = async (e)
                 </label>
                <input
   type="email"
-  value={parentInfo.email}
+ value={profileData?.email || ""}
   onChange={(e) => setParentInfo({ ...parentInfo, email: e.target.value })}
   disabled={!isEditing}
   className={
@@ -218,7 +245,7 @@ const handleAvatarChange: React.ChangeEventHandler<HTMLInputElement> = async (e)
                 </label>
                <input
   type="tel"
-  value={parentInfo.phone}
+  value={profileData?.numTel|| ""}
   onChange={(e) => setParentInfo({ ...parentInfo, phone: e.target.value })}
   disabled={!isEditing}
   className={
@@ -235,7 +262,7 @@ const handleAvatarChange: React.ChangeEventHandler<HTMLInputElement> = async (e)
                 </label>
                <input
   type="text"
-  value={parentInfo.address}
+   value={profileData?.adresse|| ""}
   onChange={(e) => setParentInfo({ ...parentInfo, address: e.target.value })}
   disabled={!isEditing}
   className={
@@ -246,22 +273,27 @@ const handleAvatarChange: React.ChangeEventHandler<HTMLInputElement> = async (e)
 />
               </div>
             </div>
-            
-            <div className="mt-6">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Enfants associés
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {parentInfo.children.map((child, index) => (
-                  <span key={index} className="px-4 py-2 bg-gradient-to-r from-blue-100 to-cyan-100 dark:from-blue-900/30 dark:to-cyan-900/30 text-blue-600 dark:text-blue-400 rounded-full">
-                    {child}
-                  </span>
-                ))}
-                <button className="px-4 py-2 border border-dashed border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 rounded-full hover:bg-gray-50 dark:hover:bg-gray-700 hidden">
-                  + Ajouter
-                </button>
-              </div>
-            </div>
+       {profileData?.role === "PARENT" && (
+  <div className="mt-6">
+    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+      Enfants associés
+    </label>
+    <div className="flex flex-wrap gap-2">
+      {parentInfo.children.map((child, index) => (
+        <span
+          key={index}
+          className="px-4 py-2 bg-gradient-to-r from-blue-100 to-cyan-100 dark:from-blue-900/30 dark:to-cyan-900/30 text-blue-600 dark:text-blue-400 rounded-full"
+        >
+          {child}
+        </span>
+      ))}
+      <button className="px-4 py-2 border border-dashed border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 rounded-full hover:bg-gray-50 dark:hover:bg-gray-700 hidden">
+        + Ajouter
+      </button>
+    </div>
+  </div>
+)}
+
           </div>
 
           {/* Préférences de notifications */}
@@ -315,27 +347,37 @@ const handleAvatarChange: React.ChangeEventHandler<HTMLInputElement> = async (e)
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
             <div className="flex flex-col items-center">
              {/* Avatar */}
-  { (avatarPreview || parentInfo.avatarUrl) ? (
-    <img
-      src={avatarPreview || parentInfo.avatarUrl}
-      alt={parentInfo.name}
-      className="w-32 h-32 rounded-full object-cover ring-2 ring-white shadow mb-4 dark:ring-slate-800"
-    />
-  ) : (
-    <div className="w-32 h-32 rounded-full bg-gradient-to-r from-orange-500 to-red-500
-                    flex items-center justify-center text-white text-4xl font-bold mb-4">
-      {parentInfo.name.split(" ").map(s=>s[0]).slice(0,2).join("") /* initiales */}
-    </div>
-  )}
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">{parentInfo.name}</h3>
-              <p className="text-gray-600 dark:text-gray-300">{parentInfo.email}</p>
+{ profileData?.imageUrl || avatarPreview ? (
+  <img
+    src={
+      avatarPreview
+        ? avatarPreview
+        : authApi.getImageUrl(profileData.imageUrl)
+    }
+    alt="Photo de profil"
+    className="w-32 h-32 rounded-full object-cover ring-2 ring-white shadow mb-4 dark:ring-slate-800"
+  />
+) : (
+  <div className="w-32 h-32 rounded-full bg-gradient-to-r from-orange-500 to-red-500
+                  flex items-center justify-center text-white text-4xl font-bold mb-4">
+    {parentInfo.name.split(" ").map(s => s[0]).slice(0,2).join("")}
+  </div>
+)}
+
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white">{profileData?.nom || ""}{profileData?.prenom || ""}</h3>
+              <p className="text-gray-600 dark:text-gray-300">{profileData?.email || ""}</p>
               
-              <div className="mt-4 px-4 py-2 bg-gradient-to-r from-orange-100 to-red-100 dark:from-orange-900/30 dark:to-red-900/30 text-orange-600 dark:text-orange-400 rounded-full">
-                Compte {parentInfo.subscription}
-              </div>
+           <div className="mt-4 px-4 py-2 bg-gradient-to-r from-orange-100 to-red-100 dark:from-orange-900/30 dark:to-red-900/30 text-orange-600 dark:text-orange-400 rounded-full">
+  Compte&nbsp;
+  {profileData?.role === "ADMIN" && "Administrateur"}
+  {profileData?.role === "EDUCATEUR" && "Éducateur"}
+  {profileData?.role === "PARENT" && "Parent"}
+  {!["ADMIN", "EDUCATEUR", "PARENT"].includes(profileData?.role) && "Utilisateur"}
+</div>
+
               
               <div className="mt-6 text-sm text-gray-500 dark:text-gray-400">
-                Membre depuis {parentInfo.joinDate}
+                Membre depuis {profileData?.createdAt || ""}
               </div>
               
              <button

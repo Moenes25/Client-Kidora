@@ -68,37 +68,28 @@ getAllUsers : async () : Promise<User[]> => {
     }
   },
 
-  getImage: async (imagePath: string): Promise<Blob> => {
-    try {
-      const token = localStorage.getItem('token');
-      
-      // IMPORTANT: Créez une instance axios séparée sans le /api
-      const imageClient = axios.create({
-        baseURL: 'http://localhost:8086', // Pas de /api ici
-        responseType: 'blob',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      const response = await imageClient.get(imagePath);
-      return response.data;
-    } catch (error: any) {
-      throw new Error(error.message || 'Erreur lors du chargement de l\'image');
-    }
-  },
+getImage: async (imagePath: string): Promise<string> => {
+  try {
+    // Pas besoin de token ici si la route n'est pas protégée
+    const imageUrl = `http://localhost:8086${imagePath.startsWith('/') ? imagePath : `/${imagePath}`}`;
 
-  getImageUrl: (imagePath: string): string => {
-    const token = localStorage.getItem('token');
-    const baseURL = 'http://localhost:8086';
-    
-    if (!token) {
-      return '/images/default-avatar.jpg';
-    }
-    
-    const cleanPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
-    return `${baseURL}${cleanPath}?token=${encodeURIComponent(token)}`;
+    const response = await axios.get(imageUrl, {
+      responseType: 'blob'
+    });
+
+    // Crée un URL pour afficher dans <img />
+    return URL.createObjectURL(response.data);
+  } catch (error: any) {
+    throw new Error(error.message || "Erreur lors du chargement de l'image");
   }
+},
+
+
+getImageUrl: (imagePath: string): string => {
+  const baseURL = 'http://localhost:8086';
+  const cleanPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
+  return `${baseURL}${cleanPath}`;
+}
+
 
 }
